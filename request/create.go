@@ -35,7 +35,7 @@ func validProjectName(projectName string) bool {
 }
 
 func projectExists(projectName, user string, session *r.Session) bool {
-	results, err := r.Table("projects").Filter(r.Row.Field("owner").Eq(user)).
+	results, err := r.Table("projects").GetAllByIndex("owner", user).
 		Filter(r.Row.Field("name").Eq(projectName)).
 		Run(session)
 	if err != nil {

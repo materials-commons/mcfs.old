@@ -52,7 +52,7 @@ func (l *lookupHandler) dataFileRql(req *protocol.LookupReq) r.RqlTerm {
 	case "id":
 		return r.Table("datafiles").Get(req.Value)
 	default:
-		return r.Table("datadirs").Filter(r.Row.Field("id").Eq(req.LimitToID)).
+		return r.Table("datadirs").GetAllByIndex("id", req.LimitToID).
 			OuterJoin(r.Table("datafiles"),
 			func(ddirRow, dfRow r.RqlTerm) r.RqlTerm {
 				return ddirRow.Field("datafiles").Contains(dfRow.Field("id"))
@@ -65,7 +65,7 @@ func (l *lookupHandler) dataDirRql(req *protocol.LookupReq) r.RqlTerm {
 	case "id":
 		return r.Table("datadirs").Get(req.Value)
 	default:
-		return r.Table("project2datadir").Filter(r.Row.Field("project_id").Eq(req.LimitToID)).
+		return r.Table("project2datadir").GetAllByIndex("project_id", req.LimitToID).
 			EqJoin("datadir_id", r.Table("datadirs")).Zip().
 			Filter(r.Row.Field(req.Field).Eq(req.Value))
 	}
