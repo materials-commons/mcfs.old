@@ -151,12 +151,19 @@ func (h *ReqHandler) createDataDir(req *protocol.CreateDirReq) (*protocol.Create
 	proj, err := model.GetProject(req.ProjectID, h.session)
 	switch {
 	case err != nil:
+		fmt.Println("err != nil")
 		return nil, fmt.Errorf("Bad projectID %s", req.ProjectID)
 	case proj.Owner != h.user:
+		fmt.Println("proj.Owner != h.user")
 		return nil, fmt.Errorf("Access to project not allowed")
 	case !validDirPath(proj.Name, req.Path):
+		fmt.Println("!validDirPath")
 		return nil, fmt.Errorf("Invalid directory path %s", req.Path)
+	case pathExistsInProject(req.ProjectID, req.Path, h.session):
+		// Exists so return DataDir ID
+		return nil, fmt.Errorf("Directory already exists")
 	default:
+		fmt.Println("default")
 		var parent string
 		if parent, err = getParent(req.Path, h.session); err != nil {
 			return nil, err
@@ -199,4 +206,15 @@ func getParent(ddirPath string, session *r.Session) (string, error) {
 		return "", fmt.Errorf("No parent for %s", ddirPath)
 	}
 	return d.Id, nil
+}
+
+func pathExistsInProject(projectID, path string, session *r.Session) bool {
+	fmt.Println("Path = ", path)
+	fmt.Println("projectID =", projectID)
+	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID).
+		EqJoin("datadir_id", r.Table("datadirs")).Zip().Filter(r.Row.Field("name").Eq(path))
+	var dataDir schema.DataDir
+	err := model.GetRow(rql, session, &dataDir)
+	fmt.Println("err =", err)
+	return true
 }

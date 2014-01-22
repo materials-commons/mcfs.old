@@ -50,7 +50,9 @@ var projectTests = []lookupTest{
 	{"id", "abc123", "", false, "No such id"},
 	{"id", "904886a7-ea57-4de7-8125-6e18c9736fd0", "", true, "id Existing project with permissions"},
 	{"id", "34520277-4a0d-4f79-a30c-b63886f003c4", "", false, "id Existing project without permissions"},
-	{"name", "WE43 Heat Treatments", "", false, "name All other attributes should fail"},
+	{"name", "WE43 Heat Treatments", "", true, "name Lookup existing"},
+	{"name", "Does not exist", "", false, "name Lookup bad project name"},
+	{"name", "Synthetic Tooth", "", false, "name Lookup existing but no permissions"},
 }
 
 func TestLookupProject(t *testing.T) {

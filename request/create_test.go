@@ -35,7 +35,7 @@ func TestCreateDir(t *testing.T) {
 
 	resp, err = h.createDir(&createDirRequest)
 	if err != nil {
-		t.Fatalf("Create existing directory failed with %#v", resp)
+		t.Fatalf("Create existing directory failed with %#v, err: %s", resp, err)
 	}
 
 	// Cleanup the created directory

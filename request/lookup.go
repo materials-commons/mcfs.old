@@ -21,9 +21,6 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
 
 	switch req.Type {
 	case "project":
-		if req.Field != "id" {
-			return nil, fmt.Errorf("Projects can only be queried by id")
-		}
 		rql := l.projectRql(req)
 		var proj schema.Project
 		return l.execute(rql, &proj)
@@ -44,7 +41,12 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
 }
 
 func (l *lookupHandler) projectRql(req *protocol.LookupReq) r.RqlTerm {
-	return r.Table("projects").Get(req.Value)
+	switch req.Field {
+	case "id":
+		return r.Table("projects").Get(req.Value)
+	default:
+		return r.Table("projects").GetAllByIndex("owner", l.user).Filter(r.Row.Field(req.Field).Eq(req.Value))
+	}
 }
 
 func (l *lookupHandler) dataFileRql(req *protocol.LookupReq) r.RqlTerm {
