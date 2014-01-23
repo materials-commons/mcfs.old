@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/contrib/mc"
 	"github.com/materials-commons/contrib/model"
 	"github.com/materials-commons/contrib/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -151,37 +152,44 @@ func (h *ReqHandler) createDataDir(req *protocol.CreateDirReq) (*protocol.Create
 	proj, err := model.GetProject(req.ProjectID, h.session)
 	switch {
 	case err != nil:
-		fmt.Println("err != nil")
 		return nil, fmt.Errorf("Bad projectID %s", req.ProjectID)
 	case proj.Owner != h.user:
-		fmt.Println("proj.Owner != h.user")
 		return nil, fmt.Errorf("Access to project not allowed")
 	case !validDirPath(proj.Name, req.Path):
-		fmt.Println("!validDirPath")
 		return nil, fmt.Errorf("Invalid directory path %s", req.Path)
-	case pathExistsInProject(req.ProjectID, req.Path, h.session):
-		// Exists so return DataDir ID
-		return nil, fmt.Errorf("Directory already exists")
 	default:
-		fmt.Println("default")
-		var parent string
-		if parent, err = getParent(req.Path, h.session); err != nil {
-			return nil, err
-		}
-		datadir = schema.NewDataDir(req.Path, "private", h.user, parent)
-		var wr r.WriteResponse
-		wr, err = r.Table("datadirs").Insert(datadir).RunWrite(h.session)
-		if err == nil && wr.Inserted > 0 {
-			p2d := Project2Datadir{
-				ProjectID: req.ProjectID,
-				DataDirID: datadir.Id,
+		id, err := dataDirIdForName(req.ProjectID, req.Path, h.session)
+		switch {
+		case err == mc.ErrNotFound:
+			var parent string
+			if parent, err = getParent(req.Path, h.session); err != nil {
+				return nil, err
 			}
-			r.Table("project2datadir").Insert(p2d).RunWrite(h.session)
+			datadir = schema.NewDataDir(req.Path, "private", h.user, parent)
+			var wr r.WriteResponse
+			wr, err = r.Table("datadirs").Insert(datadir).RunWrite(h.session)
+			if err == nil && wr.Inserted > 0 {
+				dataDirID := wr.GeneratedKeys[0]
+				p2d := Project2Datadir{
+					ProjectID: req.ProjectID,
+					DataDirID: dataDirID,
+				}
+				r.Table("project2datadir").Insert(p2d).RunWrite(h.session)
+				resp := &protocol.CreateResp{
+					ID: dataDirID,
+				}
+				return resp, nil
+			}
+			// TODO: Make error message better
+			return nil, fmt.Errorf("Unable to insert into database")
+		case err != nil:
+			return nil, err
+		default:
+			resp := &protocol.CreateResp{
+				ID: id,
+			}
+			return resp, nil
 		}
-		resp := &protocol.CreateResp{
-			ID: datadir.Id,
-		}
-		return resp, nil
 	}
 }
 
@@ -208,13 +216,13 @@ func getParent(ddirPath string, session *r.Session) (string, error) {
 	return d.Id, nil
 }
 
-func pathExistsInProject(projectID, path string, session *r.Session) bool {
-	fmt.Println("Path = ", path)
-	fmt.Println("projectID =", projectID)
+func dataDirIdForName(projectID, path string, session *r.Session) (string, error) {
 	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID).
 		EqJoin("datadir_id", r.Table("datadirs")).Zip().Filter(r.Row.Field("name").Eq(path))
 	var dataDir schema.DataDir
 	err := model.GetRow(rql, session, &dataDir)
-	fmt.Println("err =", err)
-	return true
+	if err != nil {
+		return "", err
+	}
+	return dataDir.Id, nil
 }
