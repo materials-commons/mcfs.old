@@ -214,7 +214,7 @@ type LookupReq struct {
 }
 
 type ProjectEntriesReq struct {
-	ProjectName string
+	Name string
 }
 
 type ProjectEntry struct {
@@ -227,6 +227,6 @@ type ProjectEntry struct {
 }
 
 type ProjectEntriesResp struct {
-	ProjectID   string
-	Entries []ProjectEntry
+	ProjectID string
+	Entries   []ProjectEntry
 }

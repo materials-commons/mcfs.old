@@ -22,7 +22,7 @@ func (h *ReqHandler) projectEntries(req *protocol.ProjectEntriesReq) (*protocol.
 		user:    h.user,
 	}
 
-	project, err := p.getProjectByName(req.ProjectName)
+	project, err := p.getProjectByName(req.Name)
 	if err != nil {
 		return nil, err
 	}

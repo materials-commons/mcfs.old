@@ -71,7 +71,7 @@ func TestProjectEntries(t *testing.T) {
 	h.user = "gtarcea@umich.edu"
 
 	req := protocol.ProjectEntriesReq{
-		ProjectName: "Test_Proj",
+		Name: "Test_Proj",
 	}
 
 	// Test project we have access to
@@ -85,11 +85,11 @@ func TestProjectEntries(t *testing.T) {
 	}
 
 	if len(resp.Entries) == 0 {
-		t.Errorf("No entries for project %s %#v\n", req.ProjectName, resp)
+		t.Errorf("No entries for project %s %#v\n", req.Name, resp)
 	}
 
 	// Test bad project name that doesn't exist
-	req.ProjectName = "Does-Not-Exist"
+	req.Name = "Does-Not-Exist"
 	resp, err = h.projectEntries(&req)
 	if err == nil {
 		t.Errorf("No error for bad project")
@@ -100,7 +100,7 @@ func TestProjectEntries(t *testing.T) {
 	}
 
 	// Test project name that we don't have access to
-	req.ProjectName = "Synthetic Tooth"
+	req.Name = "Synthetic Tooth"
 	if err == nil {
 		t.Errorf("Got access to project I don't have permissions on")
 	}
