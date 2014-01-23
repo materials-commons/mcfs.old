@@ -5,7 +5,7 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/contrib/model"
 	"github.com/materials-commons/contrib/schema"
-	"github.com/materials-commons/gohandy/handyfile"
+	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/protocol"
 	"io"
 	"os"
@@ -150,7 +150,7 @@ func datafileClose(w io.WriteCloser, dataFileID string, session *r.Session) erro
 func datafileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
 	path := datafilePath(mcdir, dfid)
 	switch {
-	case handyfile.Exists(path):
+	case file.Exists(path):
 		mode := os.O_RDWR
 		if offset != 0 {
 			mode = mode | os.O_APPEND

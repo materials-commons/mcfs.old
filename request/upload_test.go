@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/materials-commons/contrib/model"
-	"github.com/materials-commons/gohandy/handyfile"
+	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/protocol"
 	"io/ioutil"
 	"os"
@@ -154,7 +154,7 @@ func TestUploadNewFile(t *testing.T) {
 	// Create file that we are going to upload
 	os.MkdirAll("/tmp/mcdir", 0777)
 	ioutil.WriteFile(testfilePath, []byte(testfileData), 0777)
-	checksum, _ := handyfile.Hash(md5.New(), testfilePath)
+	checksum, _ := file.Hash(md5.New(), testfilePath)
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
 		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
@@ -202,7 +202,7 @@ func TestUploadNewFile(t *testing.T) {
 		t.Fatalf("Incorrect number of bytes written expected %d, wrote %d", testfileLen, n)
 	}
 
-	nchecksum, err := handyfile.Hash(md5.New(), datafilePath(h.mcdir, createdId))
+	nchecksum, err := file.Hash(md5.New(), datafilePath(h.mcdir, createdId))
 	if err != nil {
 		t.Fatalf("Unable to checksum datafile %s", createdId)
 	}
@@ -225,7 +225,7 @@ func TestPartialToCompleted(t *testing.T) {
 	// Create file that we are going to upload
 	os.MkdirAll("/tmp/mcdir", 0777)
 	ioutil.WriteFile(testfilePath, []byte(testfileData), 0777)
-	checksum, _ := handyfile.Hash(md5.New(), testfilePath)
+	checksum, _ := file.Hash(md5.New(), testfilePath)
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
 		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
@@ -299,7 +299,7 @@ func TestPartialToCompleted(t *testing.T) {
 		t.Fatalf("Incorrect number of bytes written expected %d, wrote %d", testfileLen, n)
 	}
 
-	nchecksum, err := handyfile.Hash(md5.New(), datafilePath(h.mcdir, createdId))
+	nchecksum, err := file.Hash(md5.New(), datafilePath(h.mcdir, createdId))
 	if err != nil {
 		t.Fatalf("Unable to checksum datafile %s", createdId)
 	}
