@@ -55,6 +55,10 @@ func init() {
 	gob.Register(schema.DataFile{})
 	gob.Register(schema.DataDir{})
 	gob.Register(schema.Project{})
+
+	gob.Register(ProjectEntriesReq{})
+	gob.Register(ProjectEntriesResp{})
+	gob.Register(ProjectEntry{})
 }
 
 type Request struct {
@@ -207,4 +211,22 @@ type LookupReq struct {
 	Value     string
 	Type      string
 	LimitToID string
+}
+
+type ProjectEntriesReq struct {
+	ProjectName string
+}
+
+type ProjectEntry struct {
+	DataDirID        string `gorethink:"datadir_id"`
+	DataDirName      string `gorethink:"datadir_name"`
+	DataFileID       string `gorethink:"id"`
+	DataFileName     string `gorethink:"name"`
+	DataFileSize     int64  `gorethink:"size"`
+	DataFileChecksum string `gorethink:"checksum"`
+}
+
+type ProjectEntriesResp struct {
+	ProjectID   string
+	Entries []ProjectEntry
 }
