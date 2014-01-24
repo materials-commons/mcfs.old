@@ -203,8 +203,8 @@ func (r *ReqHandler) uploadLoop(resp *protocol.UploadResp) ReqStateFN {
 func (h *uploadHandler) uploadState() ReqStateFN {
 	request := h.req()
 	switch req := request.(type) {
-	case *protocol.SendReq:
-		n, err := h.sendReqWrite(req)
+	case protocol.SendReq:
+		n, err := h.sendReqWrite(&req)
 		if err != nil {
 			dfClose(h.w, h.dataFileID, h.session)
 			h.respError(err)
@@ -213,23 +213,23 @@ func (h *uploadHandler) uploadState() ReqStateFN {
 		h.nbytes = h.nbytes + int64(n)
 		h.respOk(&protocol.SendResp{BytesWritten: n})
 		return h.uploadState
-	case *ErrorReq:
+	case ErrorReq:
 		dfClose(h.w, h.dataFileID, h.session)
 		return nil
-	case *protocol.LogoutReq:
+	case protocol.LogoutReq:
 		dfClose(h.w, h.dataFileID, h.session)
 		h.respOk(&protocol.LogoutResp{})
 		return h.startState
-	case *protocol.CloseReq:
+	case protocol.CloseReq:
 		dfClose(h.w, h.dataFileID, h.session)
 		return nil
-	case *protocol.DoneReq:
+	case protocol.DoneReq:
 		dfClose(h.w, h.dataFileID, h.session)
 		h.respOk(&protocol.DoneResp{})
 		return h.nextCommand
 	default:
 		dfClose(h.w, h.dataFileID, h.session)
-		return h.badRequestNext(fmt.Errorf("Unknown Request Type"))
+		return h.badRequestNext(fmt.Errorf("Unknown Request Type %T", req))
 	}
 }
 
