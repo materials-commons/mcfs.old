@@ -91,12 +91,39 @@ func TestCreateProject(t *testing.T) {
 		t.Fatalf("Unable to create project")
 	}
 
+	// Make sure the created project is properly setup
+	proj, err := model.GetProject(projectId, session)
+	if err != nil {
+		t.Errorf("Unable to retrieve project %s", projectId)
+	}
+
+	if proj.Name != "TestProject1__" {
+		t.Errorf("Project Name not set")
+	}
+
+	if proj.DataDir == "" {
+		t.Errorf("Project doesn't have a datadir associated with it")
+	}
+
+	// Make sure the join table is updated
+	var p2d Project2Datadir
+	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectId)
+	err = model.GetRow(rql, session, &p2d)
+	if err != nil {
+		t.Errorf("Unable to find project in join table")
+	}
+
+	if p2d.DataDirID != datadirId {
+		t.Errorf("Wrong datadir for project %#v expected %s", p2d, datadirId)
+	}
+
 	// Test create existing project
 	resp, err = h.createProject(&createProjectRequest)
 
 	// Delete before test so we can cleanup if there is a failure
 	model.Delete("datadirs", datadirId, session)
 	model.Delete("projects", projectId, session)
+	model.Delete("project2datadir", p2d.Id, session)
 
 	if err == nil {
 		t.Fatalf("Created an existing project - shouldn't be able to")

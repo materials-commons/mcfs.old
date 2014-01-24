@@ -47,19 +47,28 @@ func projectExists(projectName, user string, session *r.Session) bool {
 	return results.Next()
 }
 
-func projectCreate(projectName, user string, session *r.Session) (projectId, datadirId string, err error) {
+func projectCreate(projectName, user string, session *r.Session) (projectID, datadirID string, err error) {
 	datadir := schema.NewDataDir(projectName, "private", user, "")
 	rv, err := r.Table("datadirs").Insert(datadir).RunWrite(session)
 	if err != nil {
 		return "", "", err
+	} else if rv.Inserted == 0 {
+		return "", "", fmt.Errorf("Unable to create datadir for project")
 	}
-	datadirId = datadir.Id
-	project := schema.NewProject(projectName, datadirId, user)
+	datadirID = rv.GeneratedKeys[0]
+	project := schema.NewProject(projectName, datadirID, user)
 	rv, err = r.Table("projects").Insert(project).RunWrite(session)
 	if err != nil {
 		return "", "", err
 	}
-	return rv.GeneratedKeys[0], datadirId, nil
+	projectID = rv.GeneratedKeys[0]
+	p2d := Project2Datadir{
+		ProjectID: projectID,
+		DataDirID: datadirID,
+	}
+	rv, err = r.Table("project2datadir").Insert(p2d).RunWrite(session)
+	// TODO: What if we get an error here?
+	return projectID, datadirID, nil
 }
 
 type createFileValidator struct {
