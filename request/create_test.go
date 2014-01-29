@@ -204,14 +204,35 @@ func TestCreateFile(t *testing.T) {
 		t.Fatalf("Wrong name %#v", df)
 	}
 
+	// Test create new file that matches existing file size and checksum
+	createFileRequest.DataDirID = "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys"
+	resp, err = h.createFile(&createFileRequest)
+	if err != nil {
+		t.Errorf("Unable to create file with matching size and checksum")
+	}
+	df, err = model.GetDataFile(resp.ID, session)
+	if err != nil {
+		t.Errorf("Unable to retrieve newly created datafile %s: %s", resp.ID, err)
+	}
+	if df.UsesID == "" {
+		t.Errorf("UsesID is blank %#v", df)
+	}
+
+	if df.UsesID != createdId {
+		t.Errorf("Wrong id for UsesID %#v", df)
+	}
+
+	createdId2 := resp.ID
+
 	// Test creating an existing file
 	resp, err = h.createFile(&createFileRequest)
 	if err == nil {
 		t.Fatalf("Allowed create of an existing file")
 	}
 
-	// Delete created file
+	// Delete created files
 	model.Delete("datafiles", createdId, session)
+	model.Delete("datafiles", createdId2, session)
 
 	// Test creating with an invalid project id
 	validProjectID := createFileRequest.ProjectID
@@ -235,4 +256,5 @@ func TestCreateFile(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Allowed creation of file in a datadir not in project")
 	}
+
 }

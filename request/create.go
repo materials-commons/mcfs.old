@@ -71,16 +71,16 @@ func projectCreate(projectName, user string, session *r.Session) (projectID, dat
 	return projectID, datadirID, nil
 }
 
-type createFileValidator struct {
+type createFileHandler struct {
 	modelValidator
 }
 
 func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
-	v := createFileValidator{
+	cfh := createFileHandler{
 		modelValidator: newModelValidator(h.user, h.session),
 	}
 
-	if err := v.validCreateFileReq(req); err != nil {
+	if err := cfh.validCreateFileReq(req); err != nil {
 		return nil, err
 	}
 
@@ -88,6 +88,10 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (*protocol.CreateRe
 	df.DataDirs = append(df.DataDirs, req.DataDirID)
 	df.Checksum = req.Checksum
 	df.Size = req.Size
+	otherId, err := cfh.duplicateFileId(req.Checksum, req.Size)
+	if err == nil && otherId != "" {
+		df.UsesID = otherId
+	}
 	rv, err := r.Table("datafiles").Insert(df).RunWrite(h.session)
 	if err != nil {
 		return nil, err
@@ -114,26 +118,26 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (*protocol.CreateRe
 	return &createResp, nil
 }
 
-func (v createFileValidator) validCreateFileReq(fileReq *protocol.CreateFileReq) error {
-	proj, err := model.GetProject(fileReq.ProjectID, v.session)
+func (h createFileHandler) validCreateFileReq(fileReq *protocol.CreateFileReq) error {
+	proj, err := model.GetProject(fileReq.ProjectID, h.session)
 	if err != nil {
 		return fmt.Errorf("Unknown project id %s", fileReq.ProjectID)
 	}
 
-	if proj.Owner != v.user {
-		return fmt.Errorf("User %s is not owner of project %s", v.user, proj.Name)
+	if proj.Owner != h.user {
+		return fmt.Errorf("User %s is not owner of project %s", h.user, proj.Name)
 	}
 
-	datadir, err := model.GetDataDir(fileReq.DataDirID, v.session)
+	datadir, err := model.GetDataDir(fileReq.DataDirID, h.session)
 	if err != nil {
 		return fmt.Errorf("Unknown datadir Id %s", fileReq.DataDirID)
 	}
 
-	if !v.datadirInProject(datadir.Id, proj.Id) {
+	if !h.datadirInProject(datadir.Id, proj.Id) {
 		return fmt.Errorf("Datadir %s not in project %s", datadir.Name, proj.Name)
 	}
 
-	if v.datafileExistsInDataDir(fileReq.DataDirID, fileReq.Name) {
+	if h.datafileExistsInDataDir(fileReq.DataDirID, fileReq.Name) {
 		return fmt.Errorf("Datafile %s already exists in datadir %s", fileReq.Name, datadir.Name)
 	}
 
@@ -146,6 +150,27 @@ func (v createFileValidator) validCreateFileReq(fileReq *protocol.CreateFileReq)
 	}
 
 	return nil
+}
+
+func (h *createFileHandler) duplicateFileId(checksum string, size int64) (id string, err error) {
+	rql := r.Table("datafiles").GetAllByIndex("checksum", checksum)
+	var datafiles []schema.DataFile
+	err = model.GetRows(rql, h.session, &datafiles)
+	if err != nil {
+		return "", nil
+	}
+
+	for _, datafile := range datafiles {
+		if datafile.Size == size {
+			switch {
+			case datafile.UsesID == "":
+				return datafile.Id, nil
+			default:
+				return datafile.UsesID, nil
+			}
+		}
+	}
+	return "", nil
 }
 
 func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (*protocol.CreateResp, error) {

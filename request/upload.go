@@ -14,7 +14,6 @@ import (
 type uploadReq struct {
 	*protocol.UploadReq
 	*ReqHandler
-	dataFile *schema.DataFile
 }
 
 func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, error) {
@@ -25,17 +24,19 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 
 	resp := &protocol.UploadResp{}
 
-	if err := ureq.isValid(); err != nil {
+	dataFile, err := ureq.getDataFile()
+
+	if err != nil {
 		return nil, err
 	}
 
-	fsize := datafileSize(h.mcdir, req.DataFileID)
+	fsize := datafileSize(h.mcdir, dataFile)
 
 	switch {
 	case fsize == -1:
 		// Problem doing a stat on the file path, send back an error
 		return nil, fmt.Errorf("Access to path for file %s denied", req.DataFileID)
-	case ureq.dataFile.Size == ureq.Size && ureq.dataFile.Checksum == ureq.Checksum:
+	case dataFile.Size == ureq.Size && dataFile.Checksum == ureq.Checksum:
 		if fsize < ureq.Size {
 			//interrupted transfer
 			// send offset = fsize and ureq.dataFile.ID
@@ -51,9 +52,9 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 			return nil, fmt.Errorf("Fatal error fsize (%d) > ureq.Size (%d) with equal checksums", fsize, ureq.Size)
 		}
 
-	case ureq.dataFile.Size != ureq.Size:
+	case dataFile.Size != ureq.Size:
 		// wants to upload a new version
-		if fsize < ureq.dataFile.Size {
+		if fsize < dataFile.Size {
 			// Other upload hasn't completed - reject this one until other completes
 			return nil, fmt.Errorf("Cannot create new version of data file when previous version hasn't completed loading.")
 		} else {
@@ -62,9 +63,9 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 			resp.Offset = 0
 		}
 
-	case ureq.dataFile.Size == ureq.Size && ureq.dataFile.Checksum != ureq.Checksum:
+	case dataFile.Size == ureq.Size && dataFile.Checksum != ureq.Checksum:
 		// wants to upload new version
-		if fsize < ureq.dataFile.Size {
+		if fsize < dataFile.Size {
 			// Other upload hasn't completed - reject this one until other completes
 			return nil, fmt.Errorf("Cannot create new version of data file when previous version hasn't completed loading.")
 		} else {
@@ -82,21 +83,21 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 	return resp, nil
 }
 
-func (req *uploadReq) isValid() error {
+func (req *uploadReq) getDataFile() (*schema.DataFile, error) {
 	dataFile, err := model.GetDataFile(req.DataFileID, req.session)
 	switch {
 	case err != nil:
-		return fmt.Errorf("No such datafile %s", req.DataFileID)
+		return nil, fmt.Errorf("No such datafile %s", req.DataFileID)
 	case !OwnerGaveAccessTo(dataFile.Owner, req.user, req.session):
-		return fmt.Errorf("Permission denied to %s", req.DataFileID)
+		return nil, fmt.Errorf("Permission denied to %s", req.DataFileID)
 	default:
-		req.dataFile = dataFile
-		return nil
+		return dataFile, nil
 	}
 }
 
-func datafileSize(mcdir, dataFileID string) int64 {
-	path := datafilePath(mcdir, dataFileID)
+func datafileSize(mcdir string, dataFile *schema.DataFile) int64 {
+	dataFileIDToUse := dataFileLocationId(dataFile)
+	path := datafilePath(mcdir, dataFileIDToUse)
 	finfo, err := os.Stat(path)
 	switch {
 	case err == nil:
@@ -106,6 +107,14 @@ func datafileSize(mcdir, dataFileID string) int64 {
 	default:
 		return -1
 	}
+}
+
+func dataFileLocationId(dataFile *schema.DataFile) string {
+	if dataFile.UsesID != "" {
+		return dataFile.UsesID
+	}
+
+	return dataFile.Id
 }
 
 func (req *uploadReq) createNewDataFileVersion() (dataFileID string) {
