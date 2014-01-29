@@ -17,10 +17,15 @@ func NewTracker() *Tracker {
 	}
 }
 
-func (t *Tracker) Mark(id string) {
+func (t *Tracker) Mark(id string) bool {
 	t.mutex.Lock()
 	defer t.mutex.Unlock()
-	t.tracking[id] = true
+	val := t.tracking[id]
+	if !val {
+		t.tracking[id] = true
+	}
+
+	return val
 }
 
 func (t *Tracker) Unmark(id string) {
@@ -35,8 +40,8 @@ func (t *Tracker) Is(id string) bool {
 	return t.tracking[id]
 }
 
-func Mark(id string) {
-	gTracker.Mark(id)
+func Mark(id string) bool {
+	return gTracker.Mark(id)
 }
 
 func Unmark(id string) {

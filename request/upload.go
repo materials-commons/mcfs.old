@@ -244,7 +244,7 @@ func (h *uploadHandler) uploadState() ReqStateFN {
 
 func (h *uploadHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
 	if req.DataFileID != h.dataFileID {
-		return 0, fmt.Errorf("Unexpected DataFileID %s", req.DataFileID)
+		return 0, fmt.Errorf("Unexpected DataFileID %s, wanted: %s", req.DataFileID, h.dataFileID)
 	}
 
 	n, err := dfWrite(h.w, req.Bytes)
