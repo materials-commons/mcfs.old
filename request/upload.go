@@ -30,7 +30,8 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 		return nil, err
 	}
 
-	fsize := datafileSize(h.mcdir, dataFile)
+	dataFileIDToUse := dataFileLocationId(dataFile)
+	fsize := datafileSize(h.mcdir, dataFileIDToUse)
 
 	switch {
 	case fsize == -1:
@@ -40,7 +41,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 		if fsize < ureq.Size {
 			//interrupted transfer
 			// send offset = fsize and ureq.dataFile.ID
-			resp.DataFileID = req.DataFileID
+			resp.DataFileID = dataFileIDToUse
 			resp.Offset = fsize
 		} else if fsize == ureq.Size {
 			// nothing to send file upload completed
@@ -95,9 +96,8 @@ func (req *uploadReq) getDataFile() (*schema.DataFile, error) {
 	}
 }
 
-func datafileSize(mcdir string, dataFile *schema.DataFile) int64 {
-	dataFileIDToUse := dataFileLocationId(dataFile)
-	path := datafilePath(mcdir, dataFileIDToUse)
+func datafileSize(mcdir, dataFileID string) int64 {
+	path := datafilePath(mcdir, dataFileID)
 	finfo, err := os.Stat(path)
 	switch {
 	case err == nil:

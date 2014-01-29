@@ -312,6 +312,98 @@ func TestPartialToCompleted(t *testing.T) {
 	}
 }
 
+func TestUploadNewFileExistingFileMatches(t *testing.T) {
+	h := NewReqHandler(nil, session, "/tmp/mcdir")
+	h.user = "gtarcea@umich.edu"
+	testfilePath := "/tmp/mcdir/testfile.txt"
+	testfileData := "Hello world for testing"
+	testfileLen := int64(len(testfileData))
+
+	// Create file that we are going to upload
+	os.MkdirAll("/tmp/mcdir", 0777)
+	ioutil.WriteFile(testfilePath, []byte(testfileData), 0777)
+	checksum, _ := file.Hash(md5.New(), testfilePath)
+	checksumHex := fmt.Sprintf("%x", checksum)
+	createFileRequest := protocol.CreateFileReq{
+		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
+		DataDirID: "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys_Data",
+		Name:      "testfile.txt",
+		Size:      testfileLen,
+		Checksum:  checksumHex,
+	}
+
+	createResp, _ := h.createFile(&createFileRequest)
+	createdId := createResp.ID
+	defer cleanup(createdId)
+	uploadReq := protocol.UploadReq{
+		DataFileID: createdId,
+		Size:       testfileLen,
+		Checksum:   checksumHex,
+	}
+
+	resp, err := h.upload(&uploadReq)
+	if err != nil {
+		t.Fatalf("error %s", err)
+	}
+
+	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
+	if err != nil {
+		t.Fatalf("Couldn't create uploadHandler %s", err)
+	}
+
+	sendReq := protocol.SendReq{
+		DataFileID: createdId,
+		Bytes:      []byte(testfileData[:len(testfileData)-1]),
+	}
+
+	n, _ := uploadHandler.sendReqWrite(&sendReq)
+	if n != len(testfileData)-1 {
+		t.Fatalf("Wrong number of bytes written, expected %d, got %d", testfileLen, n)
+	}
+	dfClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
+
+	// Now we are going to try and upload the same file to a different
+	// datadir. The system should detect that we have already uploaded
+	// the file and send us back the id from the file created above.
+	//
+	// There are two cases. Above we only wrote a partial file for the original file, so we should
+	// get back the origin file id and an offset, even though a new id was created from the
+	// second create file call.
+	//
+	createFileRequest.DataDirID = "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys"
+	createResp, err = h.createFile(&createFileRequest)
+	if err != nil {
+		t.Errorf("Failed to create new file: %s", err)
+	}
+
+	newId := createResp.ID
+	uploadReq.DataFileID = newId
+	resp, err = h.upload(&uploadReq)
+	if resp.DataFileID != createdId {
+		t.Errorf("Wronge datafile id sent when uploading a file that matches on the server. Expected %s, got %s", createdId, resp.DataFileID)
+	}
+
+	if resp.Offset != testfileLen-1 {
+		t.Errorf("Got back wrong length, got %d, expected %d", resp.Offset, testfileLen-1)
+	}
+
+	// Then we will write the rest of the file and request an upload. Now we should get back
+	// the newly created id and an offset equal to the length of the file
+	w, err := datafileOpen(h.mcdir, createdId, testfileLen-1)
+	w.Write([]byte(testfileData[len(testfileData)-1:]))
+	w.Close()
+	resp, err = h.upload(&uploadReq)
+	if resp.DataFileID != newId {
+		t.Errorf("Wronge datafile id sent when uploading a file that matches on the server. Expected %s, got %s", newId, resp.DataFileID)
+	}
+
+	if resp.Offset != testfileLen {
+		t.Errorf("Got back wrong length, got %d, expected %d", resp.Offset, testfileLen-1)
+	}
+
+	model.Delete("datafiles", newId, session)
+}
+
 func cleanup(datafileId string) {
 	fmt.Println("Deleting datafile id =", datafileId)
 	model.Delete("datafiles", datafileId, session)
