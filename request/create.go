@@ -11,16 +11,20 @@ import (
 	"strings"
 )
 
-func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.CreateProjectResp, error) {
+func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protocol.CreateProjectResp, s *stateStatus) {
 	switch {
 	case !validProjectName(req.Name):
-		return nil, fmt.Errorf("Invalid project name %s", req.Name)
+		s = ssf(mc.ErrorCodeInvalid, "Invalid project name %s", req.Name)
+		return nil, s
 	case projectExists(req.Name, h.user, h.session):
-		return nil, fmt.Errorf("Project %s exists", req.Name)
+		s = ssf(mc.ErrorCodeExists, "Project %s exists", req.Name)
+		return nil, s
 	default:
 		projectId, datadirId, err := projectCreate(req.Name, h.user, h.session)
 		if err != nil {
-			return nil, err
+			s.status = mc.ErrorCodeCreate
+			s.err = err
+			return nil, s
 		}
 		resp := &protocol.CreateProjectResp{
 			ProjectID: projectId,
@@ -75,13 +79,14 @@ type createFileHandler struct {
 	modelValidator
 }
 
-func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
+func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, s *stateStatus) {
 	cfh := createFileHandler{
 		modelValidator: newModelValidator(h.user, h.session),
 	}
 
 	if err := cfh.validCreateFileReq(req); err != nil {
-		return nil, err
+		s = ss(mc.ErrorCodeInvalid, err)
+		return nil, s
 	}
 
 	df := schema.NewDataFile(req.Name, "private", h.user)
@@ -94,11 +99,13 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (*protocol.CreateRe
 	}
 	rv, err := r.Table("datafiles").Insert(df).RunWrite(h.session)
 	if err != nil {
-		return nil, err
+		s = ss(mc.ErrorCodeCreate, err)
+		return nil, s
 	}
 
 	if rv.Inserted == 0 {
-		return nil, fmt.Errorf("Unable to insert datafile")
+		s = ssf(mc.ErrorCodeCreate, "Unable to insert datafile")
+		return nil, s
 	}
 	datafileId := rv.GeneratedKeys[0]
 
@@ -173,31 +180,31 @@ func (h *createFileHandler) duplicateFileId(checksum string, size int64) (id str
 	return "", nil
 }
 
-func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (*protocol.CreateResp, error) {
+func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, s *stateStatus) {
 	v := newModelValidator(h.user, h.session)
 	if v.verifyProject(req.ProjectID) {
 		return h.createDataDir(req)
 	}
-	return nil, fmt.Errorf("Invalid project: %s", req.ProjectID)
+	return nil, ssf(mc.ErrorCodeInvalid, "Invalid project: %s", req.ProjectID)
 }
 
-func (h *ReqHandler) createDataDir(req *protocol.CreateDirReq) (*protocol.CreateResp, error) {
+func (h *ReqHandler) createDataDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, s *stateStatus) {
 	var datadir schema.DataDir
 	proj, err := model.GetProject(req.ProjectID, h.session)
 	switch {
 	case err != nil:
-		return nil, fmt.Errorf("Bad projectID %s", req.ProjectID)
+		return nil, ssf(mc.ErrorCodeInvalid, "Bad projectID %s", req.ProjectID)
 	case proj.Owner != h.user:
-		return nil, fmt.Errorf("Access to project not allowed")
+		return nil, ssf(mc.ErrorCodeNoAccess, "Access to project not allowed")
 	case !validDirPath(proj.Name, req.Path):
-		return nil, fmt.Errorf("Invalid directory path %s", req.Path)
+		return nil, ssf(mc.ErrorCodeInvalid, "Invalid directory path %s", req.Path)
 	default:
 		id, err := dataDirIdForName(req.ProjectID, req.Path, h.session)
 		switch {
 		case err == mc.ErrNotFound:
 			var parent string
 			if parent, err = getParent(req.Path, h.session); err != nil {
-				return nil, err
+				return nil, ss(mc.ErrorCodeNotFound, err)
 			}
 			datadir = schema.NewDataDir(req.Path, "private", h.user, parent)
 			var wr r.WriteResponse
@@ -215,9 +222,9 @@ func (h *ReqHandler) createDataDir(req *protocol.CreateDirReq) (*protocol.Create
 				return resp, nil
 			}
 			// TODO: Make error message better
-			return nil, fmt.Errorf("Unable to insert into database")
+			return nil, ssf(mc.ErrorCodeCreate, "Unable to insert into database")
 		case err != nil:
-			return nil, err
+			return nil, ss(mc.ErrorCodeNotFound, err)
 		default:
 			resp := &protocol.CreateResp{
 				ID: id,

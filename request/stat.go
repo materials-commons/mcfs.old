@@ -1,19 +1,19 @@
 package request
 
 import (
-	"fmt"
+	"github.com/materials-commons/contrib/mc"
 	"github.com/materials-commons/contrib/model"
 	"github.com/materials-commons/contrib/schema"
 	"github.com/materials-commons/mcfs/protocol"
 )
 
-func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, error) {
+func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, *stateStatus) {
 	df, err := model.GetDataFile(req.DataFileID, h.session)
 	switch {
 	case err != nil:
-		return nil, fmt.Errorf("Unknown id %s", req.DataFileID)
+		return nil, ssf(mc.ErrorCodeNotFound, "Unknown id %s", req.DataFileID)
 	case !OwnerGaveAccessTo(df.Owner, h.user, h.session):
-		return nil, fmt.Errorf("You do not have permission to access this datafile %s", req.DataFileID)
+		return nil, ssf(mc.ErrorCodeNoAccess, "You do not have permission to access this datafile %s", req.DataFileID)
 	default:
 		return respStat(df), nil
 	}

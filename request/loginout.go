@@ -1,18 +1,18 @@
 package request
 
 import (
-	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/contrib/mc"
 	"github.com/materials-commons/contrib/model"
 	"github.com/materials-commons/mcfs/protocol"
 )
 
-func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, error) {
+func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, *stateStatus) {
 	if validLogin(req.User, req.ApiKey, h.session) {
 		h.user = req.User
 		return &protocol.LoginResp{}, nil
 	} else {
-		return nil, fmt.Errorf("Bad login %s/%s", req.User, req.ApiKey)
+		return nil, ssf(mc.ErrorCodeInvalid, "Bad login %s/%s", req.User, req.ApiKey)
 	}
 }
 
@@ -28,6 +28,6 @@ func validLogin(user, apikey string, session *r.Session) bool {
 	}
 }
 
-func (r *ReqHandler) logout(req *protocol.LogoutReq) (*protocol.LogoutResp, error) {
+func (r *ReqHandler) logout(req *protocol.LogoutReq) (*protocol.LogoutResp, *stateStatus) {
 	return &protocol.LogoutResp{}, nil
 }

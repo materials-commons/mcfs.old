@@ -1,8 +1,8 @@
 package request
 
 import (
-	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/contrib/mc"
 	"github.com/materials-commons/contrib/model"
 	"github.com/materials-commons/contrib/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -13,7 +13,7 @@ type lookupHandler struct {
 	user    string
 }
 
-func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
+func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, *stateStatus) {
 	l := &lookupHandler{
 		session: h.session,
 		user:    h.user,
@@ -36,7 +36,7 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
 		return l.execute(rql, &datadir)
 
 	default:
-		return nil, fmt.Errorf("Unknown entry type %s", req.Type)
+		return nil, ssf(mc.ErrorCodeInvalid, "Unknown entry type %s", req.Type)
 	}
 }
 
@@ -73,13 +73,13 @@ func (l *lookupHandler) dataDirRql(req *protocol.LookupReq) r.RqlTerm {
 	}
 }
 
-func (l *lookupHandler) execute(query r.RqlTerm, v interface{}) (interface{}, error) {
+func (l *lookupHandler) execute(query r.RqlTerm, v interface{}) (interface{}, *stateStatus) {
 	err := model.GetRow(query, l.session, v)
 	switch {
 	case err != nil:
-		return nil, err
+		return nil, ss(mc.ErrorCodeInvalid, err)
 	case !l.hasAccess(v):
-		return nil, fmt.Errorf("Permission denied")
+		return nil, ssf(mc.ErrorCodeNoAccess, "Permission denied")
 	default:
 		return v, nil
 	}

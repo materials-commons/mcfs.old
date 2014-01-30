@@ -2,6 +2,7 @@ package protocol
 
 import (
 	"encoding/gob"
+	"github.com/materials-commons/contrib/mc"
 	"github.com/materials-commons/contrib/schema"
 	"time"
 )
@@ -65,14 +66,6 @@ type Request struct {
 	Req interface{}
 }
 
-type ResponseType int
-
-const (
-	ROk ResponseType = iota
-	RError
-	RFatal
-)
-
 type ItemType int
 
 const (
@@ -94,9 +87,9 @@ func ValidItemType(t ItemType) bool {
 }
 
 type Response struct {
-	Type   ResponseType
-	Status string
-	Resp   interface{}
+	Status        mc.ErrorCode
+	StatusMessage string
+	Resp          interface{}
 }
 
 type UploadReq struct {

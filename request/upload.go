@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/contrib/mc"
 	"github.com/materials-commons/contrib/model"
 	"github.com/materials-commons/contrib/schema"
 	"github.com/materials-commons/gohandy/file"
@@ -16,7 +17,7 @@ type uploadReq struct {
 	*ReqHandler
 }
 
-func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, error) {
+func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *stateStatus) {
 	ureq := &uploadReq{
 		UploadReq:  req,
 		ReqHandler: h,
@@ -27,7 +28,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 	dataFile, err := ureq.getDataFile()
 
 	if err != nil {
-		return nil, err
+		return nil, ss(mc.ErrorCodeNotFound, err)
 	}
 
 	dataFileIDToUse := dataFileLocationId(dataFile)
@@ -36,7 +37,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 	switch {
 	case fsize == -1:
 		// Problem doing a stat on the file path, send back an error
-		return nil, fmt.Errorf("Access to path for file %s denied", req.DataFileID)
+		return nil, ssf(mc.ErrorCodeNoAccess, "Access to path for file %s denied", req.DataFileID)
 	case dataFile.Size == ureq.Size && dataFile.Checksum == ureq.Checksum:
 		if fsize < ureq.Size {
 			//interrupted transfer
@@ -50,14 +51,14 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 		} else {
 			// fsize > ureq.Size && checksums are equal
 			// Houston we have a problem!
-			return nil, fmt.Errorf("Fatal error fsize (%d) > ureq.Size (%d) with equal checksums", fsize, ureq.Size)
+			return nil, ssf(mc.ErrorCodeInvalid, "Fatal error fsize (%d) > ureq.Size (%d) with equal checksums", fsize, ureq.Size)
 		}
 
 	case dataFile.Size != ureq.Size:
 		// wants to upload a new version
 		if fsize < dataFile.Size {
 			// Other upload hasn't completed - reject this one until other completes
-			return nil, fmt.Errorf("Cannot create new version of data file when previous version hasn't completed loading.")
+			return nil, ssf(mc.ErrorCodeInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
 		} else {
 			// create a new version and send new data file and offset = 0
 			resp.DataFileID = ureq.createNewDataFileVersion()
@@ -68,7 +69,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 		// wants to upload new version
 		if fsize < dataFile.Size {
 			// Other upload hasn't completed - reject this one until other completes
-			return nil, fmt.Errorf("Cannot create new version of data file when previous version hasn't completed loading.")
+			return nil, ssf(mc.ErrorCodeInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
 		} else {
 			// create a new version start upload
 			// send offset = 0 and a new datafile id
@@ -78,7 +79,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 
 	default:
 		// We should never get here so this is a bug that we need to log
-		return nil, fmt.Errorf("Internal fatal error")
+		return nil, ssf(mc.ErrorCodeInvalid, "Internal fatal error")
 	}
 
 	return resp, nil
@@ -201,7 +202,7 @@ func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uplo
 
 func (r *ReqHandler) uploadLoop(resp *protocol.UploadResp) ReqStateFN {
 	if uploadHandler, err := prepareUploadHandler(r, resp.DataFileID, resp.Offset); err != nil {
-		r.respError(err)
+		r.respError(ss(mc.ErrorCodeInternal, err))
 		return r.nextCommand
 	} else {
 		r.respOk(resp)
@@ -213,10 +214,10 @@ func (h *uploadHandler) uploadState() ReqStateFN {
 	request := h.req()
 	switch req := request.(type) {
 	case protocol.SendReq:
-		n, err := h.sendReqWrite(&req)
-		if err != nil {
+		n, s := h.sendReqWrite(&req)
+		if s != nil {
 			dfClose(h.w, h.dataFileID, h.session)
-			h.respError(err)
+			h.respError(s)
 			return h.nextCommand
 		}
 		h.nbytes = h.nbytes + int64(n)
@@ -238,18 +239,18 @@ func (h *uploadHandler) uploadState() ReqStateFN {
 		return h.nextCommand
 	default:
 		dfClose(h.w, h.dataFileID, h.session)
-		return h.badRequestNext(fmt.Errorf("Unknown Request Type %T", req))
+		return h.badRequestNext(ssf(mc.ErrorCodeInvalid, "Unknown Request Type %T", req))
 	}
 }
 
-func (h *uploadHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
+func (h *uploadHandler) sendReqWrite(req *protocol.SendReq) (int, *stateStatus) {
 	if req.DataFileID != h.dataFileID {
-		return 0, fmt.Errorf("Unexpected DataFileID %s, wanted: %s", req.DataFileID, h.dataFileID)
+		return 0, ssf(mc.ErrorCodeInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, h.dataFileID)
 	}
 
 	n, err := dfWrite(h.w, req.Bytes)
 	if err != nil {
-		return 0, fmt.Errorf("Write unexpectedly failed for %s", req.DataFileID)
+		return 0, ssf(mc.ErrorCodeInternal, "Write unexpectedly failed for %s", req.DataFileID)
 	}
 
 	return n, nil

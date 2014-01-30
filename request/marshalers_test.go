@@ -2,6 +2,7 @@ package request
 
 import (
 	"fmt"
+	"github.com/materials-commons/contrib/mc"
 	"github.com/materials-commons/materials/util"
 	"github.com/materials-commons/mcfs/protocol"
 	"testing"
@@ -51,8 +52,8 @@ func responder(m *util.ChannelMarshaler) {
 	fmt.Printf("request = %#v\n", request)
 	logoutResp := protocol.LogoutResp{}
 	resp := protocol.Response{
-		Type: protocol.ROk,
-		Resp: &logoutResp,
+		Status: mc.ErrorCodeSuccess,
+		Resp:   &logoutResp,
 	}
 	m.Marshal(&resp)
 }

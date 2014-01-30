@@ -16,7 +16,7 @@ type projectEntryHandler struct {
 	user    string
 }
 
-func (h *ReqHandler) projectEntries(req *protocol.ProjectEntriesReq) (*protocol.ProjectEntriesResp, error) {
+func (h *ReqHandler) projectEntries(req *protocol.ProjectEntriesReq) (*protocol.ProjectEntriesResp, *stateStatus) {
 	p := &projectEntryHandler{
 		session: h.session,
 		user:    h.user,
@@ -24,12 +24,14 @@ func (h *ReqHandler) projectEntries(req *protocol.ProjectEntriesReq) (*protocol.
 
 	project, err := p.getProjectByName(req.Name)
 	if err != nil {
-		return nil, err
+		return nil, ss(mc.ErrorCodeNotFound, err)
 	}
 
 	entries, err := p.getProjectEntries(project.Id)
-	if err != nil {
-		return nil, err
+	if err == mc.ErrNotFound {
+		return nil, ss(mc.ErrorCodeNotFound, err)
+	} else if err != nil {
+		return nil, ss(mc.ErrorCodeInvalid, err)
 	}
 
 	resp := protocol.ProjectEntriesResp{

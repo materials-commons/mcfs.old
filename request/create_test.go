@@ -22,10 +22,10 @@ func TestCreateDir(t *testing.T) {
 		Path:      "WE43 Heat Treatments/tdir1",
 	}
 
-	resp, err := h.createDir(&createDirRequest)
+	resp, status := h.createDir(&createDirRequest)
 
-	if err != nil {
-		t.Fatalf("Directory create failed with %s", err)
+	if status != nil {
+		t.Fatalf("Directory create failed with %s", status.err)
 	}
 
 	createdId := resp.ID
@@ -33,9 +33,9 @@ func TestCreateDir(t *testing.T) {
 
 	// Test existing directory
 
-	resp, err = h.createDir(&createDirRequest)
-	if err != nil {
-		t.Fatalf("Create existing directory failed with %#v, err: %s", resp, err)
+	resp, status = h.createDir(&createDirRequest)
+	if status != nil {
+		t.Fatalf("Create existing directory failed with %#v, err: %s", resp, status.err)
 	}
 
 	// Cleanup the created directory
@@ -49,16 +49,16 @@ func TestCreateDir(t *testing.T) {
 
 	// Test path outside of project
 	createDirRequest.Path = "DIFFERENTPROJECT/tdir1"
-	resp, err = h.createDir(&createDirRequest)
-	if err == nil {
+	resp, status = h.createDir(&createDirRequest)
+	if status == nil {
 		t.Fatalf("Create dir outside of project succeeded %#v", resp)
 	}
 
 	// Test invalid project id
 	createDirRequest.ProjectID = "abc123"
 	createDirRequest.Path = "WE43 Heat Treatments/tdir2"
-	resp, err = h.createDir(&createDirRequest)
-	if err == nil {
+	resp, status = h.createDir(&createDirRequest)
+	if status == nil {
 		t.Fatalf("Create dir with bad project succeeded %#v", resp)
 	}
 
@@ -67,8 +67,8 @@ func TestCreateDir(t *testing.T) {
 	createDirRequest.ProjectID = "904886a7-ea57-4de7-8125-6e18c9736fd0"
 	createDirRequest.Path = "WE43 Heat Treatments/tdir1/tdir2"
 
-	resp, err = h.createDir(&createDirRequest)
-	if err == nil {
+	resp, status = h.createDir(&createDirRequest)
+	if status == nil {
 		t.Fatalf("Create dir with missing subdirs succeeded %#v", resp)
 	}
 }
@@ -82,12 +82,12 @@ func TestCreateProject(t *testing.T) {
 	}
 
 	// Test create new project
-	resp, err := h.createProject(&createProjectRequest)
+	resp, status := h.createProject(&createProjectRequest)
 
 	projectId := resp.ProjectID
 	datadirId := resp.DataDirID
 
-	if err != nil {
+	if status != nil {
 		t.Fatalf("Unable to create project")
 	}
 
@@ -118,21 +118,21 @@ func TestCreateProject(t *testing.T) {
 	}
 
 	// Test create existing project
-	resp, err = h.createProject(&createProjectRequest)
+	resp, status = h.createProject(&createProjectRequest)
 
 	// Delete before test so we can cleanup if there is a failure
 	model.Delete("datadirs", datadirId, session)
 	model.Delete("projects", projectId, session)
 	model.Delete("project2datadir", p2d.Id, session)
 
-	if err == nil {
+	if status == nil {
 		t.Fatalf("Created an existing project - shouldn't be able to")
 	}
 
 	// Test create project with invalid name
 	createProjectRequest.Name = "/InvalidName"
-	resp, err = h.createProject(&createProjectRequest)
-	if err == nil {
+	resp, status = h.createProject(&createProjectRequest)
+	if status == nil {
 		t.Fatalf("Created project with Invalid name")
 	}
 }
@@ -149,24 +149,24 @@ func TestCreateFile(t *testing.T) {
 		Checksum:  "abc123",
 	}
 
-	resp, err := h.createFile(&createFileRequest)
-	if err == nil {
+	resp, status := h.createFile(&createFileRequest)
+	if status == nil {
 		t.Fatalf("Created file with no size")
 	}
 
 	createFileRequest.Size = 1
 	createFileRequest.Checksum = ""
-	resp, err = h.createFile(&createFileRequest)
-	if err == nil {
+	resp, status = h.createFile(&createFileRequest)
+	if status == nil {
 		t.Fatalf("Created file with no checksum")
 	}
 
 	// Test create a valid file
 	createFileRequest.Size = 1
 	createFileRequest.Checksum = "abc123"
-	resp, err = h.createFile(&createFileRequest)
-	if err != nil {
-		t.Fatalf("Create file failed %s", err)
+	resp, status = h.createFile(&createFileRequest)
+	if status != nil {
+		t.Fatalf("Create file failed %s", status.err)
 	}
 	createdId := resp.ID
 
@@ -206,8 +206,8 @@ func TestCreateFile(t *testing.T) {
 
 	// Test create new file that matches existing file size and checksum
 	createFileRequest.DataDirID = "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys"
-	resp, err = h.createFile(&createFileRequest)
-	if err != nil {
+	resp, status = h.createFile(&createFileRequest)
+	if status != nil {
 		t.Errorf("Unable to create file with matching size and checksum")
 	}
 	df, err = model.GetDataFile(resp.ID, session)
@@ -225,8 +225,8 @@ func TestCreateFile(t *testing.T) {
 	createdId2 := resp.ID
 
 	// Test creating an existing file
-	resp, err = h.createFile(&createFileRequest)
-	if err == nil {
+	resp, status = h.createFile(&createFileRequest)
+	if status == nil {
 		t.Fatalf("Allowed create of an existing file")
 	}
 
@@ -237,23 +237,23 @@ func TestCreateFile(t *testing.T) {
 	// Test creating with an invalid project id
 	validProjectID := createFileRequest.ProjectID
 	createFileRequest.ProjectID = "abc123-doesnotexist"
-	resp, err = h.createFile(&createFileRequest)
-	if err == nil {
+	resp, status = h.createFile(&createFileRequest)
+	if status == nil {
 		t.Fatalf("Allowed creation of file with bad projectid")
 	}
 
 	// Test creating with an invalid datadir id
 	createFileRequest.ProjectID = validProjectID
 	createFileRequest.DataDirID = "abc123-doesnotexist"
-	resp, err = h.createFile(&createFileRequest)
-	if err == nil {
+	resp, status = h.createFile(&createFileRequest)
+	if status == nil {
 		t.Fatalf("Allowed creation of file with bad projectid")
 	}
 
 	// Test creating with a datadir not in project
 	createFileRequest.DataDirID = "mcfada@umich.edu$Synthetic Tooth_Presentation_MCubed"
-	resp, err = h.createFile(&createFileRequest)
-	if err == nil {
+	resp, status = h.createFile(&createFileRequest)
+	if status == nil {
 		t.Fatalf("Allowed creation of file in a datadir not in project")
 	}
 
