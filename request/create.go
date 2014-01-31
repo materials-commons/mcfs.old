@@ -236,6 +236,9 @@ func (h *ReqHandler) createDataDir(req *protocol.CreateDirReq) (resp *protocol.C
 
 func validDirPath(projName, dirPath string) bool {
 	slash := strings.Index(dirPath, "/")
+	if slash == -1 {
+		slash = strings.Index(dirPath, "\\")
+	}
 	switch {
 	case slash == -1:
 		return false
