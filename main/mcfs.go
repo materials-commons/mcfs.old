@@ -137,7 +137,13 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	case !request.OwnerGaveAccessTo(df.Owner, u.Email, session):
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	default:
-		path := request.DataFilePath(MCDir, dataFileID)
+		var idToUse string
+		if df.UsesID != "" {
+			idToUse = df.UsesID
+		} else {
+			idToUse = dataFileID
+		}
+		path := request.DataFilePath(MCDir, idToUse)
 		http.ServeFile(writer, req, path)
 	}
 }
