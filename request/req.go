@@ -40,7 +40,7 @@ func ss(statusCode mc.ErrorCode, err error) *stateStatus {
 func ssf(statusCode mc.ErrorCode, message string, args ...interface{}) *stateStatus {
 	var err error
 	if len(args) >= 1 {
-		err = fmt.Errorf(message, message[0:])
+		err = fmt.Errorf(message, args...)
 	} else {
 		err = fmt.Errorf(message)
 	}

@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	"github.com/materials-commons/materials/util"
+	"github.com/materials-commons/contrib/mc"
 	"github.com/materials-commons/mcfs/protocol"
 	"io"
 	"testing"
@@ -39,5 +40,17 @@ func TestReq(t *testing.T) {
 	case protocol.LoginReq:
 	default:
 		t.Fatalf("req returned wrong type %T", val)
+	}
+}
+
+func TestSsfAndSs(t *testing.T) {
+	s := ssf(mc.ErrorCodeInvalid, "Error %s", "a")
+	if s.err.Error() != "Error a" {
+		t.Errorf("error string wrong: %s", s.err)
+	}
+
+	s = ss(mc.ErrorCodeInvalid, mc.ErrInvalid)
+	if s.err != mc.ErrInvalid {
+		t.Errorf("Not equal to mc.ErrInvalid: %s", s.err)
 	}
 }
