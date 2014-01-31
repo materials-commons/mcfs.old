@@ -137,15 +137,21 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	case !request.OwnerGaveAccessTo(df.Owner, u.Email, session):
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	default:
-		var idToUse string
-		if df.UsesID != "" {
-			idToUse = df.UsesID
-		} else {
-			idToUse = dataFileID
-		}
-		path := request.DataFilePath(MCDir, idToUse)
+		path := request.DataFilePath(MCDir, idToUse(df))
 		http.ServeFile(writer, req, path)
 	}
+}
+
+// idToUse looks at a datafile and if UsesID is set returns that id
+// otherwise it returns Id. UsesID is set when a file has already
+// been uploaded and their is a duplicate entry. Duplicates point
+// to the real file through UsesID.
+func idToUse(dataFile *schema.DataFile) string {
+	if dataFile.UsesID != "" {
+		return dataFile.UsesID
+	}
+
+	return dataFile.Id
 }
 
 // createListener creates the net connection. It connects to the specified host
