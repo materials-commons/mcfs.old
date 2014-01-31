@@ -49,6 +49,11 @@ func TestSsfAndSs(t *testing.T) {
 		t.Errorf("error string wrong: %s", s.err)
 	}
 
+	s = ssf(mc.ErrorCodeInvalid, "Error")
+	if s.err.Error() != "Error" {
+		t.Errorf("error with no parameters wrong: %s", s.err)
+	}
+
 	s = ss(mc.ErrorCodeInvalid, mc.ErrInvalid)
 	if s.err != mc.ErrInvalid {
 		t.Errorf("Not equal to mc.ErrInvalid: %s", s.err)
