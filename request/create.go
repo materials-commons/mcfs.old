@@ -12,13 +12,21 @@ import (
 )
 
 func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protocol.CreateProjectResp, s *stateStatus) {
-	switch {
-	case !validProjectName(req.Name):
+	if !validProjectName(req.Name) {
 		s = ssf(mc.ErrorCodeInvalid, "Invalid project name %s", req.Name)
 		return nil, s
-	case projectExists(req.Name, h.user, h.session):
-		s = ssf(mc.ErrorCodeExists, "Project %s exists", req.Name)
-		return nil, s
+	}
+
+	proj, err := getProjectByName(req.Name, h.user, h.session)
+	switch {
+	case err == nil:
+		// Found project
+		resp := &protocol.CreateProjectResp{
+			ProjectID: proj.Id,
+			DataDirID: proj.DataDir,
+		}
+		return resp, ss(mc.ErrorCodeExists, mc.ErrExists)
+
 	default:
 		projectId, datadirId, err := projectCreate(req.Name, h.user, h.session)
 		if err != nil {
@@ -39,16 +47,15 @@ func validProjectName(projectName string) bool {
 	return i == -1
 }
 
-func projectExists(projectName, user string, session *r.Session) bool {
-	results, err := r.Table("projects").GetAllByIndex("owner", user).
-		Filter(r.Row.Field("name").Eq(projectName)).
-		Run(session)
+func getProjectByName(projectName, user string, session *r.Session) (*schema.Project, error) {
+	rql := r.Table("projects").GetAllByIndex("owner", user).
+		Filter(r.Row.Field("name").Eq(projectName))
+	var project schema.Project
+	err := model.GetRow(rql, session, &project)
 	if err != nil {
-		return true // Error, we don't know if it exists
+		return nil, err
 	}
-	defer results.Close()
-
-	return results.Next()
+	return &project, nil
 }
 
 func projectCreate(projectName, user string, session *r.Session) (projectID, datadirID string, err error) {

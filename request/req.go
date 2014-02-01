@@ -7,6 +7,7 @@ import (
 	"github.com/materials-commons/gohandy/marshaling"
 	"github.com/materials-commons/mcfs/protocol"
 	"io"
+	"reflect"
 )
 
 const maxBadRequests = 10
@@ -163,7 +164,7 @@ func (h *ReqHandler) nextCommand() ReqStateFN {
 
 func (h *ReqHandler) sendResp(resp interface{}, s *stateStatus) {
 	if s != nil {
-		h.respError(s)
+		h.respError(resp, s)
 	} else {
 		h.respOk(resp)
 	}
@@ -175,14 +176,23 @@ func (h *ReqHandler) respOk(respData interface{}) {
 		Resp:   respData,
 	}
 	err := h.Marshal(resp)
-	var _ = err
+	if err != nil {
+		fmt.Println("respOk, marshal error = ", err)
+	}
 }
 
-func (h *ReqHandler) respError(s *stateStatus) {
-	fmt.Println("respError:", s.status, s.err)
+func (h *ReqHandler) respError(respData interface{}, s *stateStatus) {
 	resp := &protocol.Response{
 		Status:        s.status,
 		StatusMessage: s.err.Error(),
 	}
-	h.Marshal(resp)
+
+	if !reflect.ValueOf(respData).IsNil() {
+		resp.Resp = respData
+	}
+
+	err := h.Marshal(resp)
+	if err != nil {
+		fmt.Println("respError, marshal error = ", err)
+	}
 }

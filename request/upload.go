@@ -202,7 +202,7 @@ func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uplo
 
 func (r *ReqHandler) uploadLoop(resp *protocol.UploadResp) ReqStateFN {
 	if uploadHandler, err := prepareUploadHandler(r, resp.DataFileID, resp.Offset); err != nil {
-		r.respError(ss(mc.ErrorCodeInternal, err))
+		r.respError(nil, ss(mc.ErrorCodeInternal, err))
 		return r.nextCommand
 	} else {
 		r.respOk(resp)
@@ -217,7 +217,7 @@ func (h *uploadHandler) uploadState() ReqStateFN {
 		n, s := h.sendReqWrite(&req)
 		if s != nil {
 			dfClose(h.w, h.dataFileID, h.session)
-			h.respError(s)
+			h.respError(nil, s)
 			return h.nextCommand
 		}
 		h.nbytes = h.nbytes + int64(n)

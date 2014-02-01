@@ -3,6 +3,7 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/contrib/mc"
 	"github.com/materials-commons/contrib/model"
 	"github.com/materials-commons/mcfs/protocol"
 	"testing"
@@ -119,6 +120,9 @@ func TestCreateProject(t *testing.T) {
 
 	// Test create existing project
 	resp, status = h.createProject(&createProjectRequest)
+	if status.status != mc.ErrorCodeExists {
+		t.Errorf("Creating an existing project should have returned err mc.ErrorCodeExists, returned %d instead", status.status)
+	}
 
 	// Delete before test so we can cleanup if there is a failure
 	model.Delete("datadirs", datadirId, session)
@@ -129,6 +133,17 @@ func TestCreateProject(t *testing.T) {
 		t.Fatalf("Created an existing project - shouldn't be able to")
 	}
 
+	if resp == nil {
+		t.Fatalf("Creating an existing project should have returned its project id and datadir id")
+	}
+
+	if resp.ProjectID != projectId {
+		t.Errorf("Creating an existing project returned the wrong project id")
+	}
+
+	if resp.DataDirID != datadirId {
+		t.Errorf("Creating an existing project returned the wrong datadir id")
+	}
 	// Test create project with invalid name
 	createProjectRequest.Name = "/InvalidName"
 	resp, status = h.createProject(&createProjectRequest)
