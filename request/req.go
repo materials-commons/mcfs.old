@@ -182,6 +182,7 @@ func (h *ReqHandler) respOk(respData interface{}) {
 }
 
 func (h *ReqHandler) respError(respData interface{}, s *stateStatus) {
+	fmt.Println("respError =", s.status, ",", s.err)
 	resp := &protocol.Response{
 		Status:        s.status,
 		StatusMessage: s.err.Error(),
