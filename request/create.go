@@ -92,7 +92,11 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	}
 
 	if err := cfh.validCreateFileReq(req); err != nil {
-		s = ss(mc.ErrorCodeInvalid, err)
+		if err == mc.ErrExists {
+			s = ss(mc.ErrorCodeExists, err)
+		} else {
+			s = ss(mc.ErrorCodeInvalid, err)
+		}
 		return nil, s
 	}
 
@@ -152,7 +156,7 @@ func (h createFileHandler) validCreateFileReq(fileReq *protocol.CreateFileReq) e
 	}
 
 	if h.datafileExistsInDataDir(fileReq.DataDirID, fileReq.Name) {
-		return fmt.Errorf("Datafile %s already exists in datadir %s", fileReq.Name, datadir.Name)
+		return mc.ErrExists
 	}
 
 	if fileReq.Size < 1 {
