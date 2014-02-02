@@ -2,7 +2,7 @@ package request
 
 import (
 	"fmt"
-	"github.com/materials-commons/contrib/mc"
+	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/materials/util"
 	"github.com/materials-commons/mcfs/protocol"
 	"io"

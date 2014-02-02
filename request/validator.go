@@ -2,8 +2,8 @@ package request
 
 import (
 	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/contrib/model"
-	"github.com/materials-commons/contrib/schema"
+	"github.com/materials-commons/base/model"
+	"github.com/materials-commons/base/schema"
 )
 
 type modelValidator struct {

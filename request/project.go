@@ -3,9 +3,9 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/contrib/mc"
-	"github.com/materials-commons/contrib/model"
-	"github.com/materials-commons/contrib/schema"
+	"github.com/materials-commons/base/mc"
+	"github.com/materials-commons/base/model"
+	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 )
 

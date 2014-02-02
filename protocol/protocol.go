@@ -2,8 +2,8 @@ package protocol
 
 import (
 	"encoding/gob"
-	"github.com/materials-commons/contrib/mc"
-	"github.com/materials-commons/contrib/schema"
+	"github.com/materials-commons/base/mc"
+	"github.com/materials-commons/base/schema"
 	"time"
 )
 
