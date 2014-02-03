@@ -26,7 +26,7 @@ func TestStat(t *testing.T) {
 		t.Fatalf("DataDirs length incorrect, expected 1 got %d", len(resp.DataDirs))
 	}
 
-	if resp.DataDirs[0] != "gtarcea@umich.edu$WE43 Heat Treatments_AT 250C_AT 2 hours_Atom probe" {
+	if resp.DataDirs[0] != "e70bfd9e-9c43-4a26-b89f-c5f5ab639a72" {
 		t.Fatalf("Datadirs[0] incorrect = %s", resp.DataDirs[0])
 	}
 

@@ -159,7 +159,7 @@ func TestCreateFile(t *testing.T) {
 	// Test create with no size
 	createFileRequest := protocol.CreateFileReq{
 		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys_Data",
+		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
 		Name:      "testfile1.txt",
 		Checksum:  "abc123",
 	}
@@ -203,7 +203,7 @@ func TestCreateFile(t *testing.T) {
 		t.Fatalf("Wrong number of datadirs %#v", df)
 	}
 
-	if df.DataDirs[0] != "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys_Data" {
+	if df.DataDirs[0] != "643b2a54-44ef-4864-9370-18fb529f5609" {
 		t.Fatalf("Wrong datadir inserted %#v", df)
 	}
 
@@ -220,7 +220,7 @@ func TestCreateFile(t *testing.T) {
 	}
 
 	// Test create new file that matches existing file size and checksum
-	createFileRequest.DataDirID = "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys"
+	createFileRequest.DataDirID = "e16f9f8b-a20f-4ce5-8823-b4c626739749"
 	resp, status = h.createFile(&createFileRequest)
 	if status != nil {
 		t.Errorf("Unable to create file with matching size and checksum")
@@ -266,7 +266,7 @@ func TestCreateFile(t *testing.T) {
 	}
 
 	// Test creating with a datadir not in project
-	createFileRequest.DataDirID = "mcfada@umich.edu$Synthetic Tooth_Presentation_MCubed"
+	createFileRequest.DataDirID = "ae0cf23f-2588-4864-bf34-455b0aa23ed6"
 	resp, status = h.createFile(&createFileRequest)
 	if status == nil {
 		t.Fatalf("Allowed creation of file in a datadir not in project")

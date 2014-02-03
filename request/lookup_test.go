@@ -18,8 +18,8 @@ type lookupTest struct {
 
 var dataDirTests = []lookupTest{
 	{"id", "abc123", "", false, "No such id"},
-	{"id", "gtarcea@umich.edu$Test_Proj", "", true, "id Existing with permissions"},
-	{"id", " mcfada@umich.edu$Synthetic Tooth_Pics for update_9-23-13", "", false, "id Existing without permission"},
+	{"id", "73104436-5236-4adc-a0cb-00ad97286593", "", true, "id Existing with permissions"},
+	{"id", "4b882c3d-0c03-4523-9ec8-f6320851a560", "", false, "id Existing without permission"},
 	{"blah", "blah", "", false, "No such field"},
 	{"name", "blah", "904886a7-ea57-4de7-8125-6e18c9736fd0", false, "No such name"},
 	{"name", "WE43 Heat Treatments/AT 200C", "904886a7-ea57-4de7-8125-6e18c9736fd0", true, "Existing name with perimissions"},
@@ -33,13 +33,13 @@ func TestLookupDataDir(t *testing.T) {
 
 var dataFileTests = []lookupTest{
 	{"id", "abc123", "", false, "No such id"},
-	{"id", "1a455b46-a560-472e-acec-c96482fd655a", "gtarcea@umich.edu$WE43 Heat Treatments_AT 250C_AT 2 hours_Atom probe", true, "id Existing with permissions"},
+	{"id", "1a455b46-a560-472e-acec-c96482fd655a", "e70bfd9e-9c43-4a26-b89f-c5f5ab639a72", true, "id Existing with permissions"},
 	{"id", "", "", false, "id Existing without permission"},
 	{"blah", "blah", "", false, "No such field"},
 	{"name", "blah", "", false, "No such name"},
-	{"name", "8H-4.JPG", "gtarcea@umich.edu$WE43 Heat Treatments_AT 250C_AT 8 hours_Optical Images", true, "Existing name with perimissions"},
+	{"name", "8H-4.JPG", "962d5ee5-6974-48cc-b142-a7a854374cf1", true, "Existing name with perimissions"},
 	{"name", "8H-4.JPG", "blah", false, "Existing name with bad datadir"},
-	{"name", "tooth-F.rrng", "mcfada@umich.edu$Synthetic Tooth_Reconstructions", false, "Existing name without perimissions"},
+	{"name", "tooth-F.rrng", "ad6c499d-9309-4472-8237-a93161dbe5f1", false, "Existing name without perimissions"},
 }
 
 func TestLookupDataFile(t *testing.T) {

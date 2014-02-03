@@ -33,7 +33,7 @@ func TestUploadCasesFile(t *testing.T) {
 	// Test create file and then upload
 	createFileRequest := protocol.CreateFileReq{
 		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys_Data",
+		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
 		Name:      "testfile1.txt",
 		Size:      6,
 		Checksum:  "abc123",
@@ -158,7 +158,7 @@ func TestUploadNewFile(t *testing.T) {
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
 		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys_Data",
+		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
 		Name:      "testfile.txt",
 		Size:      testfileLen,
 		Checksum:  checksumHex,
@@ -229,7 +229,7 @@ func TestPartialToCompleted(t *testing.T) {
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
 		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys_Data",
+		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
 		Name:      "testfile.txt",
 		Size:      testfileLen,
 		Checksum:  checksumHex,
@@ -326,7 +326,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
 		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys_Data",
+		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
 		Name:      "testfile.txt",
 		Size:      testfileLen,
 		Checksum:  checksumHex,
@@ -370,7 +370,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	// get back the origin file id and an offset, even though a new id was created from the
 	// second create file call.
 	//
-	createFileRequest.DataDirID = "gtarcea@umich.edu$Test_Proj_6111_Aluminum_Alloys"
+	createFileRequest.DataDirID = "e16f9f8b-a20f-4ce5-8823-b4c626739749"
 	createResp, status = h.createFile(&createFileRequest)
 	if status != nil {
 		t.Errorf("Failed to create new file: %s", status.err)
