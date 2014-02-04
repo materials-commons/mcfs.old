@@ -163,8 +163,9 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 }
 
 func (h *ReqHandler) createDataDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, s *stateStatus) {
+	dh := handler.NewCreateDir(h.session)
 	var datadir schema.DataDir
-	proj, err := model.GetProject(req.ProjectID, h.session)
+	proj, err := dh.GetProject(req.ProjectID)
 	switch {
 	case err != nil:
 		return nil, ssf(mc.ErrorCodeInvalid, "Bad projectID %s", req.ProjectID)

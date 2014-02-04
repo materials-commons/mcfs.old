@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/materials-commons/base/model"
 	"strings"
+	"path/filepath"
 )
 
 import (
@@ -94,4 +95,71 @@ func (h *sqlCreateProjectHandler) GetProject(name, user string) (*schema.Project
 
 func (h *sqlCreateProjectHandler) CreateProject(name, user string) (*schema.Project, error) {
 	return nil, nil
+}
+
+
+type rethinkCreateDirHandler struct {
+	session *r.Session
+}
+
+func NewCreateDir(db interface{}) CreateDirHandler {
+	switch t := db.(type) {
+	case *r.Session:
+		return newRethinkCreateDirHandler(t)
+	default:
+		return newSqlCreateDirHandler()
+	}
+}
+
+func newRethinkCreateDirHandler(session *r.Session) CreateDirHandler {
+	return &rethinkCreateDirHandler{
+		session: session,
+	}
+}
+
+func (h *rethinkCreateDirHandler) GetProject(id string) (*schema.Project, error) {
+	return model.GetProject(id, h.session)
+}
+
+func (h *rethinkCreateDirHandler) GetDataDir(req *protocol.CreateDirReq) (*schema.DataDir, error) {
+	rql := r.Table("project2datadir").GetAllByIndex("project_id", req.ProjectID).
+		EqJoin("datadir_id", r.Table("datadirs")).Zip().Filter(r.Row.Field("name").Eq(req.Path))
+	var dataDir schema.DataDir
+	err := model.GetRow(rql, h.session, &dataDir)
+	if err != nil {
+		return nil, err
+	}
+	return &dataDir, nil
+}
+
+func (h *rethinkCreateDirHandler) GetParent(path string) (*schema.DataDir, error) {
+	parent := filepath.Dir(path)
+	query := r.Table("datadirs").GetAllByIndex("name", parent)
+	var d schema.DataDir
+	err := model.GetRow(query, h.session, &d)
+	if err != nil {
+		return nil, fmt.Errorf("No parent for %s", path)
+	}
+	return &d, nil
+}
+
+func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, parentID string) (*schema.DataDir, error) {
+	datadir := schema.NewDataDir(req.Path, "private", user, parentID)
+	var wr r.WriteResponse
+	wr, err := r.Table("datadirs").Insert(datadir).RunWrite(h.session)
+	if err == nil && wr.Inserted > 0 {
+		dataDirID := wr.GeneratedKeys[0]
+		p2d := schema.Project2DataDir{
+			ProjectID: req.ProjectID,
+			DataDirID: dataDirID,
+		}
+		r.Table("project2datadir").Insert(p2d).RunWrite(h.session)
+		datadir.Id = dataDirID
+		return &datadir, nil
+	}
+	return nil, fmt.Errorf("Unable to insert into database")
+}
+
+func newSqlCreateDirHandler() CreateDirHandler {
+	return nil
 }
