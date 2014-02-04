@@ -7,17 +7,20 @@ import (
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/request/handler"
 	"path/filepath"
 	"strings"
 )
 
 func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protocol.CreateProjectResp, s *stateStatus) {
-	if !validProjectName(req.Name) {
+	projHandler := handler.NewCreateProject(h.session)
+
+	if !projHandler.Validate(req) {
 		s = ssf(mc.ErrorCodeInvalid, "Invalid project name %s", req.Name)
 		return nil, s
 	}
 
-	proj, err := getProjectByName(req.Name, h.user, h.session)
+	proj, err := projHandler.GetProject(req.Name, h.user)
 	switch {
 	case err == nil:
 		// Found project
@@ -28,58 +31,18 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protoc
 		return resp, ss(mc.ErrorCodeExists, mc.ErrExists)
 
 	default:
-		projectId, datadirId, err := projectCreate(req.Name, h.user, h.session)
+		p, err := projHandler.CreateProject(req.Name, h.user)
 		if err != nil {
 			s.status = mc.ErrorCodeCreate
 			s.err = err
 			return nil, s
 		}
 		resp := &protocol.CreateProjectResp{
-			ProjectID: projectId,
-			DataDirID: datadirId,
+			ProjectID: p.Id,
+			DataDirID: p.DataDir,
 		}
 		return resp, nil
 	}
-}
-
-func validProjectName(projectName string) bool {
-	i := strings.Index(projectName, "/")
-	return i == -1
-}
-
-func getProjectByName(projectName, user string, session *r.Session) (*schema.Project, error) {
-	rql := r.Table("projects").GetAllByIndex("owner", user).
-		Filter(r.Row.Field("name").Eq(projectName))
-	var project schema.Project
-	err := model.GetRow(rql, session, &project)
-	if err != nil {
-		return nil, err
-	}
-	return &project, nil
-}
-
-func projectCreate(projectName, user string, session *r.Session) (projectID, datadirID string, err error) {
-	datadir := schema.NewDataDir(projectName, "private", user, "")
-	rv, err := r.Table("datadirs").Insert(datadir).RunWrite(session)
-	if err != nil {
-		return "", "", err
-	} else if rv.Inserted == 0 {
-		return "", "", fmt.Errorf("Unable to create datadir for project")
-	}
-	datadirID = rv.GeneratedKeys[0]
-	project := schema.NewProject(projectName, datadirID, user)
-	rv, err = r.Table("projects").Insert(project).RunWrite(session)
-	if err != nil {
-		return "", "", err
-	}
-	projectID = rv.GeneratedKeys[0]
-	p2d := Project2Datadir{
-		ProjectID: projectID,
-		DataDirID: datadirID,
-	}
-	rv, err = r.Table("project2datadir").Insert(p2d).RunWrite(session)
-	// TODO: What if we get an error here?
-	return projectID, datadirID, nil
 }
 
 type createFileHandler struct {
