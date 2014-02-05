@@ -8,7 +8,6 @@ import (
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/request/handler"
-	"path/filepath"
 	"strings"
 )
 
@@ -155,16 +154,7 @@ func (h *createFileHandler) duplicateFileId(checksum string, size int64) (id str
 }
 
 func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, s *stateStatus) {
-	v := newModelValidator(h.user, h.session)
-	if v.verifyProject(req.ProjectID) {
-		return h.createDataDir(req)
-	}
-	return nil, ssf(mc.ErrorCodeInvalid, "Invalid project: %s", req.ProjectID)
-}
-
-func (h *ReqHandler) createDataDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, s *stateStatus) {
 	dh := handler.NewCreateDir(h.session)
-	var datadir schema.DataDir
 	proj, err := dh.GetProject(req.ProjectID)
 	switch {
 	case err != nil:
@@ -174,35 +164,26 @@ func (h *ReqHandler) createDataDir(req *protocol.CreateDirReq) (resp *protocol.C
 	case !validDirPath(proj.Name, req.Path):
 		return nil, ssf(mc.ErrorCodeInvalid, "Invalid directory path %s", req.Path)
 	default:
-		id, err := dataDirIdForName(req.ProjectID, req.Path, h.session)
+		dataDir, err := dh.GetDataDir(req)
 		switch {
 		case err == mc.ErrNotFound:
-			var parent string
-			if parent, err = getParent(req.Path, h.session); err != nil {
+			var parent *schema.DataDir
+			if parent, err = dh.GetParent(req.Path); err != nil {
 				return nil, ss(mc.ErrorCodeNotFound, err)
 			}
-			datadir = schema.NewDataDir(req.Path, "private", h.user, parent)
-			var wr r.WriteResponse
-			wr, err = r.Table("datadirs").Insert(datadir).RunWrite(h.session)
-			if err == nil && wr.Inserted > 0 {
-				dataDirID := wr.GeneratedKeys[0]
-				p2d := Project2Datadir{
-					ProjectID: req.ProjectID,
-					DataDirID: dataDirID,
-				}
-				r.Table("project2datadir").Insert(p2d).RunWrite(h.session)
-				resp := &protocol.CreateResp{
-					ID: dataDirID,
-				}
-				return resp, nil
+			dataDir, err := dh.CreateDir(req, h.user, parent.Id)
+			if err != nil {
+				return nil, ss(mc.ErrorCodeInvalid, err)
 			}
-			// TODO: Make error message better
-			return nil, ssf(mc.ErrorCodeCreate, "Unable to insert into database")
+			resp := &protocol.CreateResp{
+				ID: dataDir.Id,
+			}
+			return resp, nil
 		case err != nil:
 			return nil, ss(mc.ErrorCodeNotFound, err)
 		default:
 			resp := &protocol.CreateResp{
-				ID: id,
+				ID: dataDir.Id,
 			}
 			return resp, nil
 		}
@@ -222,26 +203,4 @@ func validDirPath(projName, dirPath string) bool {
 	default:
 		return true
 	}
-}
-
-func getParent(ddirPath string, session *r.Session) (string, error) {
-	parent := filepath.Dir(ddirPath)
-	query := r.Table("datadirs").GetAllByIndex("name", parent)
-	var d schema.DataDir
-	err := model.GetRow(query, session, &d)
-	if err != nil {
-		return "", fmt.Errorf("No parent for %s", ddirPath)
-	}
-	return d.Id, nil
-}
-
-func dataDirIdForName(projectID, path string, session *r.Session) (string, error) {
-	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID).
-		EqJoin("datadir_id", r.Table("datadirs")).Zip().Filter(r.Row.Field("name").Eq(path))
-	var dataDir schema.DataDir
-	err := model.GetRow(rql, session, &dataDir)
-	if err != nil {
-		return "", err
-	}
-	return dataDir.Id, nil
 }

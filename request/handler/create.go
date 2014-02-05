@@ -3,8 +3,8 @@ package handler
 import (
 	"fmt"
 	"github.com/materials-commons/base/model"
-	"strings"
 	"path/filepath"
+	"strings"
 )
 
 import (
@@ -96,7 +96,6 @@ func (h *sqlCreateProjectHandler) GetProject(name, user string) (*schema.Project
 func (h *sqlCreateProjectHandler) CreateProject(name, user string) (*schema.Project, error) {
 	return nil, nil
 }
-
 
 type rethinkCreateDirHandler struct {
 	session *r.Session
