@@ -100,7 +100,7 @@ func webserver(port uint) {
 	fmt.Println(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
 
-// datafileHandler server data files.
+// datafileHandler serves data files.
 func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	apikey := req.FormValue("apikey")
 	if apikey == "" {
