@@ -17,3 +17,8 @@ type CreateDirHandler interface {
 	GetParent(path string) (*schema.DataDir, error)
 	CreateDir(req *protocol.CreateDirReq, user, parentID string) (*schema.DataDir, error)
 }
+
+type CreateFileHandler interface {
+	Validate(req *protocol.CreateFileReq) error
+	CreateFile(req *protocol.CreateFileReq, user string) (*schema.DataDir, error)
+}

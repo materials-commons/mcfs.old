@@ -162,3 +162,26 @@ func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, pa
 func newSqlCreateDirHandler() CreateDirHandler {
 	return nil
 }
+
+type rethinkCreateFileHandler struct {
+	session *r.Session
+}
+
+func (h *rethinkCreateFileHandler) Validate(req *protocol.CreateFileReq) error {
+	return nil
+}
+
+func (h *rethinkCreateFileHandler) CreateFile(req *protocol.CreateFileReq, user string) (*schema.DataDir, error) {
+	return nil, nil
+}
+
+type sqlCreateFileHandler struct {
+}
+
+func Validate(req *protocol.CreateFileReq) error {
+	return nil
+}
+
+func CreateFile(req *protocol.CreateFileReq, user string) (*schema.DataDir, error) {
+	return nil, nil
+}
