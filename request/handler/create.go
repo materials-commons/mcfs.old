@@ -2,12 +2,12 @@ package handler
 
 import (
 	"fmt"
-	"github.com/materials-commons/base/model"
-	"path/filepath"
-	"strings"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
+	"path/filepath"
+	"strings"
 )
 
 func NewCreateProject(db interface{}) CreateProjectHandler {
@@ -160,9 +160,9 @@ func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, pa
 
 func (h *rethinkCreateDirHandler) denormInsert(datadir *schema.DataDir) error {
 	dataDirDenorm := schema.DataDirDenorm{
-		Id: datadir.Id,
-		Name: datadir.Name,
-		Owner: datadir.Owner,
+		Id:        datadir.Id,
+		Name:      datadir.Name,
+		Owner:     datadir.Owner,
 		Birthtime: datadir.Birthtime,
 	}
 	r.Table("datadirs_denorm").Insert(dataDirDenorm).RunWrite(h.session)
