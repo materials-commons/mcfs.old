@@ -5,9 +5,6 @@ import (
 	"github.com/materials-commons/base/model"
 	"path/filepath"
 	"strings"
-)
-
-import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -147,6 +144,7 @@ func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, pa
 	var wr r.WriteResponse
 	wr, err := r.Table("datadirs").Insert(datadir).RunWrite(h.session)
 	if err == nil && wr.Inserted > 0 {
+		// Successful insert into the database
 		dataDirID := wr.GeneratedKeys[0]
 		p2d := schema.Project2DataDir{
 			ProjectID: req.ProjectID,
@@ -154,9 +152,21 @@ func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, pa
 		}
 		r.Table("project2datadir").Insert(p2d).RunWrite(h.session)
 		datadir.Id = dataDirID
+		h.denormInsert(&datadir)
 		return &datadir, nil
 	}
 	return nil, fmt.Errorf("Unable to insert into database")
+}
+
+func (h *rethinkCreateDirHandler) denormInsert(datadir *schema.DataDir) error {
+	dataDirDenorm := schema.DataDirDenorm{
+		Id: datadir.Id,
+		Name: datadir.Name,
+		Owner: datadir.Owner,
+		Birthtime: datadir.Birthtime,
+	}
+	r.Table("datadirs_denorm").Insert(dataDirDenorm).RunWrite(h.session)
+	return nil
 }
 
 func newSqlCreateDirHandler() CreateDirHandler {
