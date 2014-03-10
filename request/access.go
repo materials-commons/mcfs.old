@@ -5,7 +5,7 @@ import (
 	"github.com/materials-commons/base/model"
 )
 
-// ownerGaveAccessTo checks to see if the user making the request has access to the
+// OwnerGaveAccessTo checks to see if the user making the request has access to the
 // particular datafile. Access is determined as follows:
 // 1. if the user and the owner of the file are the same return true (has access).
 // 2. Get a list of all the users groups for the file owner.

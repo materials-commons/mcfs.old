@@ -220,7 +220,6 @@ type LoginReq struct {
 	APIKey string
 }
 
-
 // LoginResp login response.
 type LoginResp struct{}
 

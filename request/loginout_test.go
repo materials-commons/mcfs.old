@@ -40,7 +40,7 @@ func newClient() *client {
 
 var gtarceaLoginReq = protocol.LoginReq{
 	User:   "gtarcea@umich.edu",
-	ApiKey: "472abe203cd411e3a280ac162d80f1bf",
+	APIKey: "472abe203cd411e3a280ac162d80f1bf",
 }
 
 func loginTestUser() *client {
@@ -59,7 +59,7 @@ func TestLoginLogout(t *testing.T) {
 	// Test valid login
 	loginRequest := protocol.LoginReq{
 		User:   "gtarcea@umich.edu",
-		ApiKey: "472abe203cd411e3a280ac162d80f1bf",
+		APIKey: "472abe203cd411e3a280ac162d80f1bf",
 	}
 
 	_, err := h.login(&loginRequest)
@@ -75,14 +75,14 @@ func TestLoginLogout(t *testing.T) {
 	}
 
 	// Test Bad Apikey with a known user
-	loginRequest.ApiKey = "abc12356"
+	loginRequest.APIKey = "abc12356"
 	_, err = h.login(&loginRequest)
 	if err == nil {
 		t.Fatalf("Successful login with bad apikey")
 	}
 
 	// Test good Apikey with wrong user
-	loginRequest.ApiKey = "472abe203cd411e3a280ac162d80f1bf"
+	loginRequest.APIKey = "472abe203cd411e3a280ac162d80f1bf"
 	loginRequest.User = "mcfada@umich.edu"
 	_, err = h.login(&loginRequest)
 	if err == nil {

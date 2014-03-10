@@ -66,9 +66,9 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	df.DataDirs = append(df.DataDirs, req.DataDirID)
 	df.Checksum = req.Checksum
 	df.Size = req.Size
-	otherId, err := cfh.duplicateFileId(req.Checksum, req.Size)
-	if err == nil && otherId != "" {
-		df.UsesID = otherId
+	otherID, err := cfh.duplicateFileID(req.Checksum, req.Size)
+	if err == nil && otherID != "" {
+		df.UsesID = otherID
 	}
 	rv, err := r.Table("datafiles").Insert(df).RunWrite(h.session)
 	if err != nil {
@@ -80,12 +80,12 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		s = ssf(mc.ErrorCodeCreate, "Unable to insert datafile")
 		return nil, s
 	}
-	datafileId := rv.GeneratedKeys[0]
+	datafileID := rv.GeneratedKeys[0]
 
 	// TODO: Eliminate an extra query to look up the DataDir
 	// when we just did during verification.
 	datadir, _ := model.GetDataDir(req.DataDirID, h.session)
-	datadir.DataFiles = append(datadir.DataFiles, datafileId)
+	datadir.DataFiles = append(datadir.DataFiles, datafileID)
 
 	// TODO: Really should check for errors here. What do
 	// we do? The database could get out of sync. Maybe
@@ -93,7 +93,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	// putting into a log? Ugh...
 	r.Table("datadirs").Update(datadir).RunWrite(h.session)
 	createResp := protocol.CreateResp{
-		ID: datafileId,
+		ID: datafileID,
 	}
 	return &createResp, nil
 }
@@ -101,20 +101,20 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 func (h createFileHandler) validCreateFileReq(fileReq *protocol.CreateFileReq) error {
 	proj, err := model.GetProject(fileReq.ProjectID, h.session)
 	if err != nil {
-		return fmt.Errorf("Unknown project id %s", fileReq.ProjectID)
+		return fmt.Errorf("unknown project id %s", fileReq.ProjectID)
 	}
 
 	if proj.Owner != h.user {
-		return fmt.Errorf("User %s is not owner of project %s", h.user, proj.Name)
+		return fmt.Errorf("user %s is not owner of project %s", h.user, proj.Name)
 	}
 
 	datadir, err := model.GetDataDir(fileReq.DataDirID, h.session)
 	if err != nil {
-		return fmt.Errorf("Unknown datadir Id %s", fileReq.DataDirID)
+		return fmt.Errorf("unknown datadir Id %s", fileReq.DataDirID)
 	}
 
 	if !h.datadirInProject(datadir.ID, proj.ID) {
-		return fmt.Errorf("Datadir %s not in project %s", datadir.Name, proj.Name)
+		return fmt.Errorf("datadir %s not in project %s", datadir.Name, proj.Name)
 	}
 
 	if h.datafileExistsInDataDir(fileReq.DataDirID, fileReq.Name) {
@@ -122,17 +122,17 @@ func (h createFileHandler) validCreateFileReq(fileReq *protocol.CreateFileReq) e
 	}
 
 	if fileReq.Size < 1 {
-		return fmt.Errorf("Invalid size (%d) for datafile %s", fileReq.Size, fileReq.Name)
+		return fmt.Errorf("invalid size (%d) for datafile %s", fileReq.Size, fileReq.Name)
 	}
 
 	if fileReq.Checksum == "" {
-		return fmt.Errorf("Bad checksum (%s) for datafile %s", fileReq.Checksum, fileReq.Name)
+		return fmt.Errorf("bad checksum (%s) for datafile %s", fileReq.Checksum, fileReq.Name)
 	}
 
 	return nil
 }
 
-func (h *createFileHandler) duplicateFileId(checksum string, size int64) (id string, err error) {
+func (h *createFileHandler) duplicateFileID(checksum string, size int64) (id string, err error) {
 	rql := r.Table("datafiles").GetAllByIndex("checksum", checksum)
 	var datafiles []schema.DataFile
 	err = model.GetRows(rql, h.session, &datafiles)

@@ -5,6 +5,7 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/model"
+	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"testing"
 )
@@ -29,8 +30,8 @@ func TestCreateDir(t *testing.T) {
 		t.Fatalf("Directory create failed with %s", status.err)
 	}
 
-	createdId := resp.ID
-	var _ = createdId
+	createdID := resp.ID
+	var _ = createdID
 
 	// Test existing directory
 
@@ -40,10 +41,10 @@ func TestCreateDir(t *testing.T) {
 	}
 
 	// Cleanup the created directory
-	fmt.Println("Deleting datadir id:", createdId)
-	model.Delete("datadirs", createdId, session)
+	fmt.Println("Deleting datadir id:", createdID)
+	model.Delete("datadirs", createdID, session)
 	// Now cleanup the join table
-	rv, _ := r.Table("project2datadir").GetAllByIndex("datadir_id", createdId).Delete().RunWrite(session)
+	rv, _ := r.Table("project2datadir").GetAllByIndex("datadir_id", createdID).Delete().RunWrite(session)
 	if rv.Deleted != 1 {
 		t.Fatalf("Multiple entries in project2datadir matched. There should only have been one: %#v\n", rv)
 	}
@@ -85,17 +86,17 @@ func TestCreateProject(t *testing.T) {
 	// Test create new project
 	resp, status := h.createProject(&createProjectRequest)
 
-	projectId := resp.ProjectID
-	datadirId := resp.DataDirID
+	projectID := resp.ProjectID
+	datadirID := resp.DataDirID
 
 	if status != nil {
 		t.Fatalf("Unable to create project")
 	}
 
 	// Make sure the created project is properly setup
-	proj, err := model.GetProject(projectId, session)
+	proj, err := model.GetProject(projectID, session)
 	if err != nil {
-		t.Errorf("Unable to retrieve project %s", projectId)
+		t.Errorf("Unable to retrieve project %s", projectID)
 	}
 
 	if proj.Name != "TestProject1__" {
@@ -107,15 +108,15 @@ func TestCreateProject(t *testing.T) {
 	}
 
 	// Make sure the join table is updated
-	var p2d Project2Datadir
-	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectId)
+	var p2d schema.Project2DataDir
+	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID)
 	err = model.GetRow(rql, session, &p2d)
 	if err != nil {
 		t.Errorf("Unable to find project in join table")
 	}
 
-	if p2d.DataDirID != datadirId {
-		t.Errorf("Wrong datadir for project %#v expected %s", p2d, datadirId)
+	if p2d.DataDirID != datadirID {
+		t.Errorf("Wrong datadir for project %#v expected %s", p2d, datadirID)
 	}
 
 	// Test create existing project
@@ -125,9 +126,9 @@ func TestCreateProject(t *testing.T) {
 	}
 
 	// Delete before test so we can cleanup if there is a failure
-	model.Delete("datadirs", datadirId, session)
-	model.Delete("projects", projectId, session)
-	model.Delete("project2datadir", p2d.Id, session)
+	model.Delete("datadirs", datadirID, session)
+	model.Delete("projects", projectID, session)
+	model.Delete("project2datadir", p2d.ID, session)
 
 	if status == nil {
 		t.Fatalf("Created an existing project - shouldn't be able to")
@@ -137,11 +138,11 @@ func TestCreateProject(t *testing.T) {
 		t.Fatalf("Creating an existing project should have returned its project id and datadir id")
 	}
 
-	if resp.ProjectID != projectId {
+	if resp.ProjectID != projectID {
 		t.Errorf("Creating an existing project returned the wrong project id")
 	}
 
-	if resp.DataDirID != datadirId {
+	if resp.DataDirID != datadirID {
 		t.Errorf("Creating an existing project returned the wrong datadir id")
 	}
 	// Test create project with invalid name
@@ -183,10 +184,10 @@ func TestCreateFile(t *testing.T) {
 	if status != nil {
 		t.Fatalf("Create file failed %s", status.err)
 	}
-	createdId := resp.ID
+	createdID := resp.ID
 
 	// Validate the newly created datafile
-	df, err := model.GetDataFile(createdId, session)
+	df, err := model.GetDataFile(createdID, session)
 	if err != nil {
 		t.Fatalf("Unable to retrieve a newly created datafile %s", err)
 	}
@@ -233,11 +234,11 @@ func TestCreateFile(t *testing.T) {
 		t.Errorf("UsesID is blank %#v", df)
 	}
 
-	if df.UsesID != createdId {
+	if df.UsesID != createdID {
 		t.Errorf("Wrong id for UsesID %#v", df)
 	}
 
-	createdId2 := resp.ID
+	createdID2 := resp.ID
 
 	// Test creating an existing file
 	resp, status = h.createFile(&createFileRequest)
@@ -246,8 +247,8 @@ func TestCreateFile(t *testing.T) {
 	}
 
 	// Delete created files
-	model.Delete("datafiles", createdId, session)
-	model.Delete("datafiles", createdId2, session)
+	model.Delete("datafiles", createdID, session)
+	model.Delete("datafiles", createdID2, session)
 
 	// Test creating with an invalid project id
 	validProjectID := createFileRequest.ProjectID

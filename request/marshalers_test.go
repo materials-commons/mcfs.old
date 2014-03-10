@@ -29,7 +29,7 @@ func TestChannelMarshaler(t *testing.T) {
 	go responder(m)
 	loginReq := protocol.LoginReq{
 		User:   "gtarcea@umich.edu",
-		ApiKey: "abc123",
+		APIKey: "abc123",
 	}
 	req := protocol.Request{
 		Req: loginReq,
