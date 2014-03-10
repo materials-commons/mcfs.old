@@ -24,7 +24,7 @@ func TestReq(t *testing.T) {
 
 	m.SetError(fmt.Errorf(""))
 	switch h.req().(type) {
-	case ErrorReq:
+	case errorReq:
 	default:
 		t.Fatalf("Wrong type")
 	}

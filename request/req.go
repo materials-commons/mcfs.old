@@ -12,7 +12,7 @@ import (
 
 const maxBadRequests = 10
 
-type ReqStateFN func() ReqStateFN
+type reqStateFN func() reqStateFN
 
 type db struct {
 	session *r.Session
@@ -46,6 +46,8 @@ func ssf(statusCode mc.ErrorCode, message string, args ...interface{}) *stateSta
 	}
 }
 
+// NewReqHandler creates a new ReqHandlerInstance. Each ReqHandler is a thread safe state machine for
+// handling client requests.
 func NewReqHandler(m marshaling.MarshalUnmarshaler, session *r.Session, mcdir string) *ReqHandler {
 	return &ReqHandler{
 		session:            session,
@@ -54,13 +56,15 @@ func NewReqHandler(m marshaling.MarshalUnmarshaler, session *r.Session, mcdir st
 	}
 }
 
+// Run run the ReqHandler state machine. The state machine accepts and processes request according
+// to the mcfs.protocol package.
 func (h *ReqHandler) Run() {
 	for reqStateFN := h.startState; reqStateFN != nil; {
 		reqStateFN = reqStateFN()
 	}
 }
 
-type ErrorReq struct{}
+type errorReq struct{}
 
 func (h *ReqHandler) req() interface{} {
 	var req protocol.Request
@@ -68,12 +72,12 @@ func (h *ReqHandler) req() interface{} {
 		if err == io.EOF {
 			return protocol.CloseReq{}
 		}
-		return ErrorReq{}
+		return errorReq{}
 	}
 	return req.Req
 }
 
-func (h *ReqHandler) startState() ReqStateFN {
+func (h *ReqHandler) startState() reqStateFN {
 	var resp interface{}
 	var s *stateStatus
 	request := h.req()
@@ -92,7 +96,7 @@ func (h *ReqHandler) startState() ReqStateFN {
 	}
 }
 
-func (h *ReqHandler) badRequestRestart(s *stateStatus) ReqStateFN {
+func (h *ReqHandler) badRequestRestart(s *stateStatus) reqStateFN {
 	fmt.Println("badRequestRestart:", s.status, s.err)
 	h.badRequestCount = h.badRequestCount + 1
 	resp := &protocol.Response{
@@ -106,7 +110,7 @@ func (h *ReqHandler) badRequestRestart(s *stateStatus) ReqStateFN {
 	return h.startState
 }
 
-func (h *ReqHandler) badRequestNext(s *stateStatus) ReqStateFN {
+func (h *ReqHandler) badRequestNext(s *stateStatus) reqStateFN {
 	fmt.Println("badRequestNext:", s.status, s.err)
 	resp := &protocol.Response{
 		Status:        s.status,
@@ -119,7 +123,7 @@ func (h *ReqHandler) badRequestNext(s *stateStatus) ReqStateFN {
 	return h.nextCommand
 }
 
-func (h *ReqHandler) nextCommand() ReqStateFN {
+func (h *ReqHandler) nextCommand() reqStateFN {
 	var s *stateStatus
 	var resp interface{}
 

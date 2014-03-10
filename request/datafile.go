@@ -14,6 +14,7 @@ func datafilePath(mcdir, dataFileID string) string {
 	return filepath.Join(datafileDir(mcdir, dataFileID), dataFileID)
 }
 
+// DataFilePath returns the path in the materials commons repo for a file with the given id.
 func DataFilePath(mcdir, dataFileID string) string {
 	return datafilePath(mcdir, dataFileID)
 }

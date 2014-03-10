@@ -200,7 +200,7 @@ func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uplo
 	return handler, nil
 }
 
-func (r *ReqHandler) uploadLoop(resp *protocol.UploadResp) ReqStateFN {
+func (r *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
 	if uploadHandler, err := prepareUploadHandler(r, resp.DataFileID, resp.Offset); err != nil {
 		r.respError(nil, ss(mc.ErrorCodeInternal, err))
 		return r.nextCommand
@@ -210,7 +210,7 @@ func (r *ReqHandler) uploadLoop(resp *protocol.UploadResp) ReqStateFN {
 	}
 }
 
-func (h *uploadHandler) uploadState() ReqStateFN {
+func (h *uploadHandler) uploadState() reqStateFN {
 	request := h.req()
 	switch req := request.(type) {
 	case protocol.SendReq:
@@ -223,7 +223,7 @@ func (h *uploadHandler) uploadState() ReqStateFN {
 		h.nbytes = h.nbytes + int64(n)
 		h.respOk(&protocol.SendResp{BytesWritten: n})
 		return h.uploadState
-	case ErrorReq:
+	case errorReq:
 		dfClose(h.w, h.dataFileID, h.session)
 		return nil
 	case protocol.LogoutReq:

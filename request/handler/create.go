@@ -10,6 +10,7 @@ import (
 	"strings"
 )
 
+// NewCreateProject creates a new CreateProjectHandler.
 func NewCreateProject(db interface{}) CreateProjectHandler {
 	switch t := db.(type) {
 	case *r.Session:
@@ -55,7 +56,7 @@ func (h *rethinkCreateProjectHandler) CreateProject(name, user string) (*schema.
 	if err != nil {
 		return nil, err
 	} else if rv.Inserted == 0 {
-		return nil, fmt.Errorf("Unable to create datadir for project")
+		return nil, fmt.Errorf("unable to create datadir for project")
 	}
 	datadirID := rv.GeneratedKeys[0]
 	project := schema.NewProject(name, datadirID, user)
@@ -98,6 +99,7 @@ type rethinkCreateDirHandler struct {
 	session *r.Session
 }
 
+// NewCreateDir creates a new CreateDirHandler.
 func NewCreateDir(db interface{}) CreateDirHandler {
 	switch t := db.(type) {
 	case *r.Session:
@@ -134,7 +136,7 @@ func (h *rethinkCreateDirHandler) GetParent(path string) (*schema.DataDir, error
 	var d schema.DataDir
 	err := model.GetRow(query, h.session, &d)
 	if err != nil {
-		return nil, fmt.Errorf("No parent for %s", path)
+		return nil, fmt.Errorf("no parent for %s", path)
 	}
 	return &d, nil
 }
@@ -155,7 +157,7 @@ func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, pa
 		h.denormInsert(&datadir)
 		return &datadir, nil
 	}
-	return nil, fmt.Errorf("Unable to insert into database")
+	return nil, fmt.Errorf("unable to insert into database")
 }
 
 func (h *rethinkCreateDirHandler) denormInsert(datadir *schema.DataDir) error {
@@ -188,10 +190,12 @@ func (h *rethinkCreateFileHandler) CreateFile(req *protocol.CreateFileReq, user 
 type sqlCreateFileHandler struct {
 }
 
+// Validate validates a CreateFileReq.
 func Validate(req *protocol.CreateFileReq) error {
 	return nil
 }
 
+// CreateFile creates a file.
 func CreateFile(req *protocol.CreateFileReq, user string) (*schema.DataDir, error) {
 	return nil, nil
 }
