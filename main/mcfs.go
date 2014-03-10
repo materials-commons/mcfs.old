@@ -1,31 +1,31 @@
 /*
- * This package implements the Materials Commons File Server service. This
- * service provides upload/download of datafiles from the Materials Commons
- * repository.
+This package implements the Materials Commons File Server service. This
+service provides upload/download of datafiles from the Materials Commons
+repository.
 
- * The protocol for file uploads looks as follows:
- *     1. The client sends the size, checksum and path. If the file
- *        is an existing file then it also sends the DataFileID for
- *        the file.
- *
- *     2. If the server receives a DataFileID it checks the size
- *        and checksum against what was sent. If the checksums
- *        match and the sizes are different then its a partially
- *        completed upload. If the checksums are different then
- *        its a new upload.
- *
- *     3. The server sends back the DataFileID. It will create a
- *        new DataFileID or send back an existing depending on
- *        whether its a new upload or an existing one.
- *
- *     4. The server will tell the client the offset to start
- *        sending data from. For a new upload this will be at
- *        position 0. For an existing one it will be the offset
- *        to restart the upload.
- *
- * The protocol for file downloads looks as follows:
- *
- */
+The protocol for file uploads looks as follows:
+    1. The client sends the size, checksum and path. If the file
+       is an existing file then it also sends the DataFileID for
+       the file.
+
+    2. If the server receives a DataFileID it checks the size
+       and checksum against what was sent. If the checksums
+       match and the sizes are different then its a partially
+       completed upload. If the checksums are different then
+       its a new upload.
+
+    3. The server sends back the DataFileID. It will create a
+       new DataFileID or send back an existing depending on
+       whether its a new upload or an existing one.
+
+    4. The server will tell the client the offset to start
+       sending data from. For a new upload this will be at
+       position 0. For an existing one it will be the offset
+       to restart the upload.
+
+The protocol for file downloads looks as follows:
+
+*/
 package main
 
 import (
@@ -44,33 +44,33 @@ import (
 )
 
 // Options for server startup
-type ServerOptions struct {
+type serverOptions struct {
 	Port     uint   `long:"server-port" description:"The port the server listens on" default:"35862"`
 	Bind     string `long:"bind" description:"Address of local interface to listen on" default:"localhost"`
 	MCDir    string `long:"mcdir" description:"Directory path to materials commons file storage" default:"/mcfs/data/materialscommons"`
 	PrintPid bool   `long:"print-pid" description:"Prints the server pid to stdout"`
-	HttpPort uint   `long:"http-port" description:"Port webserver listens on" default:"5010"`
+	HTTPPort uint   `long:"http-port" description:"Port webserver listens on" default:"5010"`
 }
 
 // Options for the database
-type DatabaseOptions struct {
+type databaseOptions struct {
 	Connection string `long:"db-connect" description:"The host/port to connect to database on" default:"localhost:28015"`
 	Name       string `long:"db" description:"Database to use" default:"materialscommons"`
 }
 
 // Break the options into option groups.
-type Options struct {
-	Server   ServerOptions   `group:"Server Options"`
-	Database DatabaseOptions `group:"Database Options"`
+type options struct {
+	Server   serverOptions   `group:"Server Options"`
+	Database databaseOptions `group:"Database Options"`
 }
 
 // The following are set to command line argument values
-var MCDir string     // Directory datafiles are stored in
-var DBAddress string // Database address
-var DBName string    // Database name
+var mcDir string     // Directory datafiles are stored in
+var dbAddress string // Database address
+var dbName string    // Database name
 
 func main() {
-	var opts Options
+	var opts options
 	_, err := flags.Parse(&opts)
 
 	if err != nil {
@@ -86,10 +86,10 @@ func main() {
 		fmt.Println(os.Getpid())
 	}
 
-	MCDir = opts.Server.MCDir
-	DBAddress = opts.Database.Connection
-	DBName = opts.Database.Name
-	go webserver(opts.Server.HttpPort)
+	mcDir = opts.Server.MCDir
+	dbAddress = opts.Database.Connection
+	dbName = opts.Database.Name
+	go webserver(opts.Server.HTTPPort)
 
 	acceptConnections(listener)
 }
@@ -109,8 +109,8 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	}
 
 	session, err := r.Connect(map[string]interface{}{
-		"address":  DBAddress,
-		"database": DBName,
+		"address":  dbAddress,
+		"database": dbName,
 	})
 
 	if err != nil {
@@ -137,7 +137,7 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	case !request.OwnerGaveAccessTo(df.Owner, u.Email, session):
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	default:
-		path := request.DataFilePath(MCDir, idToUse(df))
+		path := request.DataFilePath(mcDir, idToUse(df))
 		http.ServeFile(writer, req, path)
 	}
 }
@@ -184,8 +184,8 @@ func acceptConnections(listener *net.TCPListener) {
 		}
 
 		session, err := r.Connect(map[string]interface{}{
-			"address":  DBAddress,
-			"database": DBName,
+			"address":  dbAddress,
+			"database": dbName,
 		})
 		if err != nil {
 			conn.Close()
@@ -193,7 +193,7 @@ func acceptConnections(listener *net.TCPListener) {
 		}
 
 		m := util.NewGobMarshaler(conn)
-		r := request.NewReqHandler(m, session, MCDir)
+		r := request.NewReqHandler(m, session, mcDir)
 		go handleConnection(r, conn, session)
 	}
 }
