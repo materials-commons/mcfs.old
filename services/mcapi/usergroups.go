@@ -4,9 +4,9 @@ import (
 	"github.com/emicklei/go-restful"
 	"net/http"
 
-	"github.com/materials-commons/base/schema"
-	"github.com/materials-commons/base/model"
 	"fmt"
+	"github.com/materials-commons/base/model"
+	"github.com/materials-commons/base/schema"
 )
 
 type groupsResource struct {

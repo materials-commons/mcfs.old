@@ -21,7 +21,7 @@ func validLogin(user, apikey string, session *r.Session) bool {
 	switch {
 	case err != nil:
 		return false
-	case u.ApiKey != apikey:
+	case u.APIKey != apikey:
 		return false
 	default:
 		return true

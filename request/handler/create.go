@@ -64,7 +64,7 @@ func (h *rethinkCreateProjectHandler) CreateProject(name, user string) (*schema.
 		return nil, err
 	}
 	projectID := rv.GeneratedKeys[0]
-	project.Id = projectID
+	project.ID = projectID
 	p2d := schema.Project2DataDir{
 		ProjectID: projectID,
 		DataDirID: datadirID,
@@ -151,7 +151,7 @@ func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, pa
 			DataDirID: dataDirID,
 		}
 		r.Table("project2datadir").Insert(p2d).RunWrite(h.session)
-		datadir.Id = dataDirID
+		datadir.ID = dataDirID
 		h.denormInsert(&datadir)
 		return &datadir, nil
 	}
@@ -160,7 +160,7 @@ func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, pa
 
 func (h *rethinkCreateDirHandler) denormInsert(datadir *schema.DataDir) error {
 	dataDirDenorm := schema.DataDirDenorm{
-		Id:        datadir.Id,
+		ID:        datadir.ID,
 		Name:      datadir.Name,
 		Owner:     datadir.Owner,
 		Birthtime: datadir.Birthtime,

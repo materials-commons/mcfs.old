@@ -21,7 +21,7 @@ func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, *stateStat
 
 func respStat(df *schema.DataFile) *protocol.StatResp {
 	return &protocol.StatResp{
-		DataFileID: df.Id,
+		DataFileID: df.ID,
 		Name:       df.Name,
 		DataDirs:   df.DataDirs,
 		Checksum:   df.Checksum,

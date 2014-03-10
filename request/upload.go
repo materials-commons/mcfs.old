@@ -115,7 +115,7 @@ func dataFileLocationId(dataFile *schema.DataFile) string {
 		return dataFile.UsesID
 	}
 
-	return dataFile.Id
+	return dataFile.ID
 }
 
 func (req *uploadReq) createNewDataFileVersion() (dataFileID string) {

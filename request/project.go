@@ -27,7 +27,7 @@ func (h *ReqHandler) projectEntries(req *protocol.ProjectEntriesReq) (*protocol.
 		return nil, ss(mc.ErrorCodeNotFound, err)
 	}
 
-	entries, err := p.getProjectEntries(project.Id)
+	entries, err := p.getProjectEntries(project.ID)
 	if err == mc.ErrNotFound {
 		return nil, ss(mc.ErrorCodeNotFound, err)
 	} else if err != nil {
@@ -35,7 +35,7 @@ func (h *ReqHandler) projectEntries(req *protocol.ProjectEntriesReq) (*protocol.
 	}
 
 	resp := protocol.ProjectEntriesResp{
-		ProjectID: project.Id,
+		ProjectID: project.ID,
 		Entries:   entries,
 	}
 	return &resp, nil

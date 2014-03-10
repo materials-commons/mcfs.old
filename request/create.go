@@ -24,7 +24,7 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protoc
 	case err == nil:
 		// Found project
 		resp := &protocol.CreateProjectResp{
-			ProjectID: proj.Id,
+			ProjectID: proj.ID,
 			DataDirID: proj.DataDir,
 		}
 		return resp, ss(mc.ErrorCodeExists, mc.ErrExists)
@@ -37,7 +37,7 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protoc
 			return nil, s
 		}
 		resp := &protocol.CreateProjectResp{
-			ProjectID: p.Id,
+			ProjectID: p.ID,
 			DataDirID: p.DataDir,
 		}
 		return resp, nil
@@ -113,7 +113,7 @@ func (h createFileHandler) validCreateFileReq(fileReq *protocol.CreateFileReq) e
 		return fmt.Errorf("Unknown datadir Id %s", fileReq.DataDirID)
 	}
 
-	if !h.datadirInProject(datadir.Id, proj.Id) {
+	if !h.datadirInProject(datadir.ID, proj.ID) {
 		return fmt.Errorf("Datadir %s not in project %s", datadir.Name, proj.Name)
 	}
 
@@ -144,7 +144,7 @@ func (h *createFileHandler) duplicateFileId(checksum string, size int64) (id str
 		if datafile.Size == size {
 			switch {
 			case datafile.UsesID == "":
-				return datafile.Id, nil
+				return datafile.ID, nil
 			default:
 				return datafile.UsesID, nil
 			}
@@ -171,19 +171,19 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 			if parent, err = dh.GetParent(req.Path); err != nil {
 				return nil, ss(mc.ErrorCodeNotFound, err)
 			}
-			dataDir, err := dh.CreateDir(req, h.user, parent.Id)
+			dataDir, err := dh.CreateDir(req, h.user, parent.ID)
 			if err != nil {
 				return nil, ss(mc.ErrorCodeInvalid, err)
 			}
 			resp := &protocol.CreateResp{
-				ID: dataDir.Id,
+				ID: dataDir.ID,
 			}
 			return resp, nil
 		case err != nil:
 			return nil, ss(mc.ErrorCodeNotFound, err)
 		default:
 			resp := &protocol.CreateResp{
-				ID: dataDir.Id,
+				ID: dataDir.ID,
 			}
 			return resp, nil
 		}

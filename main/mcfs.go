@@ -151,7 +151,7 @@ func idToUse(dataFile *schema.DataFile) string {
 		return dataFile.UsesID
 	}
 
-	return dataFile.Id
+	return dataFile.ID
 }
 
 // createListener creates the net connection. It connects to the specified host
