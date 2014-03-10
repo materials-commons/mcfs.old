@@ -8,11 +8,11 @@ import (
 )
 
 func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, *stateStatus) {
-	if validLogin(req.User, req.ApiKey, h.session) {
+	if validLogin(req.User, req.APIKey, h.session) {
 		h.user = req.User
 		return &protocol.LoginResp{}, nil
 	} else {
-		return nil, ssf(mc.ErrorCodeInvalid, "Bad login %s/%s", req.User, req.ApiKey)
+		return nil, ssf(mc.ErrorCodeInvalid, "Bad login %s/%s", req.User, req.APIKey)
 	}
 }
 
