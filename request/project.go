@@ -89,6 +89,5 @@ func (p *projectEntryHandler) entriesRql(projectID string) r.RqlTerm {
 		OuterJoin(r.Table("datafiles"),
 		func(ddirRow, dfRow r.RqlTerm) r.RqlTerm {
 			return ddirRow.Field("datafiles").Contains(dfRow.Field("id"))
-		}).Zip().Pluck("datadir_name", "datadir_id",
-		"name", "id", "size", "checksum")
+		}).Zip().Pluck("datadir_name", "datadir_id", "name", "id", "size", "checksum")
 }
