@@ -39,8 +39,8 @@ func newClient() *client {
 }
 
 var gtarceaLoginReq = protocol.LoginReq{
-	User:   "gtarcea@umich.edu",
-	APIKey: "472abe203cd411e3a280ac162d80f1bf",
+	User:   "test@mc.org",
+	APIKey: "test",
 }
 
 func loginTestUser() *client {
@@ -54,12 +54,12 @@ func loginTestUser() *client {
 
 func TestLoginLogout(t *testing.T) {
 	h := NewReqHandler(nil, session, "")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 
 	// Test valid login
 	loginRequest := protocol.LoginReq{
-		User:   "gtarcea@umich.edu",
-		APIKey: "472abe203cd411e3a280ac162d80f1bf",
+		User:   "test@mc.org",
+		APIKey: "test",
 	}
 
 	_, err := h.login(&loginRequest)
@@ -82,8 +82,8 @@ func TestLoginLogout(t *testing.T) {
 	}
 
 	// Test good Apikey with wrong user
-	loginRequest.APIKey = "472abe203cd411e3a280ac162d80f1bf"
-	loginRequest.User = "mcfada@umich.edu"
+	loginRequest.APIKey = "test2-wrong"
+	loginRequest.User = "test2@mc.org"
 	_, err = h.login(&loginRequest)
 	if err == nil {
 		t.Fatalf("Login successful with good api but wrong user")

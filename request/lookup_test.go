@@ -16,43 +16,53 @@ type lookupTest struct {
 	comment  string
 }
 
+/*
+Lookup datadirs. When id field we do a direct lookup. When field other than id,
+then limitTo is a project_id that we will look up a directory in.
+*/
 var dataDirTests = []lookupTest{
 	{"id", "abc123", "", false, "No such id"},
-	{"id", "73104436-5236-4adc-a0cb-00ad97286593", "", true, "id Existing with permissions"},
-	{"id", "4b882c3d-0c03-4523-9ec8-f6320851a560", "", false, "id Existing without permission"},
+	{"id", "d0b001c6-fc0a-4e95-97c3-4427de68c0a5", "", true, "id Existing with permissions"},
+	{"id", "a87806ac-8f56-4eb9-abfb-6bfbb7a19dd6", "", false, "id Existing without permission"},
 	{"blah", "blah", "", false, "No such field"},
-	{"name", "blah", "904886a7-ea57-4de7-8125-6e18c9736fd0", false, "No such name"},
-	{"name", "WE43 Heat Treatments/AT 200C", "904886a7-ea57-4de7-8125-6e18c9736fd0", true, "Existing name with perimissions"},
-	{"name", "WE43 Heat Treatments/AT 200C", "no-such-project", false, "Existing name with bad project"},
-	{"name", "Synthetic Tooth/Presentation/1F vs Enamel/Mass Spec Compared", "34520277-4a0d-4f79-a30c-b63886f003c4", false, "Existing name without perimissions"},
+	{"name", "blah", "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3", false, "No such name"},
+	{"name", "Test/AT 250C/AT 2 hours", "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3", true, "Existing name with perimissions"},
+	{"name", "Test/AT 250C/AT 2 hours", "no-such-project", false, "Existing name with bad project"},
+	{"name", "Test2/dir1", "12b5aecb-1def-463d-8886-92f6e81bf234", false, "Existing name without perimissions"},
 }
 
 func TestLookupDataDir(t *testing.T) {
 	conductTest(t, dataDirTests, "datadir")
 }
 
+/*
+When id lookup directly. When other field, limitTo is a datadir id.
+*/
 var dataFileTests = []lookupTest{
 	{"id", "abc123", "", false, "No such id"},
-	{"id", "1a455b46-a560-472e-acec-c96482fd655a", "e70bfd9e-9c43-4a26-b89f-c5f5ab639a72", true, "id Existing with permissions"},
-	{"id", "", "", false, "id Existing without permission"},
+	{"id", "692a623d-ee26-4a40-aee6-dbfa5413aefe", "", true, "id Existing with permissions"},
+	{"id", "eb402860-0c6c-433b-b5b6-e0280d421461", "", false, "id Existing without permission"},
 	{"blah", "blah", "", false, "No such field"},
 	{"name", "blah", "", false, "No such name"},
-	{"name", "8H-4.JPG", "962d5ee5-6974-48cc-b142-a7a854374cf1", true, "Existing name with perimissions"},
-	{"name", "8H-4.JPG", "blah", false, "Existing name with bad datadir"},
-	{"name", "tooth-F.rrng", "ad6c499d-9309-4472-8237-a93161dbe5f1", false, "Existing name without perimissions"},
+	{"name", "R38_03085 Sample Info.txt", "c3d72271-4a32-4080-a6a3-b4c6a5c4b986", true, "Existing name with perimissions"},
+	{"name", "R38_03085 Sample Info.txt", "blah", false, "Existing name with bad datadir"},
+	{"name", "file1.txt", "a87806ac-8f56-4eb9-abfb-6bfbb7a19dd6", false, "Existing name without perimissions"},
 }
 
 func TestLookupDataFile(t *testing.T) {
 	conductTest(t, dataFileTests, "datafile")
 }
 
+/*
+When id lookup directly. When other field, limitTo is ignored.
+*/
 var projectTests = []lookupTest{
 	{"id", "abc123", "", false, "No such id"},
-	{"id", "904886a7-ea57-4de7-8125-6e18c9736fd0", "", true, "id Existing project with permissions"},
-	{"id", "34520277-4a0d-4f79-a30c-b63886f003c4", "", false, "id Existing project without permissions"},
-	{"name", "WE43 Heat Treatments", "", true, "name Lookup existing"},
+	{"id", "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3", "", true, "id Existing project with permissions"},
+	{"id", "12b5aecb-1def-463d-8886-92f6e81bf234", "", false, "id Existing project without permissions"},
+	{"name", "Test", "", true, "name Lookup existing with permissions"},
 	{"name", "Does not exist", "", false, "name Lookup bad project name"},
-	{"name", "Synthetic Tooth", "", false, "name Lookup existing but no permissions"},
+	{"name", "Test2", "", false, "name Lookup existing but no permissions"},
 }
 
 func TestLookupProject(t *testing.T) {
@@ -69,7 +79,7 @@ func TestLookupInvalidItem(t *testing.T) {
 
 func conductTest(t *testing.T, tests []lookupTest, whichType string) {
 	h := NewReqHandler(nil, session, "")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 	for _, test := range tests {
 		req := &protocol.LookupReq{
 			Field:     test.field,
@@ -84,10 +94,10 @@ func conductTest(t *testing.T, tests []lookupTest, whichType string) {
 		switch {
 		case err != nil && test.errorNil:
 			// Expected error to be nil
-			t.Fatalf("Expected error to be nil for test %s, err %s", test.comment, err)
+			t.Fatalf("Expected error to be nil for test type %s, test %s err %s", whichType, test.comment, err)
 		case err == nil && !test.errorNil:
 			// Expected error not to be nil
-			t.Fatalf("Expected err != nil for test %s", test.comment)
+			t.Fatalf("Expected err != nil for test type %s, test %s", whichType, test.comment)
 		}
 	}
 }

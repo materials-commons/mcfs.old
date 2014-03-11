@@ -16,7 +16,7 @@ var _ = fmt.Println
 func TestUploadCasesFile(t *testing.T) {
 	// Test New File
 	h := NewReqHandler(nil, session, "")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 
 	// Test bad upload with non existant DataFileID
 	uploadReq := protocol.UploadReq{
@@ -32,8 +32,8 @@ func TestUploadCasesFile(t *testing.T) {
 
 	// Test create file and then upload
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
+		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
 		Name:      "testfile1.txt",
 		Size:      6,
 		Checksum:  "abc123",
@@ -88,7 +88,7 @@ func TestUploadCasesFile(t *testing.T) {
 	}
 
 	// Test Existing without permissions
-	h.user = "mcfada@umich.edu"
+	h.user = "test2@mc.org"
 	uploadReq.Size = 6
 	uploadReq.Checksum = "abc123"
 	resp, status = h.upload(&uploadReq)
@@ -98,7 +98,7 @@ func TestUploadCasesFile(t *testing.T) {
 
 	// Test interrupted transfer
 	h.mcdir = "/tmp/mcdir"
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 	os.MkdirAll(h.mcdir, 0777)
 	w, _ := datafileOpen(h.mcdir, createdID, 0)
 	w.Write([]byte("Hello"))
@@ -146,7 +146,7 @@ func TestUploadCasesFile(t *testing.T) {
 
 func TestUploadNewFile(t *testing.T) {
 	h := NewReqHandler(nil, session, "/tmp/mcdir")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 	testfilePath := "/tmp/mcdir/testfile.txt"
 	testfileData := "Hello world for testing"
 	testfileLen := int64(len(testfileData))
@@ -157,8 +157,8 @@ func TestUploadNewFile(t *testing.T) {
 	checksum, _ := file.Hash(md5.New(), testfilePath)
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
+		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
 		Name:      "testfile.txt",
 		Size:      testfileLen,
 		Checksum:  checksumHex,
@@ -217,7 +217,7 @@ func TestUploadNewFile(t *testing.T) {
 
 func TestPartialToCompleted(t *testing.T) {
 	h := NewReqHandler(nil, session, "/tmp/mcdir")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 	testfilePath := "/tmp/mcdir/testfile.txt"
 	testfileData := "Hello world for testing"
 	testfileLen := int64(len(testfileData))
@@ -228,8 +228,8 @@ func TestPartialToCompleted(t *testing.T) {
 	checksum, _ := file.Hash(md5.New(), testfilePath)
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
+		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
 		Name:      "testfile.txt",
 		Size:      testfileLen,
 		Checksum:  checksumHex,
@@ -314,7 +314,7 @@ func TestPartialToCompleted(t *testing.T) {
 
 func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	h := NewReqHandler(nil, session, "/tmp/mcdir")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 	testfilePath := "/tmp/mcdir/testfile.txt"
 	testfileData := "Hello world for testing"
 	testfileLen := int64(len(testfileData))
@@ -325,8 +325,8 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	checksum, _ := file.Hash(md5.New(), testfilePath)
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
+		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
 		Name:      "testfile.txt",
 		Size:      testfileLen,
 		Checksum:  checksumHex,
@@ -370,7 +370,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	// get back the origin file id and an offset, even though a new id was created from the
 	// second create file call.
 	//
-	createFileRequest.DataDirID = "e16f9f8b-a20f-4ce5-8823-b4c626739749"
+	createFileRequest.DataDirID = "c3d72271-4a32-4080-a6a3-b4c6a5c4b986"
 	createResp, status = h.createFile(&createFileRequest)
 	if status != nil {
 		t.Errorf("Failed to create new file: %s", status.err)
@@ -394,7 +394,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	w.Close()
 	resp, status = h.upload(&uploadReq)
 	if resp.DataFileID != newID {
-		t.Errorf("Wronge datafile id sent when uploading a file that matches on the server. Expected %s, got %s", newID, resp.DataFileID)
+		t.Errorf("Wrong datafile id sent when uploading a file that matches on the server. Expected %s, got %s", newID, resp.DataFileID)
 	}
 
 	if resp.Offset != testfileLen {

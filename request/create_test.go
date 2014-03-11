@@ -15,13 +15,13 @@ var _ = r.Table
 
 func TestCreateDir(t *testing.T) {
 	h := NewReqHandler(nil, session, "")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 
 	// Test valid path
 
 	createDirRequest := protocol.CreateDirReq{
-		ProjectID: "904886a7-ea57-4de7-8125-6e18c9736fd0",
-		Path:      "WE43 Heat Treatments/tdir1",
+		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		Path:      "Test/tdir1",
 	}
 
 	resp, status := h.createDir(&createDirRequest)
@@ -58,7 +58,7 @@ func TestCreateDir(t *testing.T) {
 
 	// Test invalid project id
 	createDirRequest.ProjectID = "abc123"
-	createDirRequest.Path = "WE43 Heat Treatments/tdir2"
+	createDirRequest.Path = "Test/tdir2"
 	resp, status = h.createDir(&createDirRequest)
 	if status == nil {
 		t.Fatalf("Create dir with bad project succeeded %#v", resp)
@@ -66,8 +66,8 @@ func TestCreateDir(t *testing.T) {
 
 	// Test that fails if subdirs don't exist
 
-	createDirRequest.ProjectID = "904886a7-ea57-4de7-8125-6e18c9736fd0"
-	createDirRequest.Path = "WE43 Heat Treatments/tdir1/tdir2"
+	createDirRequest.ProjectID = "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3"
+	createDirRequest.Path = "Test/tdir1/tdir2"
 
 	resp, status = h.createDir(&createDirRequest)
 	if status == nil {
@@ -77,7 +77,7 @@ func TestCreateDir(t *testing.T) {
 
 func TestCreateProject(t *testing.T) {
 	h := NewReqHandler(nil, session, "")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 
 	createProjectRequest := protocol.CreateProjectReq{
 		Name: "TestProject1__",
@@ -155,12 +155,12 @@ func TestCreateProject(t *testing.T) {
 
 func TestCreateFile(t *testing.T) {
 	h := NewReqHandler(nil, session, "")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 
 	// Test create with no size
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "c33edab7-a65f-478e-9fa6-9013271c73ea",
-		DataDirID: "643b2a54-44ef-4864-9370-18fb529f5609",
+		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
 		Name:      "testfile1.txt",
 		Checksum:  "abc123",
 	}
@@ -204,7 +204,7 @@ func TestCreateFile(t *testing.T) {
 		t.Fatalf("Wrong number of datadirs %#v", df)
 	}
 
-	if df.DataDirs[0] != "643b2a54-44ef-4864-9370-18fb529f5609" {
+	if df.DataDirs[0] != "f0ebb733-c75d-4983-8d68-242d688fcf73" {
 		t.Fatalf("Wrong datadir inserted %#v", df)
 	}
 
@@ -212,7 +212,7 @@ func TestCreateFile(t *testing.T) {
 		t.Fatalf("Wrong access set %#v", df)
 	}
 
-	if df.Owner != "gtarcea@umich.edu" {
+	if df.Owner != "test@mc.org" {
 		t.Fatalf("Wrong owner %#v", df)
 	}
 
@@ -221,10 +221,10 @@ func TestCreateFile(t *testing.T) {
 	}
 
 	// Test create new file that matches existing file size and checksum
-	createFileRequest.DataDirID = "e16f9f8b-a20f-4ce5-8823-b4c626739749"
+	createFileRequest.DataDirID = "d0b001c6-fc0a-4e95-97c3-4427de68c0a5"
 	resp, status = h.createFile(&createFileRequest)
 	if status != nil {
-		t.Errorf("Unable to create file with matching size and checksum")
+		t.Fatalf("Unable to create file with matching size and checksum %s", status)
 	}
 	df, err = model.GetDataFile(resp.ID, session)
 	if err != nil {

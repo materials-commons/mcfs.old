@@ -15,8 +15,8 @@ var (
 		errorNil    bool
 		description string
 	}{
-		{"Test_Proj", true, "Test existing project with access"},
-		{"Synthetic Tooth", false, "Testing existing project without access"},
+		{"Test", true, "Test existing project with access"},
+		{"Test2", false, "Testing existing project without access"},
 		{"Does not exist", false, "Test non existant project"},
 	}
 )
@@ -24,7 +24,7 @@ var (
 func TestGetProjectByName(t *testing.T) {
 	p := &projectEntryHandler{
 		session: session,
-		user:    "gtarcea@umich.edu",
+		user:    "test@mc.org",
 	}
 
 	for _, test := range projectNameTests {
@@ -41,11 +41,11 @@ func TestGetProjectByName(t *testing.T) {
 func TestGetProjectEntries(t *testing.T) {
 	p := &projectEntryHandler{
 		session: session,
-		user:    "gtarcea@umich.edu",
+		user:    "test@mc.org",
 	}
 
 	// Test existing project
-	projectID := "904886a7-ea57-4de7-8125-6e18c9736fd0"
+	projectID := "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3"
 	results, err := p.getProjectEntries(projectID)
 	if err != nil {
 		t.Errorf("Query on known project id failed %s", err)
@@ -68,10 +68,10 @@ func TestGetProjectEntries(t *testing.T) {
 
 func TestProjectEntries(t *testing.T) {
 	h := NewReqHandler(nil, session, "")
-	h.user = "gtarcea@umich.edu"
+	h.user = "test@mc.org"
 
 	req := protocol.ProjectEntriesReq{
-		Name: "Test_Proj",
+		Name: "Test",
 	}
 
 	// Test project we have access to
@@ -80,7 +80,7 @@ func TestProjectEntries(t *testing.T) {
 		t.Errorf("Unable to access project I own: %s", err)
 	}
 
-	if resp.ProjectID != "c33edab7-a65f-478e-9fa6-9013271c73ea" {
+	if resp.ProjectID != "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3" {
 		t.Errorf("Bad project id returned %#v\n", resp)
 	}
 
@@ -100,7 +100,7 @@ func TestProjectEntries(t *testing.T) {
 	}
 
 	// Test project name that we don't have access to
-	req.Name = "Synthetic Tooth"
+	req.Name = "Test2"
 	if err == nil {
 		t.Errorf("Got access to project I don't have permissions on")
 	}
