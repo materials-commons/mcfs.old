@@ -13,7 +13,7 @@ func newRUsers() rUsers {
 	return rUsers{}
 }
 
-// ByID looks up users by their primary key. In RethinkDB this is id the field.
+// ByID looks up users by their primary key. In RethinkDB this is the id field.
 func (u rUsers) ByID(id string) (*schema.User, error) {
 	var user schema.User
 	if err := model.Users.Q().ByID(id, &user); err != nil {
