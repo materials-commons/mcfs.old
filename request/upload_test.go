@@ -40,17 +40,17 @@ func TestUploadCasesFile(t *testing.T) {
 	}
 
 	createResp, _ := h.createFile(&createFileRequest)
-	createdId := createResp.ID
+	createdID := createResp.ID
 
-	uploadReq.DataFileID = createdId
+	uploadReq.DataFileID = createdID
 
 	resp, status = h.upload(&uploadReq)
 	if status != nil {
 		t.Fatalf("Failed to start upload on a valid file %s", status.err)
 	}
 
-	if resp.DataFileID != createdId {
-		t.Fatalf("Upload created a new version expected id %s, got %s", createdId, resp.DataFileID)
+	if resp.DataFileID != createdID {
+		t.Fatalf("Upload created a new version expected id %s, got %s", createdID, resp.DataFileID)
 	}
 
 	if resp.Offset != 0 {
@@ -100,7 +100,7 @@ func TestUploadCasesFile(t *testing.T) {
 	h.mcdir = "/tmp/mcdir"
 	h.user = "gtarcea@umich.edu"
 	os.MkdirAll(h.mcdir, 0777)
-	w, _ := datafileOpen(h.mcdir, createdId, 0)
+	w, _ := datafileOpen(h.mcdir, createdID, 0)
 	w.Write([]byte("Hello"))
 	w.(*os.File).Sync()
 
@@ -111,7 +111,7 @@ func TestUploadCasesFile(t *testing.T) {
 	if resp.Offset != 5 {
 		t.Fatalf("Offset computation incorrect")
 	}
-	if resp.DataFileID != createdId {
+	if resp.DataFileID != createdID {
 		t.Fatalf("Tried to create a new datafile id for an interrupted transfer")
 	}
 
@@ -131,7 +131,7 @@ func TestUploadCasesFile(t *testing.T) {
 		t.Fatalf("Cannot create new version of file already uploaded %s", status.err)
 	}
 
-	if resp.DataFileID == createdId {
+	if resp.DataFileID == createdID {
 		t.Fatalf("New ID was not assigned for new version of file")
 	}
 
@@ -139,8 +139,8 @@ func TestUploadCasesFile(t *testing.T) {
 		t.Fatalf("Uploading new version offset should be 0 not %d", resp.Offset)
 	}
 
-	fmt.Println("Deleting datafile id", createdId)
-	model.Delete("datafiles", createdId, session)
+	fmt.Println("Deleting datafile id", createdID)
+	model.Delete("datafiles", createdID, session)
 	os.RemoveAll("/tmp/mcdir")
 }
 
@@ -165,10 +165,10 @@ func TestUploadNewFile(t *testing.T) {
 	}
 
 	createResp, _ := h.createFile(&createFileRequest)
-	createdId := createResp.ID
-	defer cleanup(createdId)
+	createdID := createResp.ID
+	defer cleanup(createdID)
 	uploadReq := protocol.UploadReq{
-		DataFileID: createdId,
+		DataFileID: createdID,
 		Size:       testfileLen,
 		Checksum:   checksumHex,
 	}
@@ -178,7 +178,7 @@ func TestUploadNewFile(t *testing.T) {
 		t.Fatalf("error %s", status.err)
 	}
 
-	if resp.DataFileID != createdId {
+	if resp.DataFileID != createdID {
 		t.Fatalf("ids don't match")
 	}
 
@@ -193,7 +193,7 @@ func TestUploadNewFile(t *testing.T) {
 
 	var _ = uploadHandler
 	sendReq := protocol.SendReq{
-		DataFileID: createdId,
+		DataFileID: createdID,
 		Bytes:      []byte(testfileData),
 	}
 
@@ -202,9 +202,9 @@ func TestUploadNewFile(t *testing.T) {
 		t.Fatalf("Incorrect number of bytes written expected %d, wrote %d", testfileLen, n)
 	}
 
-	nchecksum, err := file.Hash(md5.New(), datafilePath(h.mcdir, createdId))
+	nchecksum, err := file.Hash(md5.New(), datafilePath(h.mcdir, createdID))
 	if err != nil {
-		t.Fatalf("Unable to checksum datafile %s", createdId)
+		t.Fatalf("Unable to checksum datafile %s", createdID)
 	}
 
 	dfClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
@@ -236,11 +236,11 @@ func TestPartialToCompleted(t *testing.T) {
 	}
 
 	createResp, _ := h.createFile(&createFileRequest)
-	createdId := createResp.ID
-	defer cleanup(createdId)
+	createdID := createResp.ID
+	defer cleanup(createdID)
 
 	uploadReq := protocol.UploadReq{
-		DataFileID: createdId,
+		DataFileID: createdID,
 		Size:       testfileLen,
 		Checksum:   checksumHex,
 	}
@@ -250,7 +250,7 @@ func TestPartialToCompleted(t *testing.T) {
 		t.Fatalf("error %s", status.err)
 	}
 
-	if resp.DataFileID != createdId {
+	if resp.DataFileID != createdID {
 		t.Fatalf("ids don't match")
 	}
 
@@ -264,7 +264,7 @@ func TestPartialToCompleted(t *testing.T) {
 	}
 
 	sendReq := protocol.SendReq{
-		DataFileID: createdId,
+		DataFileID: createdID,
 		Bytes:      []byte(testfileData[0:3]),
 	}
 
@@ -280,7 +280,7 @@ func TestPartialToCompleted(t *testing.T) {
 		t.Fatalf("Completing upload rejected %s", status.err)
 	}
 
-	if resp.DataFileID != createdId {
+	if resp.DataFileID != createdID {
 		t.Fatalf("Unexpected creation of a new version of datafile")
 	}
 
@@ -299,9 +299,9 @@ func TestPartialToCompleted(t *testing.T) {
 		t.Fatalf("Incorrect number of bytes written expected %d, wrote %d", testfileLen, n)
 	}
 
-	nchecksum, err := file.Hash(md5.New(), datafilePath(h.mcdir, createdId))
+	nchecksum, err := file.Hash(md5.New(), datafilePath(h.mcdir, createdID))
 	if err != nil {
-		t.Fatalf("Unable to checksum datafile %s", createdId)
+		t.Fatalf("Unable to checksum datafile %s", createdID)
 	}
 
 	dfClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
@@ -333,10 +333,10 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	}
 
 	createResp, _ := h.createFile(&createFileRequest)
-	createdId := createResp.ID
-	defer cleanup(createdId)
+	createdID := createResp.ID
+	defer cleanup(createdID)
 	uploadReq := protocol.UploadReq{
-		DataFileID: createdId,
+		DataFileID: createdID,
 		Size:       testfileLen,
 		Checksum:   checksumHex,
 	}
@@ -352,7 +352,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	}
 
 	sendReq := protocol.SendReq{
-		DataFileID: createdId,
+		DataFileID: createdID,
 		Bytes:      []byte(testfileData[:len(testfileData)-1]),
 	}
 
@@ -376,11 +376,11 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 		t.Errorf("Failed to create new file: %s", status.err)
 	}
 
-	newId := createResp.ID
-	uploadReq.DataFileID = newId
+	newID := createResp.ID
+	uploadReq.DataFileID = newID
 	resp, status = h.upload(&uploadReq)
-	if resp.DataFileID != createdId {
-		t.Errorf("Wronge datafile id sent when uploading a file that matches on the server. Expected %s, got %s", createdId, resp.DataFileID)
+	if resp.DataFileID != createdID {
+		t.Errorf("Wronge datafile id sent when uploading a file that matches on the server. Expected %s, got %s", createdID, resp.DataFileID)
 	}
 
 	if resp.Offset != testfileLen-1 {
@@ -389,23 +389,23 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 
 	// Then we will write the rest of the file and request an upload. Now we should get back
 	// the newly created id and an offset equal to the length of the file
-	w, err := datafileOpen(h.mcdir, createdId, testfileLen-1)
+	w, err := datafileOpen(h.mcdir, createdID, testfileLen-1)
 	w.Write([]byte(testfileData[len(testfileData)-1:]))
 	w.Close()
 	resp, status = h.upload(&uploadReq)
-	if resp.DataFileID != newId {
-		t.Errorf("Wronge datafile id sent when uploading a file that matches on the server. Expected %s, got %s", newId, resp.DataFileID)
+	if resp.DataFileID != newID {
+		t.Errorf("Wronge datafile id sent when uploading a file that matches on the server. Expected %s, got %s", newID, resp.DataFileID)
 	}
 
 	if resp.Offset != testfileLen {
 		t.Errorf("Got back wrong length, got %d, expected %d", resp.Offset, testfileLen-1)
 	}
 
-	model.Delete("datafiles", newId, session)
+	model.Delete("datafiles", newID, session)
 }
 
-func cleanup(datafileId string) {
-	fmt.Println("Deleting datafile id =", datafileId)
-	model.Delete("datafiles", datafileId, session)
+func cleanup(datafileID string) {
+	fmt.Println("Deleting datafile id =", datafileID)
+	model.Delete("datafiles", datafileID, session)
 	os.RemoveAll("/tmp/mcdir")
 }

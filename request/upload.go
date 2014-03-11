@@ -31,7 +31,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *sta
 		return nil, ss(mc.ErrorCodeNotFound, err)
 	}
 
-	dataFileIDToUse := dataFileLocationId(dataFile)
+	dataFileIDToUse := dataFileLocationID(dataFile)
 	fsize := datafileSize(h.mcdir, dataFileIDToUse)
 
 	switch {
@@ -59,23 +59,23 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *sta
 		if fsize < dataFile.Size {
 			// Other upload hasn't completed - reject this one until other completes
 			return nil, ssf(mc.ErrorCodeInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
-		} else {
-			// create a new version and send new data file and offset = 0
-			resp.DataFileID = ureq.createNewDataFileVersion()
-			resp.Offset = 0
 		}
+
+		// create a new version and send new data file and offset = 0
+		resp.DataFileID = ureq.createNewDataFileVersion()
+		resp.Offset = 0
 
 	case dataFile.Size == ureq.Size && dataFile.Checksum != ureq.Checksum:
 		// wants to upload new version
 		if fsize < dataFile.Size {
 			// Other upload hasn't completed - reject this one until other completes
 			return nil, ssf(mc.ErrorCodeInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
-		} else {
-			// create a new version start upload
-			// send offset = 0 and a new datafile id
-			resp.DataFileID = ureq.createNewDataFileVersion()
-			resp.Offset = 0
 		}
+
+		// create a new version start upload
+		// send offset = 0 and a new datafile id
+		resp.DataFileID = ureq.createNewDataFileVersion()
+		resp.Offset = 0
 
 	default:
 		// We should never get here so this is a bug that we need to log
@@ -89,9 +89,9 @@ func (req *uploadReq) getDataFile() (*schema.DataFile, error) {
 	dataFile, err := model.GetDataFile(req.DataFileID, req.session)
 	switch {
 	case err != nil:
-		return nil, fmt.Errorf("No such datafile %s", req.DataFileID)
+		return nil, fmt.Errorf("no such datafile %s", req.DataFileID)
 	case !OwnerGaveAccessTo(dataFile.Owner, req.user, req.session):
-		return nil, fmt.Errorf("Permission denied to %s", req.DataFileID)
+		return nil, fmt.Errorf("permission denied to %s", req.DataFileID)
 	default:
 		return dataFile, nil
 	}
@@ -110,7 +110,7 @@ func datafileSize(mcdir, dataFileID string) int64 {
 	}
 }
 
-func dataFileLocationId(dataFile *schema.DataFile) string {
+func dataFileLocationID(dataFile *schema.DataFile) string {
 	if dataFile.UsesID != "" {
 		return dataFile.UsesID
 	}
@@ -200,14 +200,15 @@ func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uplo
 	return handler, nil
 }
 
-func (r *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
-	if uploadHandler, err := prepareUploadHandler(r, resp.DataFileID, resp.Offset); err != nil {
-		r.respError(nil, ss(mc.ErrorCodeInternal, err))
-		return r.nextCommand
-	} else {
-		r.respOk(resp)
-		return uploadHandler.uploadState
+func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
+	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
+	if err != nil {
+		h.respError(nil, ss(mc.ErrorCodeInternal, err))
+		return h.nextCommand
 	}
+
+	h.respOk(resp)
+	return uploadHandler.uploadState
 }
 
 func (h *uploadHandler) uploadState() reqStateFN {

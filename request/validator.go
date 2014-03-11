@@ -18,20 +18,14 @@ func newModelValidator(user string, session *r.Session) modelValidator {
 	}
 }
 
-type Project2Datadir struct {
-	Id        string `gorethink:"id,omitempty"`
-	ProjectID string `gorethink:"project_id"`
-	DataDirID string `gorethink:"datadir_id"`
-}
-
-func (v modelValidator) datadirInProject(datadirId, projectId string) bool {
-	query := r.Table("project2datadir").GetAllByIndex("datadir_id", datadirId)
-	var p2d Project2Datadir
+func (v modelValidator) datadirInProject(datadirID, projectID string) bool {
+	query := r.Table("project2datadir").GetAllByIndex("datadir_id", datadirID)
+	var p2d schema.Project2DataDir
 	err := model.GetRow(query, v.session, &p2d)
 	switch {
 	case err != nil:
 		return false
-	case p2d.ProjectID != projectId:
+	case p2d.ProjectID != projectID:
 		return false
 	default:
 		return true
