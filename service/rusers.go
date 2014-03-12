@@ -33,10 +33,10 @@ func (u rUsers) ByAPIKey(apikey string) (*schema.User, error) {
 }
 
 // All returns all the users in the database.
-func (u rUsers) All() (*[]schema.User, error) {
+func (u rUsers) All() ([]schema.User, error) {
 	var users []schema.User
 	if err := model.Users.Q().Rows(model.Users.T(), &users); err != nil {
 		return nil, err
 	}
-	return &users, nil
+	return users, nil
 }

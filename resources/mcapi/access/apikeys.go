@@ -10,7 +10,7 @@ type apikeys struct {
 	users service.Users
 }
 
-func newApiKeys(users service.Users) *apikeys {
+func newAPIKeys(users service.Users) *apikeys {
 	return &apikeys{
 		keys:  make(map[string]schema.User),
 		users: users,
@@ -23,7 +23,7 @@ func (a *apikeys) load() error {
 		return err
 	}
 
-	for _, user := range *users {
+	for _, user := range users {
 		a.keys[user.APIKey] = user
 	}
 
