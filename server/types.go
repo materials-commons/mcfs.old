@@ -13,15 +13,3 @@ const (
 	// Stopped server is no longer running
 	Stopped
 )
-
-// Server is the interface all servers implement.
-type Server interface {
-	// Start starts a server
-	Start()
-
-	// Stop stops a server
-	Stop()
-
-	// Status returns the servers status
-	Status() Status
-}
