@@ -1,8 +1,6 @@
 package recover
 
-import (
-	"launchpad.net/tomb"
-)
+import ()
 
 type Request struct{}
 
@@ -10,19 +8,16 @@ type Response struct{}
 
 type recoverServer struct {
 	request chan Request
-	tomb.Tomb
 }
 
-var s = &recoverServer{
+var server = &recoverServer{
 	request: make(chan Request, 50),
 }
 
-// Start starts the recover server.
-func Start() {
-	//s.Start()
+func Server() *recoverServer {
+	return server
 }
 
-// Stop stops the recover server.
-func Stop() {
-	//s.Stop()
+func (s *recoverServer) Run(stopChan <-chan struct{}) {
+
 }
