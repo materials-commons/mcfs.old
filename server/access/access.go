@@ -93,23 +93,34 @@ func (s *accessServer) server() {
 func (s *accessServer) doRequest(request *request) {
 	switch request.command {
 	case acGetUser:
-		u, found := s.apikeys.lookup(request.arg)
-		if !found {
-			s.response <- response{
-				user: nil,
-				err:  mc.ErrNotFound,
-			}
-		} else {
-			s.response <- response{
-				user: &u,
-				err:  nil,
-			}
+		doGetUser(request.arg)
+	default:
+		doInvalidRequest()
+	}
+}
+
+// doGetUser looks up a user by their apikey
+func (s *accessServer) doGetUser(apikey string) {
+	u, found := s.apikeys.lookup(apikey)
+	switch {
+	case found:
+		s.response <- response{
+			user: &u,
+			err:  nil,
 		}
 	default:
 		s.response <- response{
 			user: nil,
-			err:  mc.ErrInvalid,
+			err:  mc.ErrNotFound,
 		}
+	}
+}
+
+// doInvalidRequest returns an error when the command is not recognized
+func (s *accessServer) doInvalidRequest() {
+	s.response <- response{
+		user: nil,
+		err:  mc.ErrInvalid,
 	}
 }
 
