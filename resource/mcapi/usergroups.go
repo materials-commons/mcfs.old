@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"fmt"
-	
+
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/server/access"
