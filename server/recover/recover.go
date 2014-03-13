@@ -6,18 +6,18 @@ type Request struct{}
 
 type Response struct{}
 
-type recoverServer struct {
+type recoveryServer struct {
 	request chan Request
 }
 
-var server = &recoverServer{
+var server = &recoveryServer{
 	request: make(chan Request, 50),
 }
 
-func Server() *recoverServer {
+func Server() *recoveryServer {
 	return server
 }
 
-func (s *recoverServer) Run(stopChan <-chan struct{}) {
+func (s *recoveryServer) Run(stopChan <-chan struct{}) {
 
 }
