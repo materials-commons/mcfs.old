@@ -93,9 +93,9 @@ func (s *accessServer) server() {
 func (s *accessServer) doRequest(request *request) {
 	switch request.command {
 	case acGetUser:
-		doGetUser(request.arg)
+		s.doGetUser(request.arg)
 	default:
-		doInvalidRequest()
+		s.doInvalidRequest()
 	}
 }
 
