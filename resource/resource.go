@@ -1,4 +1,4 @@
-package resources
+package resource
 
 // ResourceStatus represents the current status of a given resource.
 type ResourceStatus struct {

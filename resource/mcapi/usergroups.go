@@ -5,8 +5,10 @@ import (
 	"net/http"
 
 	"fmt"
+	
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/mcfs/server/access"
 )
 
 type groupsResource struct {
@@ -25,13 +27,14 @@ func (g groupsResource) register(container *restful.Container) {
 		Produces(restful.MIME_JSON)
 
 	ws.Route(ws.GET("").To(g.all).
-		Doc("List all groups for user").
+		Doc("List all groups for user.").
 		Writes([]schema.UserGroup{}))
 
 	container.Add(ws)
 }
 
 func (g groupsResource) all(request *restful.Request, response *restful.Response) {
+	user, err := access.GetUserByAPIKey("")
 	rql := model.Groups.T().GetAllByIndex("owner", "")
 	var groups []schema.UserGroup
 	if err := model.Groups.Q().Rows(rql, &groups); err != nil {
