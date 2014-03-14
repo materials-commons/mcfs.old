@@ -48,13 +48,13 @@ func Server() *accessServer {
 	return server
 }
 
-//
-func Send(request *request) error {
-	if !server.isRunning {
+// Send sends a request to the server.
+func (s *accessServer) Send(request *request) error {
+	if !s.isRunning {
 		return mcfs.ErrServerNotRunning
 	}
 
-	var err error = nil
+	var err error
 
 	defer func() {
 		if e := recover(); e != nil {
@@ -62,12 +62,13 @@ func Send(request *request) error {
 		}
 	}()
 
-	server.request <- request
+	s.request <- request
 	return err
 }
 
-func Recv() *response {
-	return <-server.response
+// Recv receives a response from the server.
+func (s *accessServer) Recv() *response {
+	return <-s.response
 }
 
 // Init initializes the server. It meant to be called by the Server interface each

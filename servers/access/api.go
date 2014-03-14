@@ -11,10 +11,10 @@ func GetUserByAPIKey(apikey string) (*schema.User, error) {
 		arg:     apikey,
 	}
 
-	if err := Send(&request); err != nil {
+	if err := server.Send(&request); err != nil {
 		return nil, err
 	}
 
-	response := Recv()
+	response := server.Recv()
 	return response.user, response.err
 }
