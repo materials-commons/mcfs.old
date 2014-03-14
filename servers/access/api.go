@@ -10,7 +10,11 @@ func GetUserByAPIKey(apikey string) (*schema.User, error) {
 		command: acGetUser,
 		arg:     apikey,
 	}
-	server.request <- request
-	response := <-server.response
+
+	if err := Send(&request); err != nil {
+		return nil, err
+	}
+
+	response := Recv()
 	return response.user, response.err
 }

@@ -8,7 +8,7 @@ import (
 
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
-	"github.com/materials-commons/mcfs/server/access"
+	"github.com/materials-commons/mcfs/servers/access"
 )
 
 type groupsResource struct {

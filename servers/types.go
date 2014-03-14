@@ -1,4 +1,4 @@
-package server
+package servers
 
 // Status the status of a server
 type Status int
@@ -13,3 +13,16 @@ const (
 	// Stopped server is no longer running
 	Stopped
 )
+
+func (s Status) String() string {
+	switch s {
+	case Running:
+		return "Running"
+	case Stopping:
+		return "Stopping"
+	case Stopped:
+		return "Stopped"
+	default:
+		return "Unknown"
+	}
+}
