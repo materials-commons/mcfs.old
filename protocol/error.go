@@ -6,13 +6,12 @@ import (
 )
 
 type MCFSError struct {
-	ErrorMessage string
-	ErrorCode    mc.ErrorCode
-	Err          error
+	Err     error
+	Message string
 }
 
 func (e *MCFSError) Error() string {
-	return e.Err.Error() + ":" + e.ErrorMessage
+	return e.Err.Error() + ":" + e.Message
 }
 
 func (e *MCFSError) ToErrorCode() mc.ErrorCode {
@@ -25,15 +24,14 @@ func FromErrorCode(errorCode mc.ErrorCode) *MCFSError {
 	}
 }
 
-func newMCFSError(err error, errorCode mc.ErrorCode, msg string) *MCFSError {
+func newMCFSError(err error, msg string) *MCFSError {
 	return &MCFSError{
-		ErrorMessage: msg,
-		Err:          err,
-		ErrorCode:    errorCode,
+		Message: msg,
+		Err:     err,
 	}
 }
 
-func Errorf(err error, errorCode mc.ErrorCode, message string, args ...interface{}) *MCFSError {
+func Errorf(err error, message string, args ...interface{}) *MCFSError {
 	msg := fmt.Sprintf(message, args...)
-	return newMCFSError(err, errorCode, msg)
+	return newMCFSError(err, msg)
 }
