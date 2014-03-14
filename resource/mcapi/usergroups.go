@@ -35,6 +35,8 @@ func (g groupsResource) register(container *restful.Container) {
 
 func (g groupsResource) all(request *restful.Request, response *restful.Response) {
 	user, err := access.GetUserByAPIKey("")
+	_ = user
+	_ = err
 	rql := model.Groups.T().GetAllByIndex("owner", "")
 	var groups []schema.UserGroup
 	if err := model.Groups.Q().Rows(rql, &groups); err != nil {
