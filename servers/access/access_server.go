@@ -1,11 +1,15 @@
 package access
 
 import (
+	"github.com/materials-commons/base/log"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs"
 	"github.com/materials-commons/mcfs/service"
 )
+
+// For logging purposes the name of our server
+var serverName = log.Field("server", "AccessServer")
 
 // The command to send
 type command int
@@ -50,6 +54,8 @@ func Server() *accessServer {
 
 // Send sends a request to the server.
 func (s *accessServer) Send(request *request) error {
+	// Shortcut check, if we know the server isn't running then we
+	// don't have to wait for the panic.
 	if !s.isRunning {
 		return mcfs.ErrServerNotRunning
 	}
@@ -58,6 +64,7 @@ func (s *accessServer) Send(request *request) error {
 
 	defer func() {
 		if e := recover(); e != nil {
+			log.L.WithFields(serverName).Debugln("Attempt to send when server is not running.")
 			err = mcfs.ErrServerNotRunning
 		}
 	}()
@@ -80,17 +87,21 @@ func (s *accessServer) Init() {
 
 // Run implements the server. It is meant to be called by the Server interface.
 func (s *accessServer) Run(stopChan <-chan struct{}) {
+	log.L.WithFields(serverName).Infoln("Starting.")
 	s.isRunning = true
 	if err := s.apikeys.load(); err != nil {
 		s.shutdown()
+		log.L.WithFields(serverName).Fatalf("Unable to load apikeys: %s\n", err)
 		return
 	}
 
 	for {
 		select {
 		case request := <-s.request:
+			log.L.WithFields(serverName).Debugf("Received request: %#v\n", request)
 			s.doRequest(request)
 		case <-stopChan:
+			log.L.WithFields(serverName).Infoln("Shutting down.")
 			s.shutdown()
 			return
 		}
@@ -110,6 +121,7 @@ func (s *accessServer) doRequest(request *request) {
 	case acGetUser:
 		s.doGetUser(request.arg)
 	default:
+		log.L.WithFields(serverName).Warnf("Received invalid command: %d\n", request.command)
 		s.doInvalidRequest()
 	}
 }
