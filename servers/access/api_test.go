@@ -17,7 +17,7 @@ func TestNoServerRunning(t *testing.T) {
 	}
 }
 
-func TestServerRunning(t *testing.T) {
+func TestWithServerRunning(t *testing.T) {
 	db.SetAddress("localhost:30815")
 	db.SetDatabase("materialscommons")
 	var fakeStopChannel chan struct{}
