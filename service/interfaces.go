@@ -27,6 +27,7 @@ type Files interface {
 	ByID(id string) (*schema.DataFile, error)
 	Update(*schema.DataFile) error
 	Insert(*schema.DataFile) (*schema.DataFile, error)
+	AddDirectories(file *schema.DataFile, dirIDs ...string) error
 }
 
 // Dirs is the common API to directories.
@@ -34,5 +35,5 @@ type Dirs interface {
 	ByID(id string) (*schema.DataDir, error)
 	Update(*schema.DataDir) error
 	Insert(*schema.DataDir) (*schema.DataFile, error)
-	AddFiles(dir *schema.DataDir, fileIds ...string) error
+	AddFiles(dir *schema.DataDir, fileIDs ...string) error
 }

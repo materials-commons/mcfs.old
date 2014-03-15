@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/mcfs"
 )
 
 // rDirs implements the Dirs interface for RethinkDB
@@ -29,15 +30,16 @@ func (d rDirs) Update(dir *schema.DataDir) error {
 	if err := model.Dirs.Q().Update(dir.ID, dir); err != nil {
 		return err
 	}
-
 	return nil
 }
 
-// Insert creates a new dir.
+// Insert creates a new dir. This method can return an error, with a valid
+// DataDir. This happens when the dir is created, but one or more of the intermediate
+// steps failed. The call needs to handle this case.
 func (d rDirs) Insert(dir *schema.DataDir) (*schema.DataDir, error) {
 	var newDir schema.DataDir
 	if err := model.Dirs.Q().Insert(dir, &newDir); err != nil {
-		return nil, err
+		return nil, mcfs.ErrDBInsertFailed
 	}
 
 	var ddirDenorm = schema.DataDirDenorm{
@@ -48,17 +50,23 @@ func (d rDirs) Insert(dir *schema.DataDir) (*schema.DataDir, error) {
 	}
 
 	if len(newDir.DataFiles) > 0 {
-		ddirDenorm.DataFiles = d.createDataFiles(newDir.DataFiles)
+		var err error
+		if ddirDenorm.DataFiles, err = d.createDataFiles(newDir.DataFiles); err != nil {
+			return &newDir, mcfs.ErrDBRelatedUpdateFailed
+		}
 	}
 
 	if err := model.DirsDenorm.Q().Insert(ddirDenorm, nil); err != nil {
-		// Ack, database out of sync!
+		return &newDir, mcfs.ErrDBRelatedUpdateFailed
 	}
 
 	return &newDir, nil
 }
 
 // AddFiles adds new file ids to a dir. It updates all related items and join tables.
+// AddFiles will return ErrRelatedUpdateFailed or ErrUpdateFailed when an error occurs.
+// The caller will have to decide how to handle these errors because the database will
+// be out of sync.
 func (d rDirs) AddFiles(dir *schema.DataDir, fileIDs ...string) error {
 	// Add fileIds to DataDir
 	for _, id := range fileIDs {
@@ -66,19 +74,23 @@ func (d rDirs) AddFiles(dir *schema.DataDir, fileIDs ...string) error {
 	}
 
 	if err := model.Dirs.Q().Update(dir.ID, dir); err != nil {
-		return nil
+		return mcfs.ErrDBUpdateFailed
 	}
 
 	// Add entries to the denorm table for this dir.
 	var dirDenorm schema.DataDirDenorm
-	newEntries := d.createDataFiles(fileIDs)
+	newEntries, err := d.createDataFiles(fileIDs)
+	if err != nil {
+		return mcfs.ErrDBRelatedUpdateFailed
+	}
+
 	if err := model.DirsDenorm.Q().ByID(dir.ID, &dirDenorm); err != nil {
-		// TODO: What to do?
+		return mcfs.ErrDBRelatedUpdateFailed
 	}
 
 	dirDenorm.DataFiles = append(dirDenorm.DataFiles, newEntries...)
 	if err := model.DirsDenorm.Q().Update(dirDenorm.ID, dirDenorm); err != nil {
-		// TODO: What to do?
+		return mcfs.ErrDBRelatedUpdateFailed
 	}
 
 	return nil
@@ -86,13 +98,12 @@ func (d rDirs) AddFiles(dir *schema.DataDir, fileIDs ...string) error {
 
 // createDataFiles creates the datafiles entries for the datadirs_denorm table from
 // the ids contained in a DataDir
-func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.DataFileEntry) {
+func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.DataFileEntry, err error) {
+	var errorReturn error
 	for _, dataFileID := range dataFileIDs {
 		var dataFile schema.DataFile
 		if err := model.Files.Q().ByID(dataFileID, &dataFile); err != nil {
-			// TODO: How to handle this type of error?
-			// The database will be out of sync, but it isn't clear what
-			// we should do. For now log error and go on.
+			errorReturn = mcfs.ErrDBLookupFailed
 			continue
 		}
 
@@ -106,5 +117,6 @@ func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.D
 		}
 		dataFileEntries = append(dataFileEntries, dataFileEntry)
 	}
-	return dataFileEntries
+
+	return dataFileEntries, errorReturn
 }
