@@ -3,13 +3,12 @@ package service
 import (
 	"fmt"
 	"github.com/materials-commons/base/db"
-	//"github.com/materials-commons/base/schema"
 	"testing"
 )
 
 var _ = fmt.Println
 
-func TestByID(t *testing.T) {
+func TestRUsersByID(t *testing.T) {
 	db.SetAddress("localhost:30815")
 	db.SetDatabase("materialscommons")
 	rusers := newRUsers()
@@ -31,7 +30,7 @@ func TestByID(t *testing.T) {
 	}
 }
 
-func TestByAPIKey(t *testing.T) {
+func TestRUsersByAPIKey(t *testing.T) {
 	rusers := newRUsers()
 
 	// Test existing
@@ -51,7 +50,7 @@ func TestByAPIKey(t *testing.T) {
 	}
 }
 
-func TestAll(t *testing.T) {
+func TestRUsersAll(t *testing.T) {
 	rusers := newRUsers()
 
 	users, err := rusers.All()
