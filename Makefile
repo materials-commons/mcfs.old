@@ -3,7 +3,7 @@
 all: fmt test bin
 
 bin:
-	(cd main; go build mcfs.go)
+	(cd ./main; go build mcfs.go)
 
 test:
 	-go test -v ./...
