@@ -23,7 +23,7 @@ func TestWithServerRunning(t *testing.T) {
 	var fakeStopChannel chan struct{}
 	server.Init()
 	go server.Run(fakeStopChannel)
-	time.Sleep(1000)
+	time.Sleep(2000)
 	u, err := GetUserByAPIKey("test")
 	if err != nil {
 		t.Fatalf("Failed retrieving APIKey test: %s", err)
