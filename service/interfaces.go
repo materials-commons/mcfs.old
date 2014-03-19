@@ -34,6 +34,6 @@ type Files interface {
 type Dirs interface {
 	ByID(id string) (*schema.DataDir, error)
 	Update(*schema.DataDir) error
-	Insert(*schema.DataDir) (*schema.DataFile, error)
+	Insert(*schema.DataDir) (*schema.DataDir, error)
 	AddFiles(dir *schema.DataDir, fileIDs ...string) error
 }
