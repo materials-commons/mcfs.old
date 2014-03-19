@@ -3,6 +3,7 @@ package request
 import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/model"
+	"github.com/materials-commons/base/schema"
 )
 
 // OwnerGaveAccessTo checks to see if the user making the request has access to the
@@ -15,6 +16,10 @@ import (
 func OwnerGaveAccessTo(owner, user string, session *r.Session) bool {
 	// Check if user and file owner are the same
 	if user == owner {
+		return true
+	}
+
+	if isAdmin(user, session) {
 		return true
 	}
 
@@ -33,6 +38,21 @@ func OwnerGaveAccessTo(owner, user string, session *r.Session) bool {
 			if u == user {
 				return true
 			}
+		}
+	}
+
+	return false
+}
+
+// isAdmin check if user is in admin table
+func isAdmin(user string, session *r.Session) bool {
+	var group schema.Group
+	if err := model.GetItem("admin", "usergroups", session, &group); err != nil {
+		return false
+	}
+	for _, admin := range group.Users {
+		if admin == user {
+			return true
 		}
 	}
 
