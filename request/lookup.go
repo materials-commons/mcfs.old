@@ -27,12 +27,12 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, *stateStatus)
 
 	case "datafile":
 		rql := l.dataFileRql(req)
-		var datafile schema.DataFile
+		var datafile schema.File
 		return l.execute(rql, &datafile)
 
 	case "datadir":
 		rql := l.dataDirRql(req)
-		var datadir schema.DataDir
+		var datadir schema.Directory
 		return l.execute(rql, &datadir)
 
 	default:
@@ -90,9 +90,9 @@ func (l *lookupHandler) hasAccess(v interface{}) bool {
 	switch t := v.(type) {
 	case *schema.Project:
 		owner = t.Owner
-	case *schema.DataDir:
+	case *schema.Directory:
 		owner = t.Owner
-	case *schema.DataFile:
+	case *schema.File:
 		owner = t.Owner
 	}
 	return OwnerGaveAccessTo(owner, l.user, l.session)

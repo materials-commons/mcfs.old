@@ -45,7 +45,7 @@ func TestCreateFile(t *testing.T) {
 	createdID := resp.ID
 
 	// Validate the newly created datafile
-	df, err := model.GetDataFile(createdID, session)
+	df, err := model.GetFile(createdID, session)
 	if err != nil {
 		t.Fatalf("Unable to retrieve a newly created datafile %s", err)
 	}
@@ -84,7 +84,7 @@ func TestCreateFile(t *testing.T) {
 	if status != nil {
 		t.Fatalf("Unable to create file with matching size and checksum %s", status)
 	}
-	df, err = model.GetDataFile(resp.ID, session)
+	df, err = model.GetFile(resp.ID, session)
 	if err != nil {
 		t.Errorf("Unable to retrieve newly created datafile %s: %s", resp.ID, err)
 	}

@@ -22,7 +22,7 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 		dataDir, err := dh.GetDataDir(req)
 		switch {
 		case err == mc.ErrNotFound:
-			var parent *schema.DataDir
+			var parent *schema.Directory
 			if parent, err = dh.GetParent(req.Path); err != nil {
 				return nil, ss(mc.ErrorCodeNotFound, err)
 			}

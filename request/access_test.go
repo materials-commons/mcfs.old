@@ -22,7 +22,7 @@ func TestHasAccess(t *testing.T) {
 		t.Fatalf("Access failed when user is also the user")
 	}
 
-	ug := schema.NewUserGroup("mcfada@umich.edu", "tgroup1")
+	ug := schema.NewGroup("mcfada@umich.edu", "tgroup1")
 	ug.Users = append(ug.Users, "gtarcea@umich.edu")
 	rv, err := r.Table("usergroups").Insert(ug).RunWrite(session)
 	if err != nil {

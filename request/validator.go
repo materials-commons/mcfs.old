@@ -40,7 +40,7 @@ func (v modelValidator) datafileExistsInDataDir(datadirID, datafileName string) 
 	defer rows.Close()
 
 	for rows.Next() {
-		var df schema.DataFile
+		var df schema.File
 		rows.Scan(&df)
 		for _, ddirID := range df.DataDirs {
 			if datadirID == ddirID {

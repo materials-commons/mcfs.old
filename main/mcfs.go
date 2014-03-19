@@ -130,7 +130,7 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 
 	// Get datafile from db and check access
 	dataFileID := filepath.Base(req.URL.Path)
-	df, err := model.GetDataFile(dataFileID, session)
+	df, err := model.GetFile(dataFileID, session)
 	switch {
 	case err != nil:
 		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
@@ -146,7 +146,7 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 // otherwise it returns Id. UsesID is set when a file has already
 // been uploaded and their is a duplicate entry. Duplicates point
 // to the real file through UsesID.
-func idToUse(dataFile *schema.DataFile) string {
+func idToUse(dataFile *schema.File) string {
 	if dataFile.UsesID != "" {
 		return dataFile.UsesID
 	}

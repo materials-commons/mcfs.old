@@ -15,8 +15,8 @@ func newRFiles() rFiles {
 }
 
 // ByID looks up a file by its primary key. In RethinkDB this is the id field.
-func (f rFiles) ByID(id string) (*schema.DataFile, error) {
-	var file schema.DataFile
+func (f rFiles) ByID(id string) (*schema.File, error) {
+	var file schema.File
 	if err := model.Files.Q().ByID(id, &file); err != nil {
 		return nil, err
 	}
@@ -25,7 +25,7 @@ func (f rFiles) ByID(id string) (*schema.DataFile, error) {
 
 // Update updates an existing datafile. If you are adding the datafile to a directory
 // you should use the AddDirectories method. This method will not update related items.
-func (f rFiles) Update(file *schema.DataFile) error {
+func (f rFiles) Update(file *schema.File) error {
 	if err := model.Files.Q().Update(file.ID, file); err != nil {
 		return err
 	}
@@ -33,8 +33,8 @@ func (f rFiles) Update(file *schema.DataFile) error {
 }
 
 // Insert creates a new file entry.
-func (f rFiles) Insert(file *schema.DataFile) (*schema.DataFile, error) {
-	var newFile schema.DataFile
+func (f rFiles) Insert(file *schema.File) (*schema.File, error) {
+	var newFile schema.File
 	if err := model.Files.Q().Insert(file, &newFile); err != nil {
 		return nil, err
 	}
@@ -46,7 +46,7 @@ func (f rFiles) Insert(file *schema.DataFile) (*schema.DataFile, error) {
 
 // AddDirectories adds new directories to a file. It updates all related items
 // and join tables.
-func (f rFiles) AddDirectories(file *schema.DataFile, dirIDs ...string) error {
+func (f rFiles) AddDirectories(file *schema.File, dirIDs ...string) error {
 	// Add directories to to datafile
 	for _, id := range dirIDs {
 		file.DataDirs = append(file.DataDirs, id)
@@ -61,8 +61,8 @@ func (f rFiles) AddDirectories(file *schema.DataFile, dirIDs ...string) error {
 }
 
 // insertIntoDenrom updates the denorm table with the new file entries.
-func (f rFiles) insertIntoDenorm(file *schema.DataFile) error {
-	fileEntry := schema.DataFileEntry{
+func (f rFiles) insertIntoDenorm(file *schema.File) error {
+	fileEntry := schema.FileEntry{
 		ID:        file.ID,
 		Name:      file.Name,
 		Owner:     file.Owner,

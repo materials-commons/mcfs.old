@@ -56,8 +56,8 @@ func init() {
 
 	gob.Register(LookupReq{})
 
-	gob.Register(schema.DataFile{})
-	gob.Register(schema.DataDir{})
+	gob.Register(schema.File{})
+	gob.Register(schema.Directory{})
 	gob.Register(schema.Project{})
 
 	gob.Register(ProjectEntriesReq{})

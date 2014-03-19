@@ -51,7 +51,7 @@ func (h *rethinkCreateProjectHandler) GetProject(name, user string) (*schema.Pro
 }
 
 func (h *rethinkCreateProjectHandler) CreateProject(name, user string) (*schema.Project, error) {
-	datadir := schema.NewDataDir(name, "private", user, "")
+	datadir := schema.NewDirectory(name, "private", user, "")
 	rv, err := r.Table("datadirs").Insert(datadir).RunWrite(h.session)
 	if err != nil {
 		return nil, err
@@ -119,10 +119,10 @@ func (h *rethinkCreateDirHandler) GetProject(id string) (*schema.Project, error)
 	return model.GetProject(id, h.session)
 }
 
-func (h *rethinkCreateDirHandler) GetDataDir(req *protocol.CreateDirReq) (*schema.DataDir, error) {
+func (h *rethinkCreateDirHandler) GetDataDir(req *protocol.CreateDirReq) (*schema.Directory, error) {
 	rql := r.Table("project2datadir").GetAllByIndex("project_id", req.ProjectID).
 		EqJoin("datadir_id", r.Table("datadirs")).Zip().Filter(r.Row.Field("name").Eq(req.Path))
-	var dataDir schema.DataDir
+	var dataDir schema.Directory
 	err := model.GetRow(rql, h.session, &dataDir)
 	if err != nil {
 		return nil, err
@@ -130,10 +130,10 @@ func (h *rethinkCreateDirHandler) GetDataDir(req *protocol.CreateDirReq) (*schem
 	return &dataDir, nil
 }
 
-func (h *rethinkCreateDirHandler) GetParent(path string) (*schema.DataDir, error) {
+func (h *rethinkCreateDirHandler) GetParent(path string) (*schema.Directory, error) {
 	parent := filepath.Dir(path)
 	query := r.Table("datadirs").GetAllByIndex("name", parent)
-	var d schema.DataDir
+	var d schema.Directory
 	err := model.GetRow(query, h.session, &d)
 	if err != nil {
 		return nil, fmt.Errorf("no parent for %s", path)
@@ -141,8 +141,8 @@ func (h *rethinkCreateDirHandler) GetParent(path string) (*schema.DataDir, error
 	return &d, nil
 }
 
-func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, parentID string) (*schema.DataDir, error) {
-	datadir := schema.NewDataDir(req.Path, "private", user, parentID)
+func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, parentID string) (*schema.Directory, error) {
+	datadir := schema.NewDirectory(req.Path, "private", user, parentID)
 	var wr r.WriteResponse
 	wr, err := r.Table("datadirs").Insert(datadir).RunWrite(h.session)
 	if err == nil && wr.Inserted > 0 {
@@ -160,7 +160,7 @@ func (h *rethinkCreateDirHandler) CreateDir(req *protocol.CreateDirReq, user, pa
 	return nil, fmt.Errorf("unable to insert into database")
 }
 
-func (h *rethinkCreateDirHandler) denormInsert(datadir *schema.DataDir) error {
+func (h *rethinkCreateDirHandler) denormInsert(datadir *schema.Directory) error {
 	dataDirDenorm := schema.DataDirDenorm{
 		ID:        datadir.ID,
 		Name:      datadir.Name,
@@ -183,7 +183,7 @@ func (h *rethinkCreateFileHandler) Validate(req *protocol.CreateFileReq) error {
 	return nil
 }
 
-func (h *rethinkCreateFileHandler) CreateFile(req *protocol.CreateFileReq, user string) (*schema.DataDir, error) {
+func (h *rethinkCreateFileHandler) CreateFile(req *protocol.CreateFileReq, user string) (*schema.Directory, error) {
 	return nil, nil
 }
 
@@ -196,6 +196,6 @@ func Validate(req *protocol.CreateFileReq) error {
 }
 
 // CreateFile creates a file.
-func CreateFile(req *protocol.CreateFileReq, user string) (*schema.DataDir, error) {
+func CreateFile(req *protocol.CreateFileReq, user string) (*schema.Directory, error) {
 	return nil, nil
 }

@@ -85,8 +85,8 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *sta
 	return resp, nil
 }
 
-func (req *uploadReq) getDataFile() (*schema.DataFile, error) {
-	dataFile, err := model.GetDataFile(req.DataFileID, req.session)
+func (req *uploadReq) getDataFile() (*schema.File, error) {
+	dataFile, err := model.GetFile(req.DataFileID, req.session)
 	switch {
 	case err != nil:
 		return nil, fmt.Errorf("no such datafile %s", req.DataFileID)
@@ -110,7 +110,7 @@ func datafileSize(mcdir, dataFileID string) int64 {
 	}
 }
 
-func dataFileLocationID(dataFile *schema.DataFile) string {
+func dataFileLocationID(dataFile *schema.File) string {
 	if dataFile.UsesID != "" {
 		return dataFile.UsesID
 	}

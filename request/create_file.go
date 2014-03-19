@@ -27,7 +27,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		return nil, s
 	}
 
-	df := schema.NewDataFile(req.Name, "private", h.user)
+	df := schema.NewFile(req.Name, "private", h.user)
 	df.DataDirs = append(df.DataDirs, req.DataDirID)
 	df.Checksum = req.Checksum
 	df.Size = req.Size
@@ -49,7 +49,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 
 	// TODO: Eliminate an extra query to look up the DataDir
 	// when we just did during verification.
-	datadir, _ := model.GetDataDir(req.DataDirID, h.session)
+	datadir, _ := model.GetDirectory(req.DataDirID, h.session)
 	datadir.DataFiles = append(datadir.DataFiles, datafileID)
 
 	// TODO: Really should check for errors here. What do
@@ -73,7 +73,7 @@ func (h createFileHandler) validCreateFileReq(fileReq *protocol.CreateFileReq) e
 		return fmt.Errorf("user %s is not owner of project %s", h.user, proj.Name)
 	}
 
-	datadir, err := model.GetDataDir(fileReq.DataDirID, h.session)
+	datadir, err := model.GetDirectory(fileReq.DataDirID, h.session)
 	if err != nil {
 		return fmt.Errorf("unknown datadir Id %s", fileReq.DataDirID)
 	}
@@ -99,7 +99,7 @@ func (h createFileHandler) validCreateFileReq(fileReq *protocol.CreateFileReq) e
 
 func (h *createFileHandler) duplicateFileID(checksum string, size int64) (id string, err error) {
 	rql := r.Table("datafiles").GetAllByIndex("checksum", checksum)
-	var datafiles []schema.DataFile
+	var datafiles []schema.File
 	err = model.GetRows(rql, h.session, &datafiles)
 	if err != nil {
 		return "", nil

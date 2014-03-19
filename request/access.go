@@ -20,7 +20,7 @@ func OwnerGaveAccessTo(owner, user string, session *r.Session) bool {
 
 	// Get the file owners usergroups
 	rql := r.Table("usergroups").GetAllByIndex("owner", owner)
-	groups, err := model.MatchingUserGroups(rql, session)
+	groups, err := model.MatchingGroups(rql, session)
 	if err != nil {
 		return false
 	}

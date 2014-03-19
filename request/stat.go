@@ -8,7 +8,7 @@ import (
 )
 
 func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, *stateStatus) {
-	df, err := model.GetDataFile(req.DataFileID, h.session)
+	df, err := model.GetFile(req.DataFileID, h.session)
 	switch {
 	case err != nil:
 		return nil, ssf(mc.ErrorCodeNotFound, "Unknown id %s", req.DataFileID)
@@ -19,7 +19,7 @@ func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, *stateStat
 	}
 }
 
-func respStat(df *schema.DataFile) *protocol.StatResp {
+func respStat(df *schema.File) *protocol.StatResp {
 	return &protocol.StatResp{
 		DataFileID: df.ID,
 		Name:       df.Name,

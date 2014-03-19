@@ -24,16 +24,16 @@ type Users interface {
 
 // Files is the common API to files.
 type Files interface {
-	ByID(id string) (*schema.DataFile, error)
-	Update(*schema.DataFile) error
-	Insert(*schema.DataFile) (*schema.DataFile, error)
-	AddDirectories(file *schema.DataFile, dirIDs ...string) error
+	ByID(id string) (*schema.File, error)
+	Update(*schema.File) error
+	Insert(*schema.File) (*schema.File, error)
+	AddDirectories(file *schema.File, dirIDs ...string) error
 }
 
 // Dirs is the common API to directories.
 type Dirs interface {
-	ByID(id string) (*schema.DataDir, error)
-	Update(*schema.DataDir) error
-	Insert(*schema.DataDir) (*schema.DataDir, error)
-	AddFiles(dir *schema.DataDir, fileIDs ...string) error
+	ByID(id string) (*schema.Directory, error)
+	Update(*schema.Directory) error
+	Insert(*schema.Directory) (*schema.Directory, error)
+	AddFiles(dir *schema.Directory, fileIDs ...string) error
 }
