@@ -18,3 +18,8 @@ func datafilePath(mcdir, dataFileID string) string {
 func DataFilePath(mcdir, dataFileID string) string {
 	return datafilePath(mcdir, dataFileID)
 }
+
+// DataFileDir returns the directory path for a file
+func DataFileDir(mcdir, dataFileID string) string {
+	return datafileDir(mcdir, dataFileID)
+}

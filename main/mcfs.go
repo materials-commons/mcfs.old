@@ -41,6 +41,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Options for server startup
@@ -108,6 +109,8 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 		return
 	}
 
+	download := req.FormValue("download")
+
 	session, err := r.Connect(map[string]interface{}{
 		"address":  dbAddress,
 		"database": dbName,
@@ -137,9 +140,27 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	case !request.OwnerGaveAccessTo(df.Owner, u.Email, session):
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	default:
-		path := request.DataFilePath(mcDir, idToUse(df))
+		var path string
+		if isTiff(df.Name) && download == "" {
+			path = tiffConversionPath(mcDir, idToUse(df))
+		} else {
+			path = request.DataFilePath(mcDir, idToUse(df))
+		}
 		http.ServeFile(writer, req, path)
 	}
+}
+
+// isTiff checks a name to see if it is for a TIFF file.
+func isTiff(name string) bool {
+	ext := strings.ToLower(filepath.Ext(name))
+	if ext == ".tiff" || ext == ".tif" {
+		return true
+	}
+	return false
+}
+
+func tiffConversionPath(mcdir, id string) string {
+	return filepath.Join(request.DataFileDir(mcdir, id), ".conversion", id+".jpg")
 }
 
 // idToUse looks at a datafile and if UsesID is set returns that id
