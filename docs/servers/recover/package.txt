@@ -1,0 +1,25 @@
+PACKAGE DOCUMENTATION
+
+package recover
+    import "github.com/materials-commons/mcfs/servers/recover"
+
+
+
+FUNCTIONS
+
+func AddRequest(request *Request) error
+
+func Server() *recoveryServer
+
+
+TYPES
+
+type Request struct{}
+
+
+
+type Response struct{}
+
+
+
+

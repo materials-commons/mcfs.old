@@ -1,0 +1,45 @@
+PACKAGE DOCUMENTATION
+
+package inprogress
+    import "github.com/materials-commons/mcfs/request/inprogress"
+
+
+
+FUNCTIONS
+
+func Is(id string) bool
+    Is uses the global tracking list. It returns truck if an item is
+    tracked, and false otherwise.
+
+func Mark(id string) bool
+    Mark uses the global tracking list. It marks a particular item in
+    inprogress.
+
+func Unmark(id string)
+    Unmark uses the global tracking list. It marks an item as untracked.
+
+
+TYPES
+
+type Tracker struct {
+    // contains filtered or unexported fields
+}
+    Tracker holds the list of items being tracked as in progress. Access to
+    this object is thread safe.
+
+
+func NewTracker() *Tracker
+    NewTracker creates a new instance of a Tracker.
+
+
+func (t *Tracker) Is(id string) bool
+    Is returns true if a item is being tracked, false otherwise.
+
+func (t *Tracker) Mark(id string) bool
+    Mark marks a particular item as inprogress.
+
+func (t *Tracker) Unmark(id string)
+    Unmark marks an item as untracked.
+
+
+

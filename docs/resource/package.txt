@@ -1,0 +1,30 @@
+PACKAGE DOCUMENTATION
+
+package resource
+    import "github.com/materials-commons/mcfs/resource"
+
+
+
+TYPES
+
+type Resource interface {
+    Start() error
+    Stop() error
+    Status() ResourceStatus
+}
+    Resource is the interface that all resources must implement. A Resource
+    can be started, stopped and queried for access.
+
+
+
+type ResourceStatus struct {
+}
+    ResourceStatus represents the current status of a given resource.
+
+
+
+
+SUBDIRECTORIES
+
+	mcapi
+

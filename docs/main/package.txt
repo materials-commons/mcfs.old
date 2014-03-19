@@ -1,0 +1,27 @@
+COMMAND DOCUMENTATION
+
+    This package implements the Materials Commons File Server service. This
+    service provides upload/download of datafiles from the Materials Commons
+    repository.
+
+    The protocol for file uploads looks as follows:
+
+	1. The client sends the size, checksum and path. If the file
+	   is an existing file then it also sends the DataFileID for
+	   the file.
+	2. If the server receives a DataFileID it checks the size
+	   and checksum against what was sent. If the checksums
+	   match and the sizes are different then its a partially
+	   completed upload. If the checksums are different then
+	   its a new upload.
+	3. The server sends back the DataFileID. It will create a
+	   new DataFileID or send back an existing depending on
+	   whether its a new upload or an existing one.
+	4. The server will tell the client the offset to start
+	   sending data from. For a new upload this will be at
+	   position 0. For an existing one it will be the offset
+	   to restart the upload.
+
+    The protocol for file downloads looks as follows:
+
+

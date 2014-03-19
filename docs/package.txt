@@ -1,0 +1,35 @@
+PACKAGE DOCUMENTATION
+
+package mcfs
+    import "github.com/materials-commons/mcfs"
+
+
+
+VARIABLES
+
+var ErrDBInsertFailed = fmt.Errorf("insert failed")
+    ErrDBInsertFailed Failed to Insert item in database.
+
+var ErrDBLookupFailed = fmt.Errorf("lookup failed")
+    ErrDBLookupFailed Failed to lookup item in database.
+
+var ErrDBRelatedUpdateFailed = fmt.Errorf("related item update failed")
+    ErrDBRelatedUpdateFailed Failed to update related item(s) in database.
+
+var ErrDBUpdateFailed = fmt.Errorf("update failed")
+    ErrDBUpdateFailed Failed to update item in database.
+
+var ErrServerNotRunning = fmt.Errorf("server not running")
+    ErrServerNotRunning Attempt to access a server that is not running.
+
+
+SUBDIRECTORIES
+
+	docs
+	main
+	protocol
+	request
+	resource
+	servers
+	service
+

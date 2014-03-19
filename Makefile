@@ -1,4 +1,4 @@
-.PHONY: bin test all fmt deploy
+.PHONY: bin test all fmt deploy docs
 
 all: fmt test bin
 
@@ -7,6 +7,9 @@ bin:
 
 test:
 	-go test -v ./...
+
+docs:
+	./makedocs.sh
 
 fmt:
 	-go fmt ./...

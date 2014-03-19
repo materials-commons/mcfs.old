@@ -1,0 +1,54 @@
+PACKAGE DOCUMENTATION
+
+package handler
+    import "github.com/materials-commons/mcfs/request/handler"
+
+
+
+FUNCTIONS
+
+func CreateFile(req *protocol.CreateFileReq, user string) (*schema.DataDir, error)
+    CreateFile creates a file.
+
+func Validate(req *protocol.CreateFileReq) error
+    Validate validates a CreateFileReq.
+
+
+TYPES
+
+type CreateDirHandler interface {
+    GetProject(id string) (*schema.Project, error)
+    GetDataDir(req *protocol.CreateDirReq) (*schema.DataDir, error)
+    GetParent(path string) (*schema.DataDir, error)
+    CreateDir(req *protocol.CreateDirReq, user, parentID string) (*schema.DataDir, error)
+}
+    CreateDirHandler defines the interface for creating a directory.
+
+
+func NewCreateDir(db interface{}) CreateDirHandler
+    NewCreateDir creates a new CreateDirHandler.
+
+
+
+type CreateFileHandler interface {
+    Validate(req *protocol.CreateFileReq) error
+    CreateFile(req *protocol.CreateFileReq, user string) (*schema.DataDir, error)
+}
+    CreateFileHandler defines the interface for creating a file.
+
+
+
+type CreateProjectHandler interface {
+    Validate(req *protocol.CreateProjectReq) bool
+    GetProject(name, user string) (*schema.Project, error)
+    CreateProject(name, user string) (*schema.Project, error)
+}
+    CreateProjectHandler defines the interface for creating project.
+
+
+func NewCreateProject(db interface{}) CreateProjectHandler
+    NewCreateProject creates a new CreateProjectHandler.
+
+
+
+
