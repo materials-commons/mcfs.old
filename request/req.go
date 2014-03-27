@@ -145,8 +145,8 @@ func (h *ReqHandler) nextCommand() reqStateFN {
 	case protocol.DownloadReq:
 	case protocol.MoveReq:
 	case protocol.DeleteReq:
-	case protocol.ProjectEntriesReq:
-		resp, s = h.projectEntries(&req)
+	case protocol.StatProjectReq:
+		resp, s = h.statProject(&req)
 	case protocol.LookupReq:
 		resp, s = h.lookup(&req)
 	case protocol.LogoutReq:

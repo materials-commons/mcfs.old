@@ -60,8 +60,8 @@ func init() {
 	gob.Register(schema.Directory{})
 	gob.Register(schema.Project{})
 
-	gob.Register(ProjectEntriesReq{})
-	gob.Register(ProjectEntriesResp{})
+	gob.Register(StatProjectReq{})
+	gob.Register(StatProjectResp{})
 	gob.Register(ProjectEntry{})
 }
 
@@ -255,7 +255,7 @@ type LookupReq struct {
 }
 
 // ProjectEntriesReq project entries request.
-type ProjectEntriesReq struct {
+type StatProjectReq struct {
 	Name string
 }
 
@@ -270,7 +270,7 @@ type ProjectEntry struct {
 }
 
 // ProjectEntriesResp response to a ProjectEntriesReq.
-type ProjectEntriesResp struct {
+type StatProjectResp struct {
 	ProjectID string
 	Entries   []ProjectEntry
 }
