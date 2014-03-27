@@ -90,3 +90,18 @@ func (p *statProjectHandler) entriesRql(projectID string) r.RqlTerm {
 			return ddirRow.Field("datafiles").Contains(dfRow.Field("id"))
 		}).Zip().Pluck("datadir_name", "datadir_id", "name", "id", "size", "checksum")
 }
+
+func (p *statProjectHandler) projectDirList(projectID string) {
+	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID)
+	rql = rql.EqJoin("datadir_id", r.Table("datadirs_denorm")).Zip()
+	var entries []schema.DataDirDenorm
+	err := model.DirsDenorm.Qs(p.session).Rows(rql, &entries)
+	var _ = err
+	var _ = entries
+}
+
+func (p *statProjectHandler) buildEntries(entries []schema.DataDirDenorm) {
+	for _, d := range entries {
+		var _ = d
+	}
+}
