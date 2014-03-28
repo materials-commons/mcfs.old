@@ -3,11 +3,11 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/base/dir"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/base/dir"
 	"path/filepath"
 	"sort"
 )
@@ -17,7 +17,7 @@ var _ = fmt.Println
 type statProjectHandler struct {
 	session *r.Session
 	user    string
-	files []*dir.FileInfo
+	files   []*dir.FileInfo
 }
 
 func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatProjectResp, *stateStatus) {
@@ -122,26 +122,19 @@ func (f fileList) Less(i, j int) bool {
 func (p *statProjectHandler) buildDirectoryList(entries []schema.DataDirDenorm) {
 	for _, d := range entries {
 		newDir := &dir.FileInfo{
-			Path: d.Name,
+			Path:  d.Name,
 			MTime: d.Birthtime,
 			IsDir: true,
 		}
 		p.files = append(p.files, newDir)
 		for _, f := range d.DataFiles {
 			newFile := &dir.FileInfo{
-				Path: filepath.Join(d.Name, f.Name),
-				Size: f.Size,
+				Path:     filepath.Join(d.Name, f.Name),
+				Size:     f.Size,
 				Checksum: f.Checksum,
-				MTime: f.Birthtime,
+				MTime:    f.Birthtime,
 			}
 			p.files = append(p.files, newFile)
 		}
 	}
 }
-
-
-
-
-
-
-
