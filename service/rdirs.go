@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/gohandy/arrays"
 	"github.com/materials-commons/mcfs"
 )
 
@@ -94,6 +95,27 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 	}
 
 	return nil
+}
+
+func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
+	dir.DataFiles = arrays.Strings.Remove(dir.DataFiles, fileIDs...)
+	d.Update(dir)
+	var dirDenorm schema.DataDirDenorm
+	model.DirsDenorm.Q().ByID(dir.ID, &dirDenorm)
+	dirDenorm.DataFiles = removeMatchingFileIDs(dirDenorm, fileIDs...)
+	return nil
+}
+
+func removeMatchingFileIDs(d schema.DataDirDenorm, fileIDs ...string) []schema.FileEntry {
+	return d.Filter(func(f schema.FileEntry) bool {
+		found := false
+		for _, fileID := range fileIDs {
+			if fileID == f.ID {
+				found = true
+			}
+		}
+		return !found
+	})
 }
 
 // createDataFiles creates the datafiles entries for the datadirs_denorm table from

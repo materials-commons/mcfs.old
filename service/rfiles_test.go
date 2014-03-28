@@ -47,5 +47,6 @@ func TestRFilesInsert(t *testing.T) {
 
 func rfilesCleanup(f *schema.File) {
 	session, _ := db.RSession()
+	fmt.Println("Deleting file: ", f.ID)
 	r.Table("datafiles").Get(f.ID).Delete().RunWrite(session)
 }

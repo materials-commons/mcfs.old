@@ -44,6 +44,25 @@ func (f rFiles) Insert(file *schema.File) (*schema.File, error) {
 	return &newFile, nil
 }
 
+// Delete deletes a file. It updates dependent objects.
+func (f rFiles) Delete(id string) error {
+	file, err := f.ByID(id)
+	if err != nil {
+		return err
+	}
+
+	if err := model.Files.Q().Delete(id); err != nil {
+		return err
+	}
+
+	rDirs := newRDirs()
+	for _, dirID := range file.DataDirs {
+		d, _ := rDirs.ByID(dirID)
+		rDirs.RemoveFiles(d, file.ID)
+	}
+	return nil
+}
+
 // AddDirectories adds new directories to a file. It updates all related items
 // and join tables.
 func (f rFiles) AddDirectories(file *schema.File, dirIDs ...string) error {

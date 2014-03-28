@@ -7,6 +7,9 @@ import (
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/base/dir"
+	"path/filepath"
+	"sort"
 )
 
 var _ = fmt.Println
@@ -14,6 +17,7 @@ var _ = fmt.Println
 type statProjectHandler struct {
 	session *r.Session
 	user    string
+	files []*dir.FileInfo
 }
 
 func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatProjectResp, *stateStatus) {
@@ -92,16 +96,52 @@ func (p *statProjectHandler) entriesRql(projectID string) r.RqlTerm {
 }
 
 func (p *statProjectHandler) projectDirList(projectID string) {
-	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID)
-	rql = rql.EqJoin("datadir_id", r.Table("datadirs_denorm")).Zip()
+	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID).EqJoin("datadir_id", r.Table("datadirs_denorm")).Zip()
 	var entries []schema.DataDirDenorm
-	err := model.DirsDenorm.Qs(p.session).Rows(rql, &entries)
-	var _ = err
-	var _ = entries
+	if err := model.DirsDenorm.Qs(p.session).Rows(rql, &entries); err != nil {
+		return
+	}
+	p.buildDirectoryList(entries)
+	sort.Sort(fileList(p.files))
 }
 
-func (p *statProjectHandler) buildEntries(entries []schema.DataDirDenorm) {
+type fileList []*dir.FileInfo
+
+func (f fileList) Len() int {
+	return len(f)
+}
+
+func (f fileList) Swap(i, j int) {
+	f[i], f[j] = f[j], f[i]
+}
+
+func (f fileList) Less(i, j int) bool {
+	return f[i].Path < f[j].Path
+}
+
+func (p *statProjectHandler) buildDirectoryList(entries []schema.DataDirDenorm) {
 	for _, d := range entries {
-		var _ = d
+		newDir := &dir.FileInfo{
+			Path: d.Name,
+			MTime: d.Birthtime,
+			IsDir: true,
+		}
+		p.files = append(p.files, newDir)
+		for _, f := range d.DataFiles {
+			newFile := &dir.FileInfo{
+				Path: filepath.Join(d.Name, f.Name),
+				Size: f.Size,
+				Checksum: f.Checksum,
+				MTime: f.Birthtime,
+			}
+			p.files = append(p.files, newFile)
+		}
 	}
 }
+
+
+
+
+
+
+

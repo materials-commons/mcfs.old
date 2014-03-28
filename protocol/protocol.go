@@ -257,6 +257,7 @@ type LookupReq struct {
 // ProjectEntriesReq project entries request.
 type StatProjectReq struct {
 	Name string
+	ID   string
 }
 
 // ProjectEntry an entry in a project.

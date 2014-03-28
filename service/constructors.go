@@ -35,3 +35,15 @@ func NewFiles(serviceDatabase ServiceDatabase) Files {
 		panic("Unknown service type")
 	}
 }
+
+// NewProjects creates a new Projects instance connecting to a specific database backend.
+func NewProjects(serviceDatabase ServiceDatabase) Projects {
+	switch serviceDatabase {
+	case RethinkDB:
+		return newRProjects()
+	case SQL:
+		panic("SQL ServiceDatabase not supported")
+	default:
+		panic("Unknown service type")
+	}
+}

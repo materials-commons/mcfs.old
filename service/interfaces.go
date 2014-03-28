@@ -1,6 +1,7 @@
 package service
 
 import (
+	"github.com/materials-commons/base/dir"
 	"github.com/materials-commons/base/schema"
 )
 
@@ -27,6 +28,7 @@ type Files interface {
 	ByID(id string) (*schema.File, error)
 	Update(*schema.File) error
 	Insert(*schema.File) (*schema.File, error)
+	Delete(id string) error
 	AddDirectories(file *schema.File, dirIDs ...string) error
 }
 
@@ -36,4 +38,13 @@ type Dirs interface {
 	Update(*schema.Directory) error
 	Insert(*schema.Directory) (*schema.Directory, error)
 	AddFiles(dir *schema.Directory, fileIDs ...string) error
+	RemoveFiles(dir *schema.Directory, fileIDs ...string) error
+}
+
+// Projects is the common API to projects.
+type Projects interface {
+	ByID(id string) (*schema.Project, error)
+	Files(id string) ([]*dir.FileInfo, error)
+	Update(*schema.Project) error
+	Insert(*schema.Project) (*schema.Project, error)
 }
