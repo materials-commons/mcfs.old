@@ -14,10 +14,6 @@ const maxBadRequests = 10
 
 type reqStateFN func() reqStateFN
 
-type db struct {
-	session *r.Session
-}
-
 // ReqHandler is an instance of the request state machine for handling client requests.
 type ReqHandler struct {
 	session *r.Session
