@@ -97,6 +97,31 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 	return nil
 }
 
+// createDataFiles creates the datafiles entries for the datadirs_denorm table from
+// the ids contained in a DataDir
+func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.FileEntry, err error) {
+	var errorReturn error
+	for _, dataFileID := range dataFileIDs {
+		var dataFile schema.File
+		if err := model.Files.Q().ByID(dataFileID, &dataFile); err != nil {
+			errorReturn = mcfs.ErrDBLookupFailed
+			continue
+		}
+
+		dataFileEntry := schema.FileEntry{
+			ID:        dataFile.ID,
+			Name:      dataFile.Name,
+			Owner:     dataFile.Owner,
+			Birthtime: dataFile.Birthtime,
+			Checksum:  dataFile.Checksum,
+			Size:      dataFile.Size,
+		}
+		dataFileEntries = append(dataFileEntries, dataFileEntry)
+	}
+
+	return dataFileEntries, errorReturn
+}
+
 // RemoveFiles removes matching file ids from the directory and the dependent denorm
 // table entries.
 func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
@@ -127,29 +152,4 @@ func removeMatchingFileIDs(d schema.DataDirDenorm, fileIDs ...string) []schema.F
 		// Didn't find a match so keep entry
 		return !found
 	})
-}
-
-// createDataFiles creates the datafiles entries for the datadirs_denorm table from
-// the ids contained in a DataDir
-func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.FileEntry, err error) {
-	var errorReturn error
-	for _, dataFileID := range dataFileIDs {
-		var dataFile schema.File
-		if err := model.Files.Q().ByID(dataFileID, &dataFile); err != nil {
-			errorReturn = mcfs.ErrDBLookupFailed
-			continue
-		}
-
-		dataFileEntry := schema.FileEntry{
-			ID:        dataFile.ID,
-			Name:      dataFile.Name,
-			Owner:     dataFile.Owner,
-			Birthtime: dataFile.Birthtime,
-			Checksum:  dataFile.Checksum,
-			Size:      dataFile.Size,
-		}
-		dataFileEntries = append(dataFileEntries, dataFileEntry)
-	}
-
-	return dataFileEntries, errorReturn
 }
