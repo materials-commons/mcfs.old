@@ -23,24 +23,24 @@ func TestCreateFile(t *testing.T) {
 		Checksum:  "abc123",
 	}
 
-	resp, status := h.createFile(&createFileRequest)
-	if status == nil {
+	resp, err := h.createFile(&createFileRequest)
+	if err == nil {
 		t.Fatalf("Created file with no size")
 	}
 
 	createFileRequest.Size = 1
 	createFileRequest.Checksum = ""
-	resp, status = h.createFile(&createFileRequest)
-	if status == nil {
+	resp, err = h.createFile(&createFileRequest)
+	if err == nil {
 		t.Fatalf("Created file with no checksum")
 	}
 
 	// Test create a valid file
 	createFileRequest.Size = 1
 	createFileRequest.Checksum = "abc123"
-	resp, status = h.createFile(&createFileRequest)
-	if status != nil {
-		t.Fatalf("Create file failed %s", status.err)
+	resp, err = h.createFile(&createFileRequest)
+	if err != nil {
+		t.Fatalf("Create file failed %s", err)
 	}
 	createdID := resp.ID
 
@@ -80,9 +80,9 @@ func TestCreateFile(t *testing.T) {
 
 	// Test create new file that matches existing file size and checksum
 	createFileRequest.DataDirID = "d0b001c6-fc0a-4e95-97c3-4427de68c0a5"
-	resp, status = h.createFile(&createFileRequest)
-	if status != nil {
-		t.Fatalf("Unable to create file with matching size and checksum %s", status)
+	resp, err = h.createFile(&createFileRequest)
+	if err != nil {
+		t.Fatalf("Unable to create file with matching size and checksum %s", err)
 	}
 	df, err = model.GetFile(resp.ID, session)
 	if err != nil {
@@ -99,8 +99,8 @@ func TestCreateFile(t *testing.T) {
 	createdID2 := resp.ID
 
 	// Test creating an existing file
-	resp, status = h.createFile(&createFileRequest)
-	if status == nil {
+	resp, err = h.createFile(&createFileRequest)
+	if err == nil {
 		t.Fatalf("Allowed create of an existing file")
 	}
 
@@ -111,23 +111,23 @@ func TestCreateFile(t *testing.T) {
 	// Test creating with an invalid project id
 	validProjectID := createFileRequest.ProjectID
 	createFileRequest.ProjectID = "abc123-doesnotexist"
-	resp, status = h.createFile(&createFileRequest)
-	if status == nil {
+	resp, err = h.createFile(&createFileRequest)
+	if err == nil {
 		t.Fatalf("Allowed creation of file with bad projectid")
 	}
 
 	// Test creating with an invalid datadir id
 	createFileRequest.ProjectID = validProjectID
 	createFileRequest.DataDirID = "abc123-doesnotexist"
-	resp, status = h.createFile(&createFileRequest)
-	if status == nil {
+	resp, err = h.createFile(&createFileRequest)
+	if err == nil {
 		t.Fatalf("Allowed creation of file with bad projectid")
 	}
 
 	// Test creating with a datadir not in project
 	createFileRequest.DataDirID = "ae0cf23f-2588-4864-bf34-455b0aa23ed6"
-	resp, status = h.createFile(&createFileRequest)
-	if status == nil {
+	resp, err = h.createFile(&createFileRequest)
+	if err == nil {
 		t.Fatalf("Allowed creation of file in a datadir not in project")
 	}
 

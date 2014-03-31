@@ -25,8 +25,8 @@ func TestUploadCasesFile(t *testing.T) {
 		Checksum:   "abc123",
 	}
 
-	resp, status := h.upload(&uploadReq)
-	if status == nil {
+	resp, err := h.upload(&uploadReq)
+	if err == nil {
 		t.Fatalf("Upload req succeeded with a non existant datafile id")
 	}
 
@@ -44,9 +44,9 @@ func TestUploadCasesFile(t *testing.T) {
 
 	uploadReq.DataFileID = createdID
 
-	resp, status = h.upload(&uploadReq)
-	if status != nil {
-		t.Fatalf("Failed to start upload on a valid file %s", status.err)
+	resp, err = h.upload(&uploadReq)
+	if err != nil {
+		t.Fatalf("Failed to start upload on a valid file %s", err)
 	}
 
 	if resp.DataFileID != createdID {
@@ -59,31 +59,31 @@ func TestUploadCasesFile(t *testing.T) {
 
 	// Test create and then upload with size larger
 	uploadReq.Size = 7
-	resp, status = h.upload(&uploadReq)
-	if status == nil {
+	resp, err = h.upload(&uploadReq)
+	if err == nil {
 		t.Fatalf("Upload with different size should have failed")
 	}
 
 	// Test create and then upload with size smaller
 	uploadReq.Size = 5
-	resp, status = h.upload(&uploadReq)
-	if status == nil {
+	resp, err = h.upload(&uploadReq)
+	if err == nil {
 		t.Fatalf("Upload with different size should have failed")
 	}
 
 	// Test create and then upload with different checksum
 	uploadReq.Size = 6
 	uploadReq.Checksum = "def456"
-	resp, status = h.upload(&uploadReq)
-	if status == nil {
+	resp, err = h.upload(&uploadReq)
+	if err == nil {
 		t.Fatalf("Upload with different checksum should have failed")
 	}
 
 	// Test create and then upload with different size and checksum
 	uploadReq.Size = 7
 	uploadReq.Checksum = "def456"
-	resp, status = h.upload(&uploadReq)
-	if status == nil {
+	resp, err = h.upload(&uploadReq)
+	if err == nil {
 		t.Fatalf("Upload with different checksum should have failed")
 	}
 
@@ -91,8 +91,8 @@ func TestUploadCasesFile(t *testing.T) {
 	h.user = "test2@mc.org"
 	uploadReq.Size = 6
 	uploadReq.Checksum = "abc123"
-	resp, status = h.upload(&uploadReq)
-	if status == nil {
+	resp, err = h.upload(&uploadReq)
+	if err == nil {
 		t.Fatalf("Allowing upload when user doesn't have permission")
 	}
 
@@ -104,8 +104,8 @@ func TestUploadCasesFile(t *testing.T) {
 	w.Write([]byte("Hello"))
 	w.(*os.File).Sync()
 
-	resp, status = h.upload(&uploadReq)
-	if status != nil {
+	resp, err = h.upload(&uploadReq)
+	if err != nil {
 		t.Fatalf("Restart interrupted failed")
 	}
 	if resp.Offset != 5 {
@@ -118,17 +118,17 @@ func TestUploadCasesFile(t *testing.T) {
 	// Test new version with previous interrupted
 	uploadReq.Size = 8
 	uploadReq.Checksum = "def456"
-	resp, status = h.upload(&uploadReq)
-	if status == nil {
+	resp, err = h.upload(&uploadReq)
+	if err == nil {
 		t.Fatalf("Allowed to create a new version when a previous version hasn't completed upload")
 	}
 
 	// Test new version when previous version has completed the upload
 	w.Write([]byte("s")) // Get file to correct size to complete upload
 	w.Close()
-	resp, status = h.upload(&uploadReq)
-	if status != nil {
-		t.Fatalf("Cannot create new version of file already uploaded %s", status.err)
+	resp, err = h.upload(&uploadReq)
+	if err != nil {
+		t.Fatalf("Cannot create new version of file already uploaded %s", err)
 	}
 
 	if resp.DataFileID == createdID {
@@ -173,9 +173,9 @@ func TestUploadNewFile(t *testing.T) {
 		Checksum:   checksumHex,
 	}
 
-	resp, status := h.upload(&uploadReq)
-	if status != nil {
-		t.Fatalf("error %s", status.err)
+	resp, err := h.upload(&uploadReq)
+	if err != nil {
+		t.Fatalf("error %s", err)
 	}
 
 	if resp.DataFileID != createdID {
@@ -197,7 +197,7 @@ func TestUploadNewFile(t *testing.T) {
 		Bytes:      []byte(testfileData),
 	}
 
-	n, status := uploadHandler.sendReqWrite(&sendReq)
+	n, err := uploadHandler.sendReqWrite(&sendReq)
 	if n != len(testfileData) {
 		t.Fatalf("Incorrect number of bytes written expected %d, wrote %d", testfileLen, n)
 	}
@@ -245,9 +245,9 @@ func TestPartialToCompleted(t *testing.T) {
 		Checksum:   checksumHex,
 	}
 
-	resp, status := h.upload(&uploadReq)
-	if status != nil {
-		t.Fatalf("error %s", status.err)
+	resp, err := h.upload(&uploadReq)
+	if err != nil {
+		t.Fatalf("error %s", err)
 	}
 
 	if resp.DataFileID != createdID {
@@ -275,9 +275,9 @@ func TestPartialToCompleted(t *testing.T) {
 	dfClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
 
 	// Start a new uploadReq so we can finish the upload
-	resp, status = h.upload(&uploadReq)
-	if status != nil {
-		t.Fatalf("Completing upload rejected %s", status.err)
+	resp, err = h.upload(&uploadReq)
+	if err != nil {
+		t.Fatalf("Completing upload rejected %s", err)
 	}
 
 	if resp.DataFileID != createdID {
@@ -341,9 +341,9 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 		Checksum:   checksumHex,
 	}
 
-	resp, status := h.upload(&uploadReq)
-	if status != nil {
-		t.Fatalf("error %s", status.err)
+	resp, err := h.upload(&uploadReq)
+	if err != nil {
+		t.Fatalf("error %s", err)
 	}
 
 	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
@@ -371,14 +371,14 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	// second create file call.
 	//
 	createFileRequest.DataDirID = "c3d72271-4a32-4080-a6a3-b4c6a5c4b986"
-	createResp, status = h.createFile(&createFileRequest)
-	if status != nil {
-		t.Errorf("Failed to create new file: %s", status.err)
+	createResp, err = h.createFile(&createFileRequest)
+	if err != nil {
+		t.Errorf("Failed to create new file: %s", err)
 	}
 
 	newID := createResp.ID
 	uploadReq.DataFileID = newID
-	resp, status = h.upload(&uploadReq)
+	resp, err = h.upload(&uploadReq)
 	if resp.DataFileID != createdID {
 		t.Errorf("Wronge datafile id sent when uploading a file that matches on the server. Expected %s, got %s", createdID, resp.DataFileID)
 	}
@@ -392,7 +392,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	w, err := datafileOpen(h.mcdir, createdID, testfileLen-1)
 	w.Write([]byte(testfileData[len(testfileData)-1:]))
 	w.Close()
-	resp, status = h.upload(&uploadReq)
+	resp, err = h.upload(&uploadReq)
 	if resp.DataFileID != newID {
 		t.Errorf("Wrong datafile id sent when uploading a file that matches on the server. Expected %s, got %s", newID, resp.DataFileID)
 	}

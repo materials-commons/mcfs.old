@@ -17,7 +17,7 @@ type uploadReq struct {
 	*ReqHandler
 }
 
-func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *stateStatus) {
+func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, error) {
 	ureq := &uploadReq{
 		UploadReq:  req,
 		ReqHandler: h,
@@ -28,7 +28,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *sta
 	dataFile, err := ureq.getDataFile()
 
 	if err != nil {
-		return nil, ss(mc.ErrorCodeNotFound, err)
+		return nil, mc.Errorm(mc.ErrNotFound, err)
 	}
 
 	dataFileIDToUse := dataFileLocationID(dataFile)
@@ -37,7 +37,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *sta
 	switch {
 	case fsize == -1:
 		// Problem doing a stat on the file path, send back an error
-		return nil, ssf(mc.ErrorCodeNoAccess, "Access to path for file %s denied", req.DataFileID)
+		return nil, mc.Errorf(mc.ErrNoAccess, "Access to path for file %s denied", req.DataFileID)
 	case dataFile.Size == ureq.Size && dataFile.Checksum == ureq.Checksum:
 		if fsize < ureq.Size {
 			//interrupted transfer
@@ -51,14 +51,14 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *sta
 		} else {
 			// fsize > ureq.Size && checksums are equal
 			// Houston we have a problem!
-			return nil, ssf(mc.ErrorCodeInvalid, "Fatal error fsize (%d) > ureq.Size (%d) with equal checksums", fsize, ureq.Size)
+			return nil, mc.Errorf(mc.ErrInvalid, "Fatal error fsize (%d) > ureq.Size (%d) with equal checksums", fsize, ureq.Size)
 		}
 
 	case dataFile.Size != ureq.Size:
 		// wants to upload a new version
 		if fsize < dataFile.Size {
 			// Other upload hasn't completed - reject this one until other completes
-			return nil, ssf(mc.ErrorCodeInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
+			return nil, mc.Errorf(mc.ErrInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
 		}
 
 		// create a new version and send new data file and offset = 0
@@ -69,7 +69,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *sta
 		// wants to upload new version
 		if fsize < dataFile.Size {
 			// Other upload hasn't completed - reject this one until other completes
-			return nil, ssf(mc.ErrorCodeInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
+			return nil, mc.Errorf(mc.ErrInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
 		}
 
 		// create a new version start upload
@@ -79,7 +79,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, *sta
 
 	default:
 		// We should never get here so this is a bug that we need to log
-		return nil, ssf(mc.ErrorCodeInvalid, "Internal fatal error")
+		return nil, mc.ErrInternal
 	}
 
 	return resp, nil
@@ -203,7 +203,7 @@ func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uplo
 func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
 	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
 	if err != nil {
-		h.respError(nil, ss(mc.ErrorCodeInternal, err))
+		h.respError(nil, mc.Errorm(mc.ErrInternal, err))
 		return h.nextCommand
 	}
 
@@ -215,10 +215,10 @@ func (h *uploadHandler) uploadState() reqStateFN {
 	request := h.req()
 	switch req := request.(type) {
 	case protocol.SendReq:
-		n, s := h.sendReqWrite(&req)
-		if s != nil {
+		n, err := h.sendReqWrite(&req)
+		if err != nil {
 			dfClose(h.w, h.dataFileID, h.session)
-			h.respError(nil, s)
+			h.respError(nil, err)
 			return h.nextCommand
 		}
 		h.nbytes = h.nbytes + int64(n)
@@ -240,18 +240,18 @@ func (h *uploadHandler) uploadState() reqStateFN {
 		return h.nextCommand
 	default:
 		dfClose(h.w, h.dataFileID, h.session)
-		return h.badRequestNext(ssf(mc.ErrorCodeInvalid, "Unknown Request Type %T", req))
+		return h.badRequestNext(mc.Errorf(mc.ErrInvalid, "Unknown Request Type %T", req))
 	}
 }
 
-func (h *uploadHandler) sendReqWrite(req *protocol.SendReq) (int, *stateStatus) {
+func (h *uploadHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
 	if req.DataFileID != h.dataFileID {
-		return 0, ssf(mc.ErrorCodeInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, h.dataFileID)
+		return 0, mc.Errorf(mc.ErrInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, h.dataFileID)
 	}
 
 	n, err := dfWrite(h.w, req.Bytes)
 	if err != nil {
-		return 0, ssf(mc.ErrorCodeInternal, "Write unexpectedly failed for %s", req.DataFileID)
+		return 0, mc.Errorf(mc.ErrInternal, "Write unexpectedly failed for %s", req.DataFileID)
 	}
 
 	return n, nil

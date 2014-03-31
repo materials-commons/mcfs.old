@@ -13,18 +13,13 @@ type createFileHandler struct {
 	modelValidator
 }
 
-func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, s *stateStatus) {
+func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
 	cfh := createFileHandler{
 		modelValidator: newModelValidator(h.user, h.session),
 	}
 
 	if err := cfh.validCreateFileReq(req); err != nil {
-		if err == mc.ErrExists {
-			s = ss(mc.ErrorCodeExists, err)
-		} else {
-			s = ss(mc.ErrorCodeInvalid, err)
-		}
-		return nil, s
+		return nil, err
 	}
 
 	df := schema.NewFile(req.Name, "private", h.user)
@@ -37,13 +32,11 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	}
 	rv, err := r.Table("datafiles").Insert(df).RunWrite(h.session)
 	if err != nil {
-		s = ss(mc.ErrorCodeCreate, err)
-		return nil, s
+		return nil, err
 	}
 
 	if rv.Inserted == 0 {
-		s = ssf(mc.ErrorCodeCreate, "Unable to insert datafile")
-		return nil, s
+		return nil, mc.ErrCreate
 	}
 	datafileID := rv.GeneratedKeys[0]
 

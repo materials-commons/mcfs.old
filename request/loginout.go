@@ -7,13 +7,13 @@ import (
 	"github.com/materials-commons/mcfs/protocol"
 )
 
-func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, *stateStatus) {
+func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, error) {
 	if validLogin(req.User, req.APIKey, h.session) {
 		h.user = req.User
 		return &protocol.LoginResp{}, nil
 	}
 
-	return nil, ssf(mc.ErrorCodeInvalid, "Bad login %s/%s", req.User, req.APIKey)
+	return nil, mc.Errorf(mc.ErrInvalid, "Bad login %s/%s", req.User, req.APIKey)
 }
 
 func validLogin(user, apikey string, session *r.Session) bool {
@@ -28,6 +28,6 @@ func validLogin(user, apikey string, session *r.Session) bool {
 	}
 }
 
-func (h *ReqHandler) logout(req *protocol.LogoutReq) (*protocol.LogoutResp, *stateStatus) {
+func (h *ReqHandler) logout(req *protocol.LogoutReq) (*protocol.LogoutResp, error) {
 	return &protocol.LogoutResp{}, nil
 }

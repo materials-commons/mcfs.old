@@ -18,12 +18,12 @@ func TestCreateProject(t *testing.T) {
 	}
 
 	// Test create new project
-	resp, status := h.createProject(&createProjectRequest)
+	resp, err := h.createProject(&createProjectRequest)
 
 	projectID := resp.ProjectID
 	datadirID := resp.DataDirID
 
-	if status != nil {
+	if err != nil {
 		t.Fatalf("Unable to create project")
 	}
 
@@ -54,9 +54,9 @@ func TestCreateProject(t *testing.T) {
 	}
 
 	// Test create existing project
-	resp, status = h.createProject(&createProjectRequest)
-	if status.status != mc.ErrorCodeExists {
-		t.Errorf("Creating an existing project should have returned err mc.ErrorCodeExists, returned %d instead", status.status)
+	resp, err = h.createProject(&createProjectRequest)
+	if err != mc.ErrExists {
+		t.Errorf("Creating an existing project should have returned err mc.ErrorCodeExists, returned %d instead", err)
 	}
 
 	// Delete before test so we can cleanup if there is a failure
@@ -64,7 +64,7 @@ func TestCreateProject(t *testing.T) {
 	model.Delete("projects", projectID, session)
 	model.Delete("project2datadir", p2d.ID, session)
 
-	if status == nil {
+	if err == nil {
 		t.Fatalf("Created an existing project - shouldn't be able to")
 	}
 
@@ -81,8 +81,8 @@ func TestCreateProject(t *testing.T) {
 	}
 	// Test create project with invalid name
 	createProjectRequest.Name = "/InvalidName"
-	resp, status = h.createProject(&createProjectRequest)
-	if status == nil {
+	resp, err = h.createProject(&createProjectRequest)
+	if err == nil {
 		t.Fatalf("Created project with Invalid name")
 	}
 }

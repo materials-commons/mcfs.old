@@ -13,7 +13,7 @@ type lookupHandler struct {
 	user    string
 }
 
-func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, *stateStatus) {
+func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
 	l := &lookupHandler{
 		session: h.session,
 		user:    h.user,
@@ -36,7 +36,7 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, *stateStatus)
 		return l.execute(rql, &datadir)
 
 	default:
-		return nil, ssf(mc.ErrorCodeInvalid, "Unknown entry type %s", req.Type)
+		return nil, mc.Errorf(mc.ErrInvalid, "Unknown entry type %s", req.Type)
 	}
 }
 
@@ -73,13 +73,13 @@ func (l *lookupHandler) dataDirRql(req *protocol.LookupReq) r.RqlTerm {
 	}
 }
 
-func (l *lookupHandler) execute(query r.RqlTerm, v interface{}) (interface{}, *stateStatus) {
+func (l *lookupHandler) execute(query r.RqlTerm, v interface{}) (interface{}, error) {
 	err := model.GetRow(query, l.session, v)
 	switch {
 	case err != nil:
-		return nil, ss(mc.ErrorCodeInvalid, err)
+		return nil, mc.Errorm(mc.ErrInvalid, err)
 	case !l.hasAccess(v):
-		return nil, ssf(mc.ErrorCodeNoAccess, "Permission denied")
+		return nil, mc.Errorf(mc.ErrNoAccess, "Permission denied")
 	default:
 		return v, nil
 	}

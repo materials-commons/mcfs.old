@@ -19,10 +19,10 @@ func TestCreateDir(t *testing.T) {
 		Path:      "Test/tdir1",
 	}
 
-	resp, status := h.createDir(&createDirRequest)
+	resp, err := h.createDir(&createDirRequest)
 
-	if status != nil {
-		t.Fatalf("Directory create failed with %s", status.err)
+	if err != nil {
+		t.Fatalf("Directory create failed with %s", err)
 	}
 
 	createdID := resp.ID
@@ -30,9 +30,9 @@ func TestCreateDir(t *testing.T) {
 
 	// Test existing directory
 
-	resp, status = h.createDir(&createDirRequest)
-	if status != nil {
-		t.Fatalf("Create existing directory failed with %#v, err: %s", resp, status.err)
+	resp, err = h.createDir(&createDirRequest)
+	if err != nil {
+		t.Fatalf("Create existing directory failed with %#v, err: %s", resp, err)
 	}
 
 	// Cleanup the created directory
@@ -46,16 +46,16 @@ func TestCreateDir(t *testing.T) {
 
 	// Test path outside of project
 	createDirRequest.Path = "DIFFERENTPROJECT/tdir1"
-	resp, status = h.createDir(&createDirRequest)
-	if status == nil {
+	resp, err = h.createDir(&createDirRequest)
+	if err == nil {
 		t.Fatalf("Create dir outside of project succeeded %#v", resp)
 	}
 
 	// Test invalid project id
 	createDirRequest.ProjectID = "abc123"
 	createDirRequest.Path = "Test/tdir2"
-	resp, status = h.createDir(&createDirRequest)
-	if status == nil {
+	resp, err = h.createDir(&createDirRequest)
+	if err == nil {
 		t.Fatalf("Create dir with bad project succeeded %#v", resp)
 	}
 
@@ -64,8 +64,8 @@ func TestCreateDir(t *testing.T) {
 	createDirRequest.ProjectID = "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3"
 	createDirRequest.Path = "Test/tdir1/tdir2"
 
-	resp, status = h.createDir(&createDirRequest)
-	if status == nil {
+	resp, err = h.createDir(&createDirRequest)
+	if err == nil {
 		t.Fatalf("Create dir with missing subdirs succeeded %#v", resp)
 	}
 }

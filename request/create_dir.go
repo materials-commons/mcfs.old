@@ -8,34 +8,34 @@ import (
 	"strings"
 )
 
-func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, s *stateStatus) {
+func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, err error) {
 	dh := handler.NewCreateDir(h.session)
 	proj, err := dh.GetProject(req.ProjectID)
 	switch {
 	case err != nil:
-		return nil, ssf(mc.ErrorCodeInvalid, "Bad projectID %s", req.ProjectID)
+		return nil, mc.Errorf(mc.ErrInvalid, "Bad projectID %s", req.ProjectID)
 	case proj.Owner != h.user:
-		return nil, ssf(mc.ErrorCodeNoAccess, "Access to project not allowed")
+		return nil, mc.Errorf(mc.ErrNoAccess, "Access to project %s not allowed", req.ProjectID)
 	case !validDirPath(proj.Name, req.Path):
-		return nil, ssf(mc.ErrorCodeInvalid, "Invalid directory path %s", req.Path)
+		return nil, mc.Errorf(mc.ErrInvalid, "Invalid directory path %s", req.Path)
 	default:
 		dataDir, err := dh.GetDataDir(req)
 		switch {
 		case err == mc.ErrNotFound:
 			var parent *schema.Directory
 			if parent, err = dh.GetParent(req.Path); err != nil {
-				return nil, ss(mc.ErrorCodeNotFound, err)
+				return nil, mc.Errorm(mc.ErrNotFound, err)
 			}
 			dataDir, err := dh.CreateDir(req, h.user, parent.ID)
 			if err != nil {
-				return nil, ss(mc.ErrorCodeInvalid, err)
+				return nil, mc.Errorm(mc.ErrInvalid, err)
 			}
 			resp := &protocol.CreateResp{
 				ID: dataDir.ID,
 			}
 			return resp, nil
 		case err != nil:
-			return nil, ss(mc.ErrorCodeNotFound, err)
+			return nil, mc.Errorm(mc.ErrNotFound, err)
 		default:
 			resp := &protocol.CreateResp{
 				ID: dataDir.ID,

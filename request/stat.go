@@ -7,13 +7,13 @@ import (
 	"github.com/materials-commons/mcfs/protocol"
 )
 
-func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, *stateStatus) {
+func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, error) {
 	df, err := model.GetFile(req.DataFileID, h.session)
 	switch {
 	case err != nil:
-		return nil, ssf(mc.ErrorCodeNotFound, "Unknown id %s", req.DataFileID)
+		return nil, mc.Errorf(mc.ErrNotFound, "Unknown id %s", req.DataFileID)
 	case !OwnerGaveAccessTo(df.Owner, h.user, h.session):
-		return nil, ssf(mc.ErrorCodeNoAccess, "You do not have permission to access this datafile %s", req.DataFileID)
+		return nil, mc.Errorf(mc.ErrNoAccess, "You do not have permission to access this datafile %s", req.DataFileID)
 	default:
 		return respStat(df), nil
 	}

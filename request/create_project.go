@@ -6,12 +6,11 @@ import (
 	"github.com/materials-commons/mcfs/request/handler"
 )
 
-func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protocol.CreateProjectResp, s *stateStatus) {
+func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protocol.CreateProjectResp, err error) {
 	projHandler := handler.NewCreateProject(h.session)
 
 	if !projHandler.Validate(req) {
-		s = ssf(mc.ErrorCodeInvalid, "Invalid project name %s", req.Name)
-		return nil, s
+		return nil, mc.Errorf(mc.ErrInvalid, "Invalid project name %s", req.Name)
 	}
 
 	proj, err := projHandler.GetProject(req.Name, h.user)
@@ -22,14 +21,12 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protoc
 			ProjectID: proj.ID,
 			DataDirID: proj.DataDir,
 		}
-		return resp, ss(mc.ErrorCodeExists, mc.ErrExists)
+		return resp, mc.ErrExists
 
 	default:
 		p, err := projHandler.CreateProject(req.Name, h.user)
 		if err != nil {
-			s.status = mc.ErrorCodeCreate
-			s.err = err
-			return nil, s
+			return nil, err
 		}
 		resp := &protocol.CreateProjectResp{
 			ProjectID: p.ID,

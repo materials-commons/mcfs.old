@@ -19,7 +19,7 @@ type statProjectHandler struct {
 	files   []*dir.FileInfo
 }
 
-func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatProjectResp, *stateStatus) {
+func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatProjectResp, error) {
 	p := &statProjectHandler{
 		session: h.session,
 		user:    h.user,
@@ -30,18 +30,18 @@ func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatPr
 	case req.Name != "":
 		project, err := p.getProjectByName(req.Name)
 		if err != nil {
-			return nil, ss(mc.ErrorCodeNotFound, err)
+			return nil, mc.Errorm(mc.ErrNotFound, err)
 		}
 		projectID = project.ID
 	case req.ID != "":
 		projectID = req.ID
 	default:
-		return nil, ss(mc.ErrorCodeInvalid, nil)
+		return nil, mc.Errorm(mc.ErrInvalid, nil)
 	}
 
 	entries, err := p.projectDirList(projectID)
 	if err != nil {
-		return nil, ss(mc.ErrorCodeNotFound, err)
+		return nil, mc.Errorm(mc.ErrNotFound, err)
 	}
 
 	resp := protocol.StatProjectResp{
