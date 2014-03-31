@@ -5,6 +5,7 @@ package protocol
 
 import (
 	"encoding/gob"
+	"github.com/materials-commons/base/dir"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"time"
@@ -62,7 +63,7 @@ func init() {
 
 	gob.Register(StatProjectReq{})
 	gob.Register(StatProjectResp{})
-	gob.Register(ProjectEntry{})
+	gob.Register(dir.FileInfo{})
 }
 
 // Request defines the request being made.
@@ -260,18 +261,8 @@ type StatProjectReq struct {
 	ID   string
 }
 
-// ProjectEntry an entry in a project.
-type ProjectEntry struct {
-	DataDirID        string `gorethink:"datadir_id"`
-	DataDirName      string `gorethink:"datadir_name"`
-	DataFileID       string `gorethink:"id"`
-	DataFileName     string `gorethink:"name"`
-	DataFileSize     int64  `gorethink:"size"`
-	DataFileChecksum string `gorethink:"checksum"`
-}
-
 // ProjectEntriesResp response to a ProjectEntriesReq.
 type StatProjectResp struct {
 	ProjectID string
-	Entries   []ProjectEntry
+	Entries   []*dir.FileInfo
 }
