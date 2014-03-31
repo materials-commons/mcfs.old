@@ -8,8 +8,7 @@ import (
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
-	"path/filepath"
-	"sort"
+	"github.com/materials-commons/mcfs/service"
 )
 
 var _ = fmt.Println
@@ -26,20 +25,27 @@ func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatPr
 		user:    h.user,
 	}
 
-	project, err := p.getProjectByName(req.Name)
+	var projectID string
+	switch {
+	case req.Name != "":
+		project, err := p.getProjectByName(req.Name)
+		if err != nil {
+			return nil, ss(mc.ErrorCodeNotFound, err)
+		}
+		projectID = project.ID
+	case req.ID != "":
+		projectID = req.ID
+	default:
+		return nil, ss(mc.ErrorCodeInvalid, nil)
+	}
+
+	entries, err := p.projectDirList(projectID)
 	if err != nil {
 		return nil, ss(mc.ErrorCodeNotFound, err)
 	}
 
-	entries, err := p.getProjectEntries(project.ID)
-	if err == mc.ErrNotFound {
-		return nil, ss(mc.ErrorCodeNotFound, err)
-	} else if err != nil {
-		return nil, ss(mc.ErrorCodeInvalid, err)
-	}
-
 	resp := protocol.StatProjectResp{
-		ProjectID: project.ID,
+		ProjectID: projectID,
 		Entries:   entries,
 	}
 	return &resp, nil
@@ -55,86 +61,8 @@ func (p *statProjectHandler) getProjectByName(name string) (*schema.Project, err
 	return &project, nil
 }
 
-func (p *statProjectHandler) getProjectEntries(projectID string) ([]protocol.ProjectEntry, error) {
-	rql := p.entriesRql(projectID)
-	rows, err := rql.Run(p.session)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-
-	var results []protocol.ProjectEntry
-	for rows.Next() {
-		var projectEntry protocol.ProjectEntry
-		err := rows.Scan(&projectEntry)
-		if err != nil {
-			fmt.Println("err on scan =", err)
-			continue
-		}
-		results = append(results, projectEntry)
-	}
-
-	if len(results) == 0 {
-		return nil, mc.ErrNotFound
-	}
-
-	return results, nil
-}
-
-var dataDirMergeMap = map[string]interface{}{
-	"datadir_name": r.Row.Field("name"),
-	"datadir_id":   r.Row.Field("id"),
-}
-
-func (p *statProjectHandler) entriesRql(projectID string) r.RqlTerm {
-	return r.Table("project2datadir").GetAllByIndex("project_id", projectID).
-		EqJoin("datadir_id", r.Table("datadirs")).Zip().Map(r.Row.Merge(dataDirMergeMap)).
-		Without("name", "id").OrderBy("datadir_name").OuterJoin(r.Table("datafiles"),
-		func(ddirRow, dfRow r.RqlTerm) r.RqlTerm {
-			return ddirRow.Field("datafiles").Contains(dfRow.Field("id"))
-		}).Zip().Pluck("datadir_name", "datadir_id", "name", "id", "size", "checksum")
-}
-
-func (p *statProjectHandler) projectDirList(projectID string) {
-	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID).EqJoin("datadir_id", r.Table("datadirs_denorm")).Zip()
-	var entries []schema.DataDirDenorm
-	if err := model.DirsDenorm.Qs(p.session).Rows(rql, &entries); err != nil {
-		return
-	}
-	p.buildDirectoryList(entries)
-	sort.Sort(fileList(p.files))
-}
-
-type fileList []*dir.FileInfo
-
-func (f fileList) Len() int {
-	return len(f)
-}
-
-func (f fileList) Swap(i, j int) {
-	f[i], f[j] = f[j], f[i]
-}
-
-func (f fileList) Less(i, j int) bool {
-	return f[i].Path < f[j].Path
-}
-
-func (p *statProjectHandler) buildDirectoryList(entries []schema.DataDirDenorm) {
-	for _, d := range entries {
-		newDir := &dir.FileInfo{
-			Path:  d.Name,
-			MTime: d.Birthtime,
-			IsDir: true,
-		}
-		p.files = append(p.files, newDir)
-		for _, f := range d.DataFiles {
-			newFile := &dir.FileInfo{
-				Path:     filepath.Join(d.Name, f.Name),
-				Size:     f.Size,
-				Checksum: f.Checksum,
-				MTime:    f.Birthtime,
-			}
-			p.files = append(p.files, newFile)
-		}
-	}
+func (p *statProjectHandler) projectDirList(projectID string) ([]*dir.FileInfo, error) {
+	projects := service.NewProjects(service.RethinkDB)
+	files, err := projects.Files(projectID)
+	return files, err
 }

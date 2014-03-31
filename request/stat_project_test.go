@@ -2,6 +2,7 @@ package request
 
 import (
 	"fmt"
+	"github.com/materials-commons/base/db"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/mcfs/protocol"
 	"testing"
@@ -22,7 +23,9 @@ var (
 )
 
 func TestGetProjectByName(t *testing.T) {
-	p := &projectEntryHandler{
+	db.SetAddress("localhost:30815")
+	db.SetDatabase("materialscommons")
+	p := &statProjectHandler{
 		session: session,
 		user:    "test@mc.org",
 	}
@@ -39,14 +42,14 @@ func TestGetProjectByName(t *testing.T) {
 }
 
 func TestGetProjectEntries(t *testing.T) {
-	p := &projectEntryHandler{
+	p := &statProjectHandler{
 		session: session,
 		user:    "test@mc.org",
 	}
 
 	// Test existing project
 	projectID := "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3"
-	results, err := p.getProjectEntries(projectID)
+	results, err := p.projectDirList(projectID)
 	if err != nil {
 		t.Errorf("Query on known project id failed %s", err)
 	}
@@ -56,9 +59,9 @@ func TestGetProjectEntries(t *testing.T) {
 	}
 
 	// Test bad id
-	results, err = p.getProjectEntries("bad-id")
+	results, err = p.projectDirList("bad-id")
 	if err != mc.ErrNotFound {
-		t.Errorf("Error not equal to ErrNotFound for bad project id")
+		t.Errorf("Error not equal to ErrNotFound for bad project id: %s", err)
 	}
 
 	if results != nil {
@@ -70,12 +73,12 @@ func TestProjectEntries(t *testing.T) {
 	h := NewReqHandler(nil, session, "")
 	h.user = "test@mc.org"
 
-	req := protocol.ProjectEntriesReq{
+	req := protocol.StatProjectReq{
 		Name: "Test",
 	}
 
 	// Test project we have access to
-	resp, err := h.projectEntries(&req)
+	resp, err := h.statProject(&req)
 	if err != nil {
 		t.Errorf("Unable to access project I own: %s", err)
 	}
@@ -90,7 +93,7 @@ func TestProjectEntries(t *testing.T) {
 
 	// Test bad project name that doesn't exist
 	req.Name = "Does-Not-Exist"
-	resp, err = h.projectEntries(&req)
+	resp, err = h.statProject(&req)
 	if err == nil {
 		t.Errorf("No error for bad project")
 	}
