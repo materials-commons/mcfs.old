@@ -97,15 +97,25 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 	return nil
 }
 
+// RemoveFiles removes matching file ids from the directory and the dependent denorm
+// table entries.
 func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
 	dir.DataFiles = arrays.Strings.Remove(dir.DataFiles, fileIDs...)
-	d.Update(dir)
+	if err := d.Update(dir); err != nil {
+		return err
+	}
 	var dirDenorm schema.DataDirDenorm
-	model.DirsDenorm.Q().ByID(dir.ID, &dirDenorm)
+	if err := model.DirsDenorm.Q().ByID(dir.ID, &dirDenorm); err != nil {
+		return mcfs.ErrDBRelatedUpdateFailed
+	}
 	dirDenorm.DataFiles = removeMatchingFileIDs(dirDenorm, fileIDs...)
+	if err := model.DirsDenorm.Q().Update(dirDenorm.ID, dirDenorm); err != nil {
+		return mcfs.ErrDBRelatedUpdateFailed
+	}
 	return nil
 }
 
+// removeMatchingFileIDs removes FileEntries from the list of entries that match that id.
 func removeMatchingFileIDs(d schema.DataDirDenorm, fileIDs ...string) []schema.FileEntry {
 	return d.Filter(func(f schema.FileEntry) bool {
 		found := false
@@ -114,6 +124,7 @@ func removeMatchingFileIDs(d schema.DataDirDenorm, fileIDs ...string) []schema.F
 				found = true
 			}
 		}
+		// Didn't find a match so keep entry
 		return !found
 	})
 }

@@ -56,11 +56,14 @@ func (f rFiles) Delete(id string) error {
 	}
 
 	rDirs := newRDirs()
+	var sawError error
 	for _, dirID := range file.DataDirs {
 		d, _ := rDirs.ByID(dirID)
-		rDirs.RemoveFiles(d, file.ID)
+		if err := rDirs.RemoveFiles(d, file.ID); err != nil {
+			sawError = err
+		}
 	}
-	return nil
+	return sawError
 }
 
 // AddDirectories adds new directories to a file. It updates all related items

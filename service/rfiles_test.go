@@ -2,7 +2,6 @@ package service
 
 import (
 	"fmt"
-	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/db"
 	"github.com/materials-commons/base/schema"
 	"testing"
@@ -46,7 +45,7 @@ func TestRFilesInsert(t *testing.T) {
 }
 
 func rfilesCleanup(f *schema.File) {
-	session, _ := db.RSession()
-	fmt.Println("Deleting file: ", f.ID)
-	r.Table("datafiles").Get(f.ID).Delete().RunWrite(session)
+	fmt.Println("Deleting file: ", f.ID, f.Name)
+	rf := newRFiles()
+	rf.Delete(f.ID)
 }
