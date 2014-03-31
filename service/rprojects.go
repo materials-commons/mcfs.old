@@ -3,6 +3,7 @@ package service
 import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/dir"
+	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs"
@@ -31,6 +32,10 @@ func (p rProjects) Files(projectID string) ([]*dir.FileInfo, error) {
 	var entries []schema.DataDirDenorm
 	if err := model.DirsDenorm.Q().Rows(rql, &entries); err != nil {
 		return nil, err
+	}
+	if len(entries) == 0 {
+		// Nothing was found, treat as invalid project.
+		return nil, mc.ErrNotFound
 	}
 	dlist := &dirList{}
 	return dlist.build(entries), nil
