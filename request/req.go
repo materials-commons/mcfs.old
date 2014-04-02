@@ -3,8 +3,10 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/base/codex"
 	"github.com/materials-commons/base/mc"
-	"github.com/materials-commons/gohandy/marshaling"
+	//"github.com/materials-commons/gohandy/marshaling"
+	p2 "github.com/materials-commons/base/protocol"
 	"github.com/materials-commons/mcfs/protocol"
 	"io"
 	"reflect"
@@ -12,24 +14,30 @@ import (
 
 const maxBadRequests = 10
 
+const maxBufSize = (1024 * 1024 * 20) + (1024 + 1024)
+
 type reqStateFN func() reqStateFN
 
 // ReqHandler is an instance of the request state machine for handling client requests.
 type ReqHandler struct {
-	session *r.Session
-	user    string
-	mcdir   string
-	marshaling.MarshalUnmarshaler
+	session         *r.Session
+	user            string
+	mcdir           string
 	badRequestCount int
+	buf             []byte
+	io.ReadWriter
+	codex.EncoderDecoder
 }
 
 // NewReqHandler creates a new ReqHandlerInstance. Each ReqHandler is a thread safe state machine for
 // handling client requests.
-func NewReqHandler(m marshaling.MarshalUnmarshaler, session *r.Session, mcdir string) *ReqHandler {
+func NewReqHandler(rw io.ReadWriter, encoderDecoder codex.EncoderDecoder, session *r.Session, mcdir string) *ReqHandler {
 	return &ReqHandler{
-		session:            session,
-		MarshalUnmarshaler: m,
-		mcdir:              mcdir,
+		session:        session,
+		ReadWriter:     rw,
+		EncoderDecoder: encoderDecoder,
+		mcdir:          mcdir,
+		buf:            make([]byte, maxBufSize),
 	}
 }
 
@@ -41,8 +49,58 @@ func (h *ReqHandler) Run() {
 	}
 }
 
+func (h *ReqHandler) req() interface{} {
+	bytesReader, err := h.Read(h.buf)
+	if err != nil {
+		if err == io.EOF {
+			return protocol.CloseReq{}
+		}
+		return errorReq{}
+	}
+
+	pb, err := h.Prepare(h.buf)
+	if err != nil {
+		return errorReq{}
+	}
+
+	var req interface{}
+	switch pb.Type {
+	case p2.LoginRequest:
+		var lr p2.LoginReq
+		err = h.Decode(pb.Bytes, &lr)
+		req = &lr
+	case p2.LogoutRequest:
+		var lr p2.LogoutReq
+		err = h.Decode(pb.Bytes, &lr)
+		req = &lr
+	case p2.CreateProjectRequest:
+		var cpr p2.CreateProjectReq
+		err = h.Decode(pb.Bytes, &cpr)
+		req = &cpr
+	case p2.CreateDirectoryRequest:
+		var cdr p2.CreateDirectoryReq
+		err = h.Decode(pb.Bytes, &cdr)
+		req = &cdr
+	case p2.CreateFileRequest:
+		var cfr p2.CreateFileReq
+		err = h.Decode(pb.Bytes, &cfr)
+		req = &cfr
+	case p2.DirectoryStatRequest:
+		var dsr p2.DirectoryStatReq
+		err = h.Decode(pb.Bytes, &dsr)
+		req = &dsr
+	}
+
+	if err != nil {
+		return errorReq{}
+	}
+
+	return req
+}
+
 type errorReq struct{}
 
+/*
 func (h *ReqHandler) req() interface{} {
 	var req protocol.Request
 	if err := h.Unmarshal(&req); err != nil {
@@ -53,6 +111,7 @@ func (h *ReqHandler) req() interface{} {
 	}
 	return req.Req
 }
+*/
 
 func (h *ReqHandler) startState() reqStateFN {
 	var resp interface{}
