@@ -37,6 +37,7 @@ import (
 	"github.com/materials-commons/materials/util"
 	_ "github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/request"
+	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -144,6 +145,9 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 		if isTiff(df.Name) && download == "" {
 			path = tiffConversionPath(mcDir, idToUse(df))
 		} else {
+			if mimetype := mime.TypeByExtension(filepath.Ext(df.Name)); mimetype != "" {
+				writer.Header().Set("Content-Type", mimetype)
+			}
 			path = request.DataFilePath(mcDir, idToUse(df))
 		}
 		http.ServeFile(writer, req, path)
