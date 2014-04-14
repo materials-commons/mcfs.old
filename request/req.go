@@ -75,12 +75,11 @@ func (h *ReqHandler) startState() reqStateFN {
 
 func (h *ReqHandler) badRequestRestart(err error) reqStateFN {
 	fmt.Println("badRequestRestart:", err)
+	
+	// Need to pass a fake response to respError that is nil.
+	var resp *protocol.LoginResp
+	h.respError(resp, err)
 	h.badRequestCount = h.badRequestCount + 1
-	resp := &protocol.Response{
-		Status:        mc.ErrorToErrorCode(err),
-		StatusMessage: err.Error(),
-	}
-	h.Marshal(resp)
 	if h.badRequestCount > maxBadRequests {
 		return nil
 	}
@@ -89,11 +88,7 @@ func (h *ReqHandler) badRequestRestart(err error) reqStateFN {
 
 func (h *ReqHandler) badRequestNext(err error) reqStateFN {
 	fmt.Println("badRequestNext:", err)
-	resp := &protocol.Response{
-		Status:        mc.ErrorToErrorCode(err),
-		StatusMessage: err.Error(),
-	}
-	h.Marshal(resp)
+	h.respError(nil, err)
 	if h.badRequestCount > maxBadRequests {
 		return nil
 	}
@@ -163,8 +158,7 @@ func (h *ReqHandler) respOk(respData interface{}) {
 }
 
 func (h *ReqHandler) respError(respData interface{}, err error) {
-	var resp *protocol.Response
-
+	var resp protocol.Response
 	switch e := err.(type) {
 	case *mc.Error:
 		resp.Status = e.ToErrorCode()

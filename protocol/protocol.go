@@ -259,10 +259,11 @@ type LookupReq struct {
 type StatProjectReq struct {
 	Name string
 	ID   string
+	Base string
 }
 
 // ProjectEntriesResp response to a ProjectEntriesReq.
 type StatProjectResp struct {
 	ProjectID string
-	Entries   []*dir.FileInfo
+	Entries   []dir.FileInfo
 }

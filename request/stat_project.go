@@ -16,7 +16,7 @@ var _ = fmt.Println
 type statProjectHandler struct {
 	session *r.Session
 	user    string
-	files   []*dir.FileInfo
+	files   []dir.FileInfo
 }
 
 func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatProjectResp, error) {
@@ -39,7 +39,7 @@ func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatPr
 		return nil, mc.Errorm(mc.ErrInvalid, nil)
 	}
 
-	entries, err := p.projectDirList(projectID)
+	entries, err := p.projectDirList(projectID, req.Base)
 	if err != nil {
 		return nil, mc.Errorm(mc.ErrNotFound, err)
 	}
@@ -61,8 +61,8 @@ func (p *statProjectHandler) getProjectByName(name string) (*schema.Project, err
 	return &project, nil
 }
 
-func (p *statProjectHandler) projectDirList(projectID string) ([]*dir.FileInfo, error) {
+func (p *statProjectHandler) projectDirList(projectID, base string) ([]dir.FileInfo, error) {
 	projects := service.NewProjects(service.RethinkDB)
-	files, err := projects.Files(projectID)
+	files, err := projects.Files(projectID, base)
 	return files, err
 }

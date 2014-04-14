@@ -10,11 +10,11 @@ import (
 // dirList is the state structure for building a sorted
 // list of entries from a denorm table lookup.
 type dirList struct {
-	files []*dir.FileInfo
+	files []dir.FileInfo
 }
 
 // fileList type is defined for Sort.
-type fileList []*dir.FileInfo
+type fileList []dir.FileInfo
 
 // Len length of array for sort.
 func (f fileList) Len() int {
@@ -33,17 +33,17 @@ func (f fileList) Less(i, j int) bool {
 
 // build creates the sorted list of dir.FileInfo files and directories from a list
 // of DataDirDenorm items.
-func (dlist *dirList) build(denormEntries []schema.DataDirDenorm) []*dir.FileInfo {
+func (dlist *dirList) build(denormEntries []schema.DataDirDenorm, base string) []dir.FileInfo {
 	for _, d := range denormEntries {
-		newDir := &dir.FileInfo{
-			Path:  d.Name,
+		newDir := dir.FileInfo{
+			Path:  filepath.Join(base, d.Name),
 			MTime: d.Birthtime,
 			IsDir: true,
 		}
 		dlist.files = append(dlist.files, newDir)
 		for _, f := range d.DataFiles {
-			newFile := &dir.FileInfo{
-				Path:     filepath.Join(d.Name, f.Name),
+			newFile := dir.FileInfo{
+				Path:     filepath.Join(base, d.Name, f.Name),
 				Size:     f.Size,
 				Checksum: f.Checksum,
 				MTime:    f.Birthtime,
@@ -55,3 +55,12 @@ func (dlist *dirList) build(denormEntries []schema.DataDirDenorm) []*dir.FileInf
 	sort.Sort(fileList(dlist.files))
 	return dlist.files
 }
+
+
+
+
+
+
+
+
+

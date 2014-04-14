@@ -9,7 +9,7 @@ import (
 )
 
 // For logging purposes the name of our server
-var serverName = log.Field("server", "AccessServer")
+var accessServerName = log.Field("server", "AccessServer")
 
 // The command to send
 type command int
@@ -64,7 +64,7 @@ func (s *accessServer) Send(request *request) error {
 
 	defer func() {
 		if e := recover(); e != nil {
-			log.L.WithFields(serverName).Debugln("Attempt to send when server is not running.")
+			log.L.WithFields(accessServerName).Debugln("Attempt to send when server is not running.")
 			err = mcfs.ErrServerNotRunning
 		}
 	}()
@@ -87,21 +87,21 @@ func (s *accessServer) Init() {
 
 // Run implements the server. It is meant to be called by the Server interface.
 func (s *accessServer) Run(stopChan <-chan struct{}) {
-	log.L.WithFields(serverName).Infoln("Starting.")
+	log.L.WithFields(accessServerName).Infoln("Starting.")
 	s.isRunning = true
 	if err := s.apikeys.load(); err != nil {
 		s.shutdown()
-		log.L.WithFields(serverName).Fatalf("Unable to load apikeys: %s\n", err)
+		log.L.WithFields(accessServerName).Fatalf("Unable to load apikeys: %s\n", err)
 		return
 	}
 
 	for {
 		select {
 		case request := <-s.request:
-			log.L.WithFields(serverName).Debugf("Received request: %#v\n", request)
+			log.L.WithFields(accessServerName).Debugf("Received request: %#v\n", request)
 			s.doRequest(request)
 		case <-stopChan:
-			log.L.WithFields(serverName).Infoln("Shutting down.")
+			log.L.WithFields(accessServerName).Infoln("Shutting down.")
 			s.shutdown()
 			return
 		}
@@ -121,7 +121,7 @@ func (s *accessServer) doRequest(request *request) {
 	case acGetUser:
 		s.doGetUser(request.arg)
 	default:
-		log.L.WithFields(serverName).Warnf("Received invalid command: %d\n", request.command)
+		log.L.WithFields(accessServerName).Warnf("Received invalid command: %d\n", request.command)
 		s.doInvalidRequest()
 	}
 }

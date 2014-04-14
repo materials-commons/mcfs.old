@@ -19,7 +19,7 @@ func newRProjects() rProjects {
 func (p rProjects) ByID(id string) (*schema.Project, error) {
 	var project schema.Project
 	if err := model.Projects.Q().ByID(id, &project); err != nil {
-		return nil, err
+		return nil, mc.ErrNotFound
 	}
 	return &project, nil
 }
@@ -27,7 +27,7 @@ func (p rProjects) ByID(id string) (*schema.Project, error) {
 // Files returns a flattened of all the files and directories in a project.
 // Each entry has its full path starting from the project. The returned list
 // is in sorted (ascending) order.
-func (p rProjects) Files(projectID string) ([]*dir.FileInfo, error) {
+func (p rProjects) Files(projectID, base string) ([]dir.FileInfo, error) {
 	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID).EqJoin("datadir_id", r.Table("datadirs_denorm")).Zip()
 	var entries []schema.DataDirDenorm
 	if err := model.DirsDenorm.Q().Rows(rql, &entries); err != nil {
@@ -37,8 +37,8 @@ func (p rProjects) Files(projectID string) ([]*dir.FileInfo, error) {
 		// Nothing was found, treat as invalid project.
 		return nil, mc.ErrNotFound
 	}
-	dlist := &dirList{}
-	return dlist.build(entries), nil
+	dirlist := &dirList{}
+	return dirlist.build(entries, base), nil
 }
 
 // Update updates an existing project.
