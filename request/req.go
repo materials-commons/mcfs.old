@@ -75,7 +75,7 @@ func (h *ReqHandler) startState() reqStateFN {
 
 func (h *ReqHandler) badRequestRestart(err error) reqStateFN {
 	fmt.Println("badRequestRestart:", err)
-	
+
 	// Need to pass a fake response to respError that is nil.
 	var resp *protocol.LoginResp
 	h.respError(resp, err)
