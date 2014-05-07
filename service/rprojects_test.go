@@ -24,7 +24,7 @@ func TestRProjectsByID(t *testing.T) {
 }
 
 func TestRProjectsFiles(t *testing.T) {
-	files, err := rprojs.Files("9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3")
+	files, err := rprojs.Files("9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3", "")
 	if err != nil {
 		t.Fatalf("Unable to build list of files for existing project: %s", err)
 	}

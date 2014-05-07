@@ -49,7 +49,7 @@ func TestGetProjectEntries(t *testing.T) {
 
 	// Test existing project
 	projectID := "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3"
-	results, err := p.projectDirList(projectID)
+	results, err := p.projectDirList(projectID, "")
 	if err != nil {
 		t.Errorf("Query on known project id failed %s", err)
 	}
@@ -59,7 +59,7 @@ func TestGetProjectEntries(t *testing.T) {
 	}
 
 	// Test bad id
-	results, err = p.projectDirList("bad-id")
+	results, err = p.projectDirList("bad-id", "")
 	if err != mc.ErrNotFound {
 		t.Errorf("Error not equal to ErrNotFound for bad project id: %s", err)
 	}
