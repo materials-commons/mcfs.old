@@ -2,9 +2,7 @@ package service
 
 import (
 	"fmt"
-	//r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/db"
-	//"github.com/materials-commons/base/schema"
 	"testing"
 )
 
