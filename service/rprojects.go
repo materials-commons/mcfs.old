@@ -24,9 +24,9 @@ func (p rProjects) ByID(id string) (*schema.Project, error) {
 	return &project, nil
 }
 
-// Files returns a flattened of all the files and directories in a project.
-// Each entry has its full path starting from the project. The returned list
-// is in sorted (ascending) order.
+// Files returns a flattened list of all the files and directories in a project.
+// Each entry has its full path starting from the project. The returned list is
+// in sorted (ascending) order.
 func (p rProjects) Files(projectID, base string) ([]dir.FileInfo, error) {
 	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID).EqJoin("datadir_id", r.Table("datadirs_denorm")).Zip()
 	var entries []schema.DataDirDenorm
