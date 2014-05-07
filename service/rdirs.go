@@ -43,6 +43,7 @@ func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 		return nil, mcfs.ErrDBInsertFailed
 	}
 
+	// Insert the directory into the denorm table.
 	var ddirDenorm = schema.DataDirDenorm{
 		ID:        newDir.ID,
 		Name:      newDir.Name,
@@ -141,15 +142,14 @@ func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
 }
 
 // removeMatchingFileIDs removes FileEntries from the list of entries that match that id.
-func removeMatchingFileIDs(d schema.DataDirDenorm, fileIDs ...string) []schema.FileEntry {
-	return d.Filter(func(f schema.FileEntry) bool {
-		found := false
+func removeMatchingFileIDs(denorm schema.DataDirDenorm, fileIDs ...string) []schema.FileEntry {
+	return denorm.Filter(func(f schema.FileEntry) bool {
 		for _, fileID := range fileIDs {
 			if fileID == f.ID {
-				found = true
+				return false
 			}
 		}
 		// Didn't find a match so keep entry
-		return !found
+		return true
 	})
 }
