@@ -1,0 +1,41 @@
+{
+	"ImportPath": "github.com/materials-commons/mcfs",
+	"GoVersion": "go1.2.1",
+	"Packages": [
+		"./..."
+	],
+	"Deps": [
+		{
+			"ImportPath": "code.google.com/p/goprotobuf/proto",
+			"Comment": "go.r60-138",
+			"Rev": "8af8443f6427e7a7faa07fbc40d88f5a61f7892c"
+		},
+		{
+			"ImportPath": "github.com/Sirupsen/logrus",
+			"Rev": "d4ada4466b1f797ca9aee2bc6bed46dcdfa731ae"
+		},
+		{
+			"ImportPath": "github.com/burke/ttyutils",
+			"Rev": "70f0d73eb47f7033f514f7f8f5138152fe1088fc"
+		},
+		{
+			"ImportPath": "github.com/dancannon/gorethink",
+			"Comment": "v0.9-86-g58d5b87",
+			"Rev": "58d5b8717eb6bf453443a71da99b94039f76bd24"
+		},
+		{
+			"ImportPath": "github.com/emicklei/go-restful",
+			"Rev": "f31517760acdba9067d62e519d2642061bfcbe1a"
+		},
+		{
+			"ImportPath": "github.com/jessevdk/go-flags",
+			"Comment": "v1-154-gcee4db9",
+			"Rev": "cee4db96aec1f7382a0b09d8249c09a8bb8d160b"
+		},
+		{
+			"ImportPath": "launchpad.net/tomb",
+			"Comment": "17",
+			"Rev": "gustavo@niemeyer.net-20130531003818-70ikdgklbxopn8x4"
+		}
+	]
+}
