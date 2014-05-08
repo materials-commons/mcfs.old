@@ -1,9 +1,9 @@
 package service
 
 import (
+	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
-	"github.com/materials-commons/gohandy/arrays"
 	"github.com/materials-commons/mcfs"
 )
 
@@ -19,6 +19,16 @@ func newRDirs() rDirs {
 func (d rDirs) ByID(id string) (*schema.Directory, error) {
 	var dir schema.Directory
 	if err := model.Dirs.Q().ByID(id, &dir); err != nil {
+		return nil, err
+	}
+	return &dir, nil
+}
+
+// ByPath looks up a directory in a project by its path.
+func (d rDirs) ByPath(path, projectID string) (*schema.Directory, error) {
+	rql := model.Dirs.T().GetAllByIndex("name", path).Filter(r.Row.Field("project").Eq(projectID))
+	var dir schema.Directory
+	if err := model.Dirs.Q().Row(rql, &dir); err != nil {
 		return nil, err
 	}
 	return &dir, nil
@@ -51,13 +61,6 @@ func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 		Birthtime: newDir.Birthtime,
 	}
 
-	if len(newDir.DataFiles) > 0 {
-		var err error
-		if ddirDenorm.DataFiles, err = d.createDataFiles(newDir.DataFiles); err != nil {
-			return &newDir, mcfs.ErrDBRelatedUpdateFailed
-		}
-	}
-
 	if err := model.DirsDenorm.Q().Insert(ddirDenorm, nil); err != nil {
 		return &newDir, mcfs.ErrDBRelatedUpdateFailed
 	}
@@ -70,15 +73,6 @@ func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 // The caller will have to decide how to handle these errors because the database will
 // be out of sync.
 func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
-	// Add fileIds to the Directory
-	for _, id := range fileIDs {
-		dir.DataFiles = append(dir.DataFiles, id)
-	}
-
-	if err := model.Dirs.Q().Update(dir.ID, dir); err != nil {
-		return mcfs.ErrDBUpdateFailed
-	}
-
 	// Add entries to the denorm table for this dir.
 	var dirDenorm schema.DataDirDenorm
 	newEntries, err := d.createDataFiles(fileIDs)
@@ -99,7 +93,9 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 }
 
 // createDataFiles creates the datafiles entries for the datadirs_denorm table from
-// the ids contained in a DataDir
+// the ids contained in a DataDir.
+// TODO: Don't do individual lookup. But we need to handle missing entries so
+//       batch lookup will need a little bit of smarts around it.
 func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.FileEntry, err error) {
 	var errorReturn error
 	for _, dataFileID := range dataFileIDs {
@@ -126,10 +122,6 @@ func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.F
 // RemoveFiles removes matching file ids from the directory and the dependent denorm
 // table entries.
 func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
-	dir.DataFiles = arrays.Strings.Remove(dir.DataFiles, fileIDs...)
-	if err := d.Update(dir); err != nil {
-		return err
-	}
 	var dirDenorm schema.DataDirDenorm
 	if err := model.DirsDenorm.Q().ByID(dir.ID, &dirDenorm); err != nil {
 		return mcfs.ErrDBRelatedUpdateFailed

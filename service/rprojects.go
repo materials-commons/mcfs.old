@@ -54,3 +54,21 @@ func (p rProjects) Insert(project *schema.Project) (*schema.Project, error) {
 	}
 	return &newProject, nil
 }
+
+// AddDirectories adds new directories to the project.
+func (p rProjects) AddDirectories(project *schema.Project, directoryIDs ...string) error {
+	var rverror error
+	// Add each directory to the project2datadir table. If there are any errors,
+	// remember that we saw an error, but continue on.
+	for _, dirID := range directoryIDs {
+		p2d := schema.Project2DataDir{
+			ProjectID: project.ID,
+			DataDirID: dirID,
+		}
+		if err := model.Projects.Q().InsertRaw("project2datadir", p2d, nil); err != nil {
+			rverror = mcfs.ErrDBRelatedUpdateFailed
+		}
+	}
+
+	return rverror
+}

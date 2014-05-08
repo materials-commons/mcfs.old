@@ -1,32 +1,50 @@
 package request
 
 import (
+	"fmt"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/request/handler"
+	"github.com/materials-commons/mcfs/service"
+	"path/filepath"
 	"strings"
 )
 
+// createDirHandler is an internal handler for creating a directory.
+// It holds state information needed to create a new directory entry.
+type createDirHandler struct {
+	req      *protocol.CreateDirReq
+	user     string
+	proj     *schema.Project
+	dirs     service.Dirs
+	projects service.Projects
+}
+
+// createDir creates a new directory entry if it doesn't exist and the user has permission.
+// Otherwise it returns an error.
 func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, err error) {
-	dh := handler.NewCreateDir(h.session)
-	proj, err := dh.GetProject(req.ProjectID)
+	cdh := newCreateDirHandler(req, h.user)
+
+	// Get the project since a directory is added to a project.
+	cdh.proj, err = cdh.projects.ByID(req.ProjectID)
 	switch {
 	case err != nil:
+		// A bad projectID was passed to us
 		return nil, mc.Errorf(mc.ErrInvalid, "Bad projectID %s", req.ProjectID)
-	case proj.Owner != h.user:
+	case cdh.proj.Owner != h.user:
+		// A valid project but the user doesn't have permission to add an entry
+		// to this project.
 		return nil, mc.Errorf(mc.ErrNoAccess, "Access to project %s not allowed", req.ProjectID)
-	case !validDirPath(proj.Name, req.Path):
+	case !validDirPath(cdh.proj.Name, req.Path):
+		// The format for the path is incorrect.
 		return nil, mc.Errorf(mc.ErrInvalid, "Invalid directory path %s", req.Path)
 	default:
-		dataDir, err := dh.GetDataDir(req)
+		// The project exists and the user has permission.
+		dataDir, err := cdh.dirs.ByPath(req.Path, req.ProjectID)
 		switch {
 		case err == mc.ErrNotFound:
-			var parent *schema.Directory
-			if parent, err = dh.GetParent(req.Path); err != nil {
-				return nil, mc.Errorm(mc.ErrNotFound, err)
-			}
-			dataDir, err := dh.CreateDir(req, h.user, parent.ID)
+			// There isn't a matching directory so attempt to create a new one.
+			dataDir, err := cdh.createDir()
 			if err != nil {
 				return nil, mc.Errorm(mc.ErrInvalid, err)
 			}
@@ -35,8 +53,10 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 			}
 			return resp, nil
 		case err != nil:
+			// Lookup failed with an error other than not found.
 			return nil, mc.Errorm(mc.ErrNotFound, err)
 		default:
+			// No error, and the directory already exists, just return it.
 			resp := &protocol.CreateResp{
 				ID: dataDir.ID,
 			}
@@ -45,6 +65,62 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 	}
 }
 
+// newCreateDirHandler creates a new instance of an createDirHandler. The constructor
+// also sets up the dirs and projects models.
+func newCreateDirHandler(req *protocol.CreateDirReq, user string) *createDirHandler {
+	return &createDirHandler{
+		req:      req,
+		user:     user,
+		dirs:     service.NewDirs(service.RethinkDB),
+		projects: service.NewProjects(service.RethinkDB),
+	}
+}
+
+// createDir takes care of creating the directory and attaching it up to
+// all the other components and dependencies.
+func (cdh *createDirHandler) createDir() (*schema.Directory, error) {
+	// Each directory has a pointer to its parent directory. Retrieve
+	// the parent for the new directory we are creating.
+	parent, err := cdh.getParent()
+	if err != nil {
+		return nil, err
+	}
+
+	datadir := schema.NewDirectory(cdh.req.Path, "private", cdh.user, parent.ID)
+	ddir, err := cdh.dirs.Insert(&datadir)
+	if err != nil {
+		return ddir, err
+	}
+
+	// Add the directory to the project.
+	if err := cdh.projects.AddDirectories(cdh.proj, ddir.ID); err != nil {
+		return ddir, err
+	}
+
+	return ddir, nil
+}
+
+// getParent retrieves the parent directory for a directory path. It does
+// this by getting the parent in the path name and then querying the database
+// by name for this particular entry. The query is filtered by the project
+// which prevents any collisions since a project is a rooted tree. Two trees
+// could be the same, but no singular tree can have two different children with
+// the exact same path.
+func (cdh *createDirHandler) getParent() (*schema.Directory, error) {
+	var (
+		parent *schema.Directory
+		err    error
+	)
+	parentPath := filepath.Dir(cdh.req.Path)
+	if parent, err = cdh.dirs.ByPath(parentPath, cdh.req.ProjectID); err != nil {
+		fmt.Println("Couldn't find parentPath", parentPath, "project", cdh.req.ProjectID, err)
+		return nil, mc.ErrNotFound
+	}
+	return parent, nil
+}
+
+// validDirPath verifies that the directory path starts with the project name.
+// It handles both Linux (/) and Windows (\) style slashes.
 func validDirPath(projName, dirPath string) bool {
 	slash := strings.Index(dirPath, "/")
 	if slash == -1 {

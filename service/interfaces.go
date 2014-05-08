@@ -27,7 +27,7 @@ type Users interface {
 type Files interface {
 	ByID(id string) (*schema.File, error)
 	Update(*schema.File) error
-	Insert(*schema.File) (*schema.File, error)
+	Insert(file *schema.File, dirIDs ...string) (*schema.File, error)
 	Delete(id string) error
 	AddDirectories(file *schema.File, dirIDs ...string) error
 }
@@ -35,6 +35,7 @@ type Files interface {
 // Dirs is the common API to directories.
 type Dirs interface {
 	ByID(id string) (*schema.Directory, error)
+	ByPath(path, projectID string) (*schema.Directory, error)
 	Update(*schema.Directory) error
 	Insert(*schema.Directory) (*schema.Directory, error)
 	AddFiles(dir *schema.Directory, fileIDs ...string) error
@@ -47,4 +48,5 @@ type Projects interface {
 	Files(id, base string) ([]dir.FileInfo, error)
 	Update(*schema.Project) error
 	Insert(*schema.Project) (*schema.Project, error)
+	AddDirectories(project *schema.Project, directoryIDs ...string) error
 }

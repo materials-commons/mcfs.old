@@ -3,12 +3,15 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/base/db"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/mcfs/protocol"
 	"testing"
 )
 
 func TestCreateDir(t *testing.T) {
+	db.SetAddress("localhost:30815")
+	db.SetDatabase("materialscommons")
 	h := NewReqHandler(nil, session, "")
 	h.user = "test@mc.org"
 
