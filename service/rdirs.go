@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/dancannon/gorethink"
+	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/gohandy/arrays"
