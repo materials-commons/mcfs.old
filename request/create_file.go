@@ -17,7 +17,7 @@ type createFileHandler2 struct {
 	files    service.Files
 }
 
-func (h *ReqHandler) createFile2(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
+func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
 	cfh := newCreateFileHandler2(h.user)
 
 	// Make sure we have a valid request.
@@ -169,7 +169,7 @@ type createFileHandler struct {
 	modelValidator
 }
 
-func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
+func (h *ReqHandler) createFileOld(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
 	cfh := createFileHandler{
 		modelValidator: newModelValidator(h.user, h.session),
 	}
