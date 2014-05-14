@@ -55,6 +55,8 @@ func (f rFiles) Delete(id string) error {
 	}
 
 	// Need to delete files from denorm tables
+	// 1. Get all datadirs from the datadir2datafile denorm table
+	// 2. 
 	return nil
 }
 
