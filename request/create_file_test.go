@@ -66,10 +66,6 @@ func TestCreateFile(t *testing.T) {
 		t.Fatalf("Wrong datadir inserted %#v", df)
 	}
 
-	if df.Access != "private" {
-		t.Fatalf("Wrong access set %#v", df)
-	}
-
 	if df.Owner != "test@mc.org" {
 		t.Fatalf("Wrong owner %#v", df)
 	}

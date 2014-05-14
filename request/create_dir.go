@@ -1,7 +1,6 @@
 package request
 
 import (
-	"fmt"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -113,7 +112,6 @@ func (cdh *createDirHandler) getParent() (*schema.Directory, error) {
 	)
 	parentPath := filepath.Dir(cdh.req.Path)
 	if parent, err = cdh.dirs.ByPath(parentPath, cdh.req.ProjectID); err != nil {
-		fmt.Println("Couldn't find parentPath", parentPath, "project", cdh.req.ProjectID, err)
 		return nil, mc.ErrNotFound
 	}
 	return parent, nil

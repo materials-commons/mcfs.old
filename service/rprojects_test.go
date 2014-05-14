@@ -26,7 +26,7 @@ func TestRProjectsFiles(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Unable to build list of files for existing project: %s", err)
 	}
-	if len(files) != 11 {
+	if len(files) < 11 {
 		t.Fatalf("Expected 11 entries, and got %d", len(files))
 	}
 }

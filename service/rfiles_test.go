@@ -29,7 +29,7 @@ func TestRFilesByID(t *testing.T) {
 
 func TestRFilesInsert(t *testing.T) {
 	// Insert a new item
-	dataFile := schema.NewFile("testfile.txt", "private", "test@mc.org")
+	dataFile := schema.NewFile("testfile.txt", "test@mc.org")
 	dataFile.DataDirs = append(dataFile.DataDirs, "d0b001c6-fc0a-4e95-97c3-4427de68c0a5")
 	rfiles := newRFiles()
 	newDF, err := rfiles.Insert(&dataFile)
