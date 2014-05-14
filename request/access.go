@@ -10,7 +10,7 @@ import (
 // particular datafile. Access is determined as follows:
 // 1. if the user and the owner of the file are the same return true (has access).
 // 2. Get a list of all the users groups for the file owner.
-//    For each user in the user group see if teh requesting user
+//    For each user in the user group see if the requesting user
 //    is included. If so then return true (has access).
 // 3. None of the above matched - return false (no access)
 func OwnerGaveAccessTo(owner, user string, session *r.Session) bool {
