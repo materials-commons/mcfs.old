@@ -31,7 +31,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 		return nil, mc.Errorm(mc.ErrNotFound, err)
 	}
 
-	dataFileIDToUse := dataFileLocationID(dataFile)
+	dataFileIDToUse := datafileLocationID(dataFile)
 	fsize := datafileSize(h.mcdir, dataFileIDToUse)
 
 	switch {
@@ -95,27 +95,6 @@ func (req *uploadReq) getDataFile() (*schema.File, error) {
 	default:
 		return dataFile, nil
 	}
-}
-
-func datafileSize(mcdir, dataFileID string) int64 {
-	path := datafilePath(mcdir, dataFileID)
-	finfo, err := os.Stat(path)
-	switch {
-	case err == nil:
-		return finfo.Size()
-	case os.IsNotExist(err):
-		return 0
-	default:
-		return -1
-	}
-}
-
-func dataFileLocationID(dataFile *schema.File) string {
-	if dataFile.UsesID != "" {
-		return dataFile.UsesID
-	}
-
-	return dataFile.ID
 }
 
 func (req *uploadReq) createNewDataFileVersion() (dataFileID string) {
