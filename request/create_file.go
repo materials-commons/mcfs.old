@@ -22,7 +22,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		return nil, err
 	}
 
-	df := schema.NewFile(req.Name, "private", h.user)
+	df := schema.NewFile(req.Name, h.user)
 	df.DataDirs = append(df.DataDirs, req.DataDirID)
 	df.Checksum = req.Checksum
 	df.Size = req.Size

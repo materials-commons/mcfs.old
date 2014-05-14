@@ -85,11 +85,3 @@ func (f rFiles) AddDirectories(file *schema.File, dirIDs ...string) error {
 	}
 	return nil
 }
-
-
-
-
-
-
-
-
