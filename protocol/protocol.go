@@ -255,14 +255,14 @@ type LookupReq struct {
 	LimitToID string
 }
 
-// ProjectEntriesReq project entries request.
+// StatProjectReq project entries request.
 type StatProjectReq struct {
 	Name string
 	ID   string
 	Base string
 }
 
-// ProjectEntriesResp response to a ProjectEntriesReq.
+// StatProjectResp response to a ProjectEntriesReq.
 type StatProjectResp struct {
 	ProjectID string
 	Entries   []dir.FileInfo
