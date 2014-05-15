@@ -27,7 +27,7 @@ func (p rProjects) ByID(id string) (*schema.Project, error) {
 // ByName looks up a project by its name and owner.
 func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
 	var project schema.Project
-	rql := model.Projects.T().GetAllByIndex("name").Filter(r.Row.Field("owner").Eq(owner))
+	rql := model.Projects.T().GetAllByIndex("name", name).Filter(r.Row.Field("owner").Eq(owner))
 	if err := model.Projects.Q().Row(rql, &project); err != nil {
 		return nil, mc.ErrNotFound
 	}

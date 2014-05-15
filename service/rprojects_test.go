@@ -21,6 +21,15 @@ func TestRProjectsByID(t *testing.T) {
 	}
 }
 
+func TestRProjectsByName(t *testing.T) {
+	proj, err := rprojs.ByName("Test", "test@mc.org")
+	if err != nil {
+		t.Fatalf("Unable to find existing project 'Test', owner 'test@mc.org': %s", err)
+	}
+
+	var _ = proj
+}
+
 func TestRProjectsFiles(t *testing.T) {
 	files, err := rprojs.Files("9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3", "")
 	if err != nil {
