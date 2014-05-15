@@ -24,6 +24,16 @@ func (p rProjects) ByID(id string) (*schema.Project, error) {
 	return &project, nil
 }
 
+// ByName looks up a project by its name and owner.
+func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
+	var project schema.Project
+	rql := model.Projects.T().GetAllByIndex("name").Filter(r.Row.Field("owner").Eq(owner))
+	if err := model.Projects.Q().Row(rql, &project); err != nil {
+		return nil, mc.ErrNotFound
+	}
+	return &project, nil
+}
+
 // Files returns a flattened list of all the files and directories in a project.
 // Each entry has its full path starting from the project. The returned list is
 // in sorted (ascending) order.
@@ -46,13 +56,39 @@ func (p rProjects) Update(project *schema.Project) error {
 	return model.Projects.Q().Update(project.ID, project)
 }
 
-// Insert inserts a new project.
+// Insert inserts a new project. This method creates the directory object
+// for the project. If a directory id is specified in the project then
+// the method will return ErrInvalid.
 func (p rProjects) Insert(project *schema.Project) (*schema.Project, error) {
-	var newProject schema.Project
-	if err := model.Projects.Q().Insert(project, &newProject); err != nil {
+	if project.DataDir != "" {
+		return nil, mc.ErrInvalid
+	}
+
+	var (
+		newProject schema.Project
+		newDir     *schema.Directory
+		err        error
+	)
+
+	if err = model.Projects.Q().Insert(project, &newProject); err != nil {
 		return nil, mcfs.ErrDBInsertFailed
 	}
-	return &newProject, nil
+
+	dir := schema.NewDirectory(project.Name, project.Owner, newProject.ID, "")
+	rdirs := newRDirs()
+
+	if newDir, err = rdirs.Insert(&dir); err != nil {
+		return nil, mcfs.ErrDBRelatedUpdateFailed
+	}
+
+	newProject.DataDir = newDir.ID
+	if err = model.Projects.Q().Update(newProject.ID, &newProject); err != nil {
+		return &newProject, err
+	}
+
+	err = p.AddDirectories(&newProject, newDir.ID)
+
+	return &newProject, err
 }
 
 // AddDirectories adds new directories to the project.

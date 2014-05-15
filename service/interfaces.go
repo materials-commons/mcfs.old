@@ -48,6 +48,7 @@ type Dirs interface {
 // Projects is the common API to projects.
 type Projects interface {
 	ByID(id string) (*schema.Project, error)
+	ByName(name, owner string) (*schema.Project, error)
 	Files(id, base string) ([]dir.FileInfo, error)
 	Update(*schema.Project) error
 	Insert(*schema.Project) (*schema.Project, error)
