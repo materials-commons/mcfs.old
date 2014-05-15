@@ -3,6 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/materials-commons/base/db"
+	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"testing"
 )
@@ -61,6 +62,22 @@ func TestRFilesByPath(t *testing.T) {
 	if f != nil {
 		t.Fatalf("Found non-existent file in non-existent directory")
 	}
+
+	// Insert a file that doesn't have current set and then see if we can find it.
+	file := schema.NewFile("testfile.test", "test@mc.org")
+	file.Current = false
+	var nf *schema.File
+	nf, err = rfiles.Insert(&file, "c3d72271-4a32-4080-a6a3-b4c6a5c4b986")
+	if err != nil {
+		t.Fatalf("Unable to insert file testfile.test")
+	}
+
+	_, err = rfiles.ByPath("testfile.test", "c3d72271-4a32-4080-a6a3-b4c6a5c4b986")
+	if err != mc.ErrNotFound {
+		t.Fatalf("Lookup of testfile.test should have returned err 'mc.ErrNotFound', returned %s instead", err)
+	}
+
+	rfiles.Delete(nf.ID)
 }
 
 func TestRFilesByChecksum(t *testing.T) {

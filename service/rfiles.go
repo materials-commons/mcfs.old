@@ -24,9 +24,11 @@ func (f rFiles) ByID(id string) (*schema.File, error) {
 	return &file, nil
 }
 
-// ByPath looks up a file by its name in a specific directory.
+// ByPath looks up a file by its name in a specific directory. It only returns the
+// current file, not hidden files.
 func (f rFiles) ByPath(name, dirID string) (*schema.File, error) {
-	rql := model.Files.T().GetAllByIndex("name", name).Filter(r.Row.Field("datadirs").Contains(dirID))
+	rql := model.Files.T().GetAllByIndex("name", name).
+		Filter(r.Row.Field("datadirs").Contains(dirID).And(r.Row.Field("current").Eq(true)))
 	var file schema.File
 	if err := model.Files.Q().Row(rql, &file); err != nil {
 		return nil, err
