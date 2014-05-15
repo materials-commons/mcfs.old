@@ -50,6 +50,8 @@ func (f rFiles) ByChecksum(checksum string) (*schema.File, error) {
 // Hide keeps the file around, but removes it from all dependent objects. This allows
 // multiple versions of a file to exist, but only the current version to be used.
 func (f rFiles) Hide(file *schema.File) error {
+	file.Current = false
+	model.Files.Q().Update(file.ID, file)
 	return f.removeFromDependents(file)
 }
 
@@ -63,12 +65,12 @@ func (f rFiles) Update(file *schema.File) error {
 }
 
 // Insert creates a new file entry.
-func (f rFiles) Insert(file *schema.File, dirIDs ...string) (*schema.File, error) {
+func (f rFiles) Insert(file *schema.File) (*schema.File, error) {
 	var newFile schema.File
 	if err := model.Files.Q().Insert(file, &newFile); err != nil {
 		return nil, err
 	}
-	if err := f.AddDirectories(&newFile, dirIDs...); err != nil {
+	if err := f.AddDirectories(&newFile, file.DataDirs...); err != nil {
 		return &newFile, err
 	}
 	return &newFile, nil
@@ -112,25 +114,30 @@ func (f rFiles) removeFromDependents(file *schema.File) error {
 // AddDirectories adds new directories to a file. It updates all related items
 // and join tables.
 func (f rFiles) AddDirectories(file *schema.File, dirIDs ...string) error {
-	fileEntry := schema.FileEntry{
-		ID:        file.ID,
-		Name:      file.Name,
-		Owner:     file.Owner,
-		Birthtime: file.Birthtime,
-		Checksum:  file.Checksum,
-		Size:      file.Size,
-	}
-
+	rdirs := newRDirs()
+	var rv error
 	for _, ddirID := range dirIDs {
-		var ddirDenorm schema.DataDirDenorm
-		if err := model.DirsDenorm.Q().ByID(ddirID, &ddirDenorm); err != nil {
-			return err
-		}
-
-		ddirDenorm.DataFiles = append(ddirDenorm.DataFiles, fileEntry)
-		if err := model.DirsDenorm.Q().Update(ddirID, ddirDenorm); err != nil {
-			return err
+		dir, err := rdirs.ByID(ddirID)
+		rdirs.AddFiles(dir, file.ID)
+		if err != nil {
+			rv = mcfs.ErrDBRelatedUpdateFailed
 		}
 	}
-	return nil
+	return rv
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

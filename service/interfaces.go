@@ -30,7 +30,7 @@ type Files interface {
 	ByChecksum(checksum string) (*schema.File, error)
 	Hide(*schema.File) error
 	Update(*schema.File) error
-	Insert(file *schema.File, dirIDs ...string) (*schema.File, error)
+	Insert(file *schema.File) (*schema.File, error)
 	Delete(id string) error
 	AddDirectories(file *schema.File, dirIDs ...string) error
 }

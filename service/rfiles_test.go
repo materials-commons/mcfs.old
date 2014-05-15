@@ -3,9 +3,9 @@ package service
 import (
 	"fmt"
 	"github.com/materials-commons/base/db"
-	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"testing"
+	"github.com/materials-commons/base/mc"
 )
 
 var _ = fmt.Println
@@ -67,7 +67,8 @@ func TestRFilesByPath(t *testing.T) {
 	file := schema.NewFile("testfile.test", "test@mc.org")
 	file.Current = false
 	var nf *schema.File
-	nf, err = rfiles.Insert(&file, "c3d72271-4a32-4080-a6a3-b4c6a5c4b986")
+	file.DataDirs = append(file.DataDirs, "c3d72271-4a32-4080-a6a3-b4c6a5c4b986")
+	nf, err = rfiles.Insert(&file)
 	if err != nil {
 		t.Fatalf("Unable to insert file testfile.test")
 	}
