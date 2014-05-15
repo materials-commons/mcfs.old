@@ -111,8 +111,6 @@ func TestCreateFile(t *testing.T) {
 		fmt.Printf("file = %#v\n", f)
 	}
 
-	t.Fatalf("Stop before deleting")
-
 	// Delete created files
 	model.Delete("datafiles", createdID, session)
 	model.Delete("datafiles", createdID2, session)
