@@ -8,6 +8,7 @@ import (
 	"github.com/materials-commons/mcfs/service"
 )
 
+// createFileHandler is an internal type for handling create file requests.
 type createFileHandler struct {
 	user     string
 	dirs     service.Dirs
@@ -15,6 +16,9 @@ type createFileHandler struct {
 	files    service.Files
 }
 
+// createFile will create a new file, or use an existing file. Existing files are
+// returned if the existing files upload was interrupted. In the case where an
+// existing file is returned, the checksums must match.
 func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
 	cfh := newCreateFileHandler(h.user)
 
@@ -69,6 +73,8 @@ func newCreateFileHandler(user string) *createFileHandler {
 	}
 }
 
+// validateRequest will validate the CreateFileReq. It does sanity checking on the file
+// size and checksum. We rely on the client to send us a good checksum.
 func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq, session *r.Session) error {
 	proj, err := cfh.projects.ByID(req.ProjectID)
 	if err != nil {
@@ -99,6 +105,7 @@ func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq, sessi
 	return nil
 }
 
+// createNewFile will create the file object in the database.
 func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
 	file := cfh.newFile(req, cfh.user)
 	created, err := cfh.files.Insert(file)
@@ -114,6 +121,9 @@ func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*proto
 	return &createResp, nil
 }
 
+// newFile creates a new file object to insert into the database. It also handles the
+// bookkeeping task of setting the usesid field if the upload is for a previously
+// uploaded file.
 func (cfh *createFileHandler) newFile(req *protocol.CreateFileReq, user string) *schema.File {
 	file := schema.NewFile(req.Name, user)
 	file.DataDirs = append(file.DataDirs, req.DataDirID)
@@ -129,6 +139,8 @@ func (cfh *createFileHandler) newFile(req *protocol.CreateFileReq, user string) 
 	return &file
 }
 
+// partiallyUploaded checks if the file request is for a file that has not completed
+// its upload.
 func (cfh *createFileHandler) partiallyUploaded(file *schema.File, mcdir string) bool {
 	id := datafileLocationID(file)
 	dfSize := datafileSize(mcdir, id)
@@ -139,6 +151,8 @@ func (cfh *createFileHandler) partiallyUploaded(file *schema.File, mcdir string)
 	return dfSize != file.Size
 }
 
+// createNewFileVersion creates a new version of an existing file. It handles hiding the old
+// version and setting the parent on the new version to point at the old file.
 func (cfh *createFileHandler) createNewFileVersion(file *schema.File, req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
 	f := cfh.newFile(req, cfh.user)
 	f.Parent = file.ID
