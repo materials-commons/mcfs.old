@@ -43,6 +43,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/materials-commons/base/db"
 )
 
 // Options for server startup
@@ -91,6 +92,8 @@ func main() {
 	mcDir = opts.Server.MCDir
 	dbAddress = opts.Database.Connection
 	dbName = opts.Database.Name
+	db.SetAddress(dbAddress)
+	db.SetDatabase(dbName)
 	go webserver(opts.Server.HTTPPort)
 
 	acceptConnections(listener)
