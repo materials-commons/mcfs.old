@@ -56,6 +56,15 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		}
 		return &createResp, nil
 
+	case f.Checksum == req.Checksum:
+		// File exists, is fully uploaded, and the request is to upload
+		// a file with the same checksum. Just return the existing file
+		// and the let the upload take care of the number of bytes.
+		createResp := protocol.CreateResp{
+			ID: f.ID,
+		}
+		return &createResp, nil
+
 	default:
 		// At this point the file exists and is fully uploaded. So we can create a new file
 		// to upload to. We also need to update all entries entries to point to this new file.
