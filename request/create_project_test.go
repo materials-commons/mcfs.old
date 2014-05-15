@@ -56,7 +56,7 @@ func TestCreateProject(t *testing.T) {
 	// Test create existing project
 	resp, err = h.createProject(&createProjectRequest)
 	if err != mc.ErrExists {
-		t.Errorf("Creating an existing project should have returned err mc.ErrorCodeExists, returned %d instead", err)
+		t.Errorf("Creating an existing project should have returned err mc.ErrExists, returned %s instead", err)
 	}
 
 	// Delete before test so we can cleanup if there is a failure
