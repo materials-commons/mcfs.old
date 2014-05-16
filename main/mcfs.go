@@ -33,7 +33,6 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/base/db"
-	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/materials/util"
 	_ "github.com/materials-commons/mcfs/protocol"
@@ -129,16 +128,15 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	defer session.Close()
 
 	// Verify key
-	var u schema.User
-	query := r.Table("users").GetAllByIndex("apikey", apikey)
-	if err := model.GetRow(query, session, &u); err != nil {
+	u, err := service.User.ByAPIKey(apikey)
+	if err != nil {
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
 	}
 
 	// Get datafile from db and check access
 	dataFileID := filepath.Base(req.URL.Path)
-	df, err := model.GetFile(dataFileID, session)
+	df, err := service.File.ByID(dataFileID)
 	switch {
 	case err != nil:
 		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
