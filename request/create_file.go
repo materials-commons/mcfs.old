@@ -10,10 +10,7 @@ import (
 
 // createFileHandler is an internal type for handling create file requests.
 type createFileHandler struct {
-	user     string
-	dirs     service.Dirs
-	projects service.Projects
-	files    service.Files
+	user string
 }
 
 // createFile will create a new file, or use an existing file. Existing files are
@@ -28,7 +25,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	}
 
 	// Check if the file status.
-	f, err := cfh.files.ByPath(req.Name, req.DataDirID)
+	f, err := service.File.ByPath(req.Name, req.DataDirID)
 	switch {
 	case err == mc.ErrNotFound:
 		// File doesn't exist. This is the easy case: Create a new one and
@@ -77,17 +74,14 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 
 func newCreateFileHandler(user string) *createFileHandler {
 	return &createFileHandler{
-		user:     user,
-		dirs:     service.NewDirs(service.RethinkDB),
-		projects: service.NewProjects(service.RethinkDB),
-		files:    service.NewFiles(service.RethinkDB),
+		user: user,
 	}
 }
 
 // validateRequest will validate the CreateFileReq. It does sanity checking on the file
 // size and checksum. We rely on the client to send us a good checksum.
 func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq, session *r.Session) error {
-	proj, err := cfh.projects.ByID(req.ProjectID)
+	proj, err := service.Project.ByID(req.ProjectID)
 	if err != nil {
 		return mc.Errorf(mc.ErrInvalid, "Bad projectID %s", req.ProjectID)
 	}
@@ -96,7 +90,7 @@ func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq, sessi
 		return mc.ErrNoAccess
 	}
 
-	ddir, err := cfh.dirs.ByID(req.DataDirID)
+	ddir, err := service.Dir.ByID(req.DataDirID)
 	if err != nil {
 		return mc.Errorf(mc.ErrInvalid, "Unknown directory id: %s", req.DataDirID)
 	}
@@ -119,7 +113,7 @@ func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq, sessi
 // createNewFile will create the file object in the database.
 func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
 	file := cfh.newFile(req, cfh.user)
-	created, err := cfh.files.Insert(file)
+	created, err := service.File.Insert(file)
 	if err != nil {
 		// Insert into database failed
 		return nil, err
@@ -141,7 +135,7 @@ func (cfh *createFileHandler) newFile(req *protocol.CreateFileReq, user string) 
 	file.Checksum = req.Checksum
 	file.Size = req.Size
 
-	dup, err := cfh.files.ByChecksum(file.Checksum)
+	dup, err := service.File.ByChecksum(file.Checksum)
 	if err == nil {
 		// Found a matching entry, set usesid to it
 		file.UsesID = dup.ID
@@ -169,10 +163,10 @@ func (cfh *createFileHandler) createNewFileVersion(file *schema.File, req *proto
 	f.Parent = file.ID
 
 	// Hide the old file, but keep it around so we can get to it if needed.
-	cfh.files.Hide(file)
+	service.File.Hide(file)
 
 	// Insert the new file into the database.
-	created, err := cfh.files.Insert(f)
+	created, err := service.File.Insert(f)
 	if err != nil {
 		// Insert into database failed
 		return nil, err
