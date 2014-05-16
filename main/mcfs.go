@@ -38,13 +38,13 @@ import (
 	"github.com/materials-commons/materials/util"
 	_ "github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/request"
+	"github.com/materials-commons/mcfs/service"
 	"mime"
 	"net"
 	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
-	"github.com/materials-commons/mcfs/service"
 )
 
 // Options for server startup
