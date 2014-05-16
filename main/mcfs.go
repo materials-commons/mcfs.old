@@ -115,18 +115,6 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 
 	download := req.FormValue("download")
 
-	session, err := r.Connect(map[string]interface{}{
-		"address":  dbAddress,
-		"database": dbName,
-	})
-
-	if err != nil {
-		http.Error(writer, http.StatusText(http.StatusServiceUnavailable), http.StatusServiceUnavailable)
-		return
-	}
-
-	defer session.Close()
-
 	// Verify key
 	u, err := service.User.ByAPIKey(apikey)
 	if err != nil {
