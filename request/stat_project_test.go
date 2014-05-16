@@ -2,72 +2,11 @@ package request
 
 import (
 	"fmt"
-	"github.com/materials-commons/base/db"
-	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/mcfs/protocol"
 	"testing"
 )
 
 var _ = fmt.Println
-
-var (
-	projectNameTests = []struct {
-		name        string
-		errorNil    bool
-		description string
-	}{
-		{"Test", true, "Test existing project with access"},
-		{"Test2", false, "Testing existing project without access"},
-		{"Does not exist", false, "Test non existant project"},
-	}
-)
-
-func TestGetProjectByName(t *testing.T) {
-	db.SetAddress("localhost:30815")
-	db.SetDatabase("materialscommons")
-	p := &statProjectHandler{
-		session: session,
-		user:    "test@mc.org",
-	}
-
-	for _, test := range projectNameTests {
-		_, err := p.getProjectByName(test.name)
-		switch {
-		case err != nil && test.errorNil:
-			t.Errorf("Expected error to be nil for test %s, err %s", test.description, err)
-		case err == nil && !test.errorNil:
-			t.Errorf("Expected err != nil for test %s", test.description)
-		}
-	}
-}
-
-func TestGetProjectEntries(t *testing.T) {
-	p := &statProjectHandler{
-		session: session,
-		user:    "test@mc.org",
-	}
-
-	// Test existing project
-	projectID := "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3"
-	results, err := p.projectDirList(projectID, "")
-	if err != nil {
-		t.Errorf("Query on known project id failed %s", err)
-	}
-
-	if len(results) == 0 {
-		t.Errorf("Expected # of results to be greater than 0")
-	}
-
-	// Test bad id
-	results, err = p.projectDirList("bad-id", "")
-	if err != mc.ErrNotFound {
-		t.Errorf("Error not equal to ErrNotFound for bad project id: %s", err)
-	}
-
-	if results != nil {
-		t.Errorf("Expected results to be nil")
-	}
-}
 
 func TestProjectEntries(t *testing.T) {
 	h := NewReqHandler(nil, session, "")
