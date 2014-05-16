@@ -11,7 +11,7 @@ import (
 // rDirs implements the Dirs interface for RethinkDB
 type rDirs struct{}
 
-// newRDirs create a new instance of rDirs
+// newRDirs creates a new instance of rDirs
 func newRDirs() rDirs {
 	return rDirs{}
 }
