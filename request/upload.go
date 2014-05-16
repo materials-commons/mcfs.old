@@ -1,34 +1,28 @@
 package request
 
 import (
-	"fmt"
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/mc"
-	"github.com/materials-commons/base/model"
-	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/service"
 	"io"
 	"os"
 )
 
-type uploadReq struct {
-	*protocol.UploadReq
-	*ReqHandler
-}
-
+// upload handles the upload request. It validates the request and sends back the
+// file ID to write to, and the offset to start sending from. The uploading of bytes
+// is handled in the uploadLoop() method.
 func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, error) {
-	ureq := &uploadReq{
-		UploadReq:  req,
-		ReqHandler: h,
-	}
+	files := service.NewFiles(service.RethinkDB)
 
-	resp := &protocol.UploadResp{}
-
-	dataFile, err := ureq.getDataFile()
-
+	dataFile, err := files.ByID(req.DataFileID)
 	if err != nil {
 		return nil, mc.Errorm(mc.ErrNotFound, err)
+	}
+
+	if !OwnerGaveAccessTo(dataFile.Owner, h.user, h.session) {
+		return nil, mc.ErrNoAccess
 	}
 
 	dataFileIDToUse := datafileLocationID(dataFile)
@@ -38,85 +32,47 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 	case fsize == -1:
 		// Problem doing a stat on the file path, send back an error
 		return nil, mc.Errorf(mc.ErrNoAccess, "Access to path for file %s denied", req.DataFileID)
-	case dataFile.Size == ureq.Size && dataFile.Checksum == ureq.Checksum:
-		if fsize < ureq.Size {
-			//interrupted transfer
-			// send offset = fsize and ureq.dataFile.ID
-			resp.DataFileID = dataFileIDToUse
-			resp.Offset = fsize
-		} else if fsize == ureq.Size {
-			// nothing to send file upload completed
-			resp.DataFileID = req.DataFileID
-			resp.Offset = ureq.Size
-		} else {
-			// fsize > ureq.Size && checksums are equal
-			// Houston we have a problem!
-			return nil, mc.Errorf(mc.ErrInvalid, "Fatal error fsize (%d) > ureq.Size (%d) with equal checksums", fsize, ureq.Size)
+
+	case dataFile.Size == req.Size && dataFile.Checksum == req.Checksum:
+		// Request looks ok, determine offset to use.
+		var offset int64
+		if offset, err = responseOffset(fsize, req.Size); err != nil {
+			return nil, err
 		}
+		return &protocol.UploadResp{DataFileID: dataFileIDToUse, Offset: offset}, nil
 
-	case dataFile.Size != ureq.Size:
-		// wants to upload a new version
-		if fsize < dataFile.Size {
-			// Other upload hasn't completed - reject this one until other completes
-			return nil, mc.Errorf(mc.ErrInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
-		}
+	case dataFile.Size != req.Size:
+		// Invalid request. The correct size was set at the time createFile was called.
+		return nil, mc.Errorf(mc.ErrInvalid, "Invalid request: Expected size (%d) doesn't match the request size (%d).", dataFile.Size, req.Size)
 
-		// create a new version and send new data file and offset = 0
-		resp.DataFileID = ureq.createNewDataFileVersion()
-		resp.Offset = 0
-
-	case dataFile.Size == ureq.Size && dataFile.Checksum != ureq.Checksum:
-		// wants to upload new version
-		if fsize < dataFile.Size {
-			// Other upload hasn't completed - reject this one until other completes
-			return nil, mc.Errorf(mc.ErrInvalid, "Cannot create new version of data file when previous version hasn't completed loading.")
-		}
-
-		// create a new version start upload
-		// send offset = 0 and a new datafile id
-		resp.DataFileID = ureq.createNewDataFileVersion()
-		resp.Offset = 0
+	case dataFile.Checksum != req.Checksum:
+		// Invalid request. The correct checksum was set at the time createFile was called.
+		return nil, mc.Errorf(mc.ErrInvalid, "Invalid request: Expected checksum (%s) doesn't match the request checksum (%s).", dataFile.Checksum, req.Checksum)
 
 	default:
 		// We should never get here so this is a bug that we need to log
 		return nil, mc.ErrInternal
 	}
-
-	return resp, nil
 }
 
-func (req *uploadReq) getDataFile() (*schema.File, error) {
-	dataFile, err := model.GetFile(req.DataFileID, req.session)
+// responseOffset determines the offset to start sending bytes from. This
+// call assumes that the checksums have been validated.
+func responseOffset(fsize, reqSize int64) (int64, error) {
 	switch {
-	case err != nil:
-		return nil, fmt.Errorf("no such datafile %s", req.DataFileID)
-	case !OwnerGaveAccessTo(dataFile.Owner, req.user, req.session):
-		return nil, fmt.Errorf("permission denied to %s", req.DataFileID)
+	case fsize < reqSize:
+		// interrupted transfer, send offset = fsize. Thus the
+		// client will start sending from fsize, thereby sending
+		// the rest of the bytes for the file.
+		return fsize, nil
+	case fsize == reqSize:
+		// No bytes need to be sent. Tell client the number of bytes
+		// to upload is exactly equal to the file. This will cause
+		// the client to skip sending anything.
+		return reqSize, nil
 	default:
-		return dataFile, nil
+		// fsize > reqSize. This is a problem on the client side.
+		return 0, mc.Errorf(mc.ErrInvalid, "Fatal error fsize (%d) > ureqSize (%d) with equal checksums", fsize, reqSize)
 	}
-}
-
-func (req *uploadReq) createNewDataFileVersion() (dataFileID string) {
-	/*
-		newDataFile := *req.dataFile
-		newDataFile.Id = ""
-		newDataFile.Parent = req.dataFile.Id
-		rv, err := r.Table("datafiles").Insert(newDataFile).RunWrite(req.session)
-		if err != nil {
-			fmt.Println(err)
-		}
-		if rv.Inserted == 0 {
-			fmt.Println("Nothing inserted!")
-		}
-		dataFileID = rv.GeneratedKeys[0]
-		// Update datadir to point at new file
-		var ddirs = []string{}
-		for _, ddir := range req.dataFile.DataDirs {
-			if ddir !=
-		}
-	*/
-	return "NEW"
 }
 
 type uploadHandler struct {
