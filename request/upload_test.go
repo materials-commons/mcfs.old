@@ -13,7 +13,7 @@ import (
 
 var _ = fmt.Println
 
-func TestUploadCasesFile(t *testing.T) {
+func TestUploadCases(t *testing.T) {
 	// Test New File
 	h := NewReqHandler(nil, session, "")
 	h.user = "test@mc.org"
@@ -113,30 +113,6 @@ func TestUploadCasesFile(t *testing.T) {
 	}
 	if resp.DataFileID != createdID {
 		t.Fatalf("Tried to create a new datafile id for an interrupted transfer")
-	}
-
-	// Test new version with previous interrupted
-	uploadReq.Size = 8
-	uploadReq.Checksum = "def456"
-	resp, err = h.upload(&uploadReq)
-	if err == nil {
-		t.Fatalf("Allowed to create a new version when a previous version hasn't completed upload")
-	}
-
-	// Test new version when previous version has completed the upload
-	w.Write([]byte("s")) // Get file to correct size to complete upload
-	w.Close()
-	resp, err = h.upload(&uploadReq)
-	if err != nil {
-		t.Fatalf("Cannot create new version of file already uploaded %s", err)
-	}
-
-	if resp.DataFileID == createdID {
-		t.Fatalf("New ID was not assigned for new version of file")
-	}
-
-	if resp.Offset != 0 {
-		t.Fatalf("Uploading new version offset should be 0 not %d", resp.Offset)
 	}
 
 	fmt.Println("Deleting datafile id", createdID)
@@ -367,7 +343,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	// the file and send us back the id from the file created above.
 	//
 	// There are two cases. Above we only wrote a partial file for the original file, so we should
-	// get back the origin file id and an offset, even though a new id was created from the
+	// get back the original file id and an offset, even though a new id was created from the
 	// second create file call.
 	//
 	createFileRequest.DataDirID = "c3d72271-4a32-4080-a6a3-b4c6a5c4b986"
@@ -380,7 +356,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	uploadReq.DataFileID = newID
 	resp, err = h.upload(&uploadReq)
 	if resp.DataFileID != createdID {
-		t.Errorf("Wronge datafile id sent when uploading a file that matches on the server. Expected %s, got %s", createdID, resp.DataFileID)
+		t.Errorf("Wrong datafile id sent when uploading a file that matches on the server. Expected %s, got %s", createdID, resp.DataFileID)
 	}
 
 	if resp.Offset != testfileLen-1 {

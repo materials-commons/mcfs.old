@@ -14,9 +14,7 @@ import (
 // file ID to write to, and the offset to start sending from. The uploading of bytes
 // is handled in the uploadLoop() method.
 func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, error) {
-	files := service.NewFiles(service.RethinkDB)
-
-	dataFile, err := files.ByID(req.DataFileID)
+	dataFile, err := service.File.ByID(req.DataFileID)
 	if err != nil {
 		return nil, mc.Errorm(mc.ErrNotFound, err)
 	}
@@ -25,8 +23,8 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 		return nil, mc.ErrNoAccess
 	}
 
-	dataFileIDToUse := datafileLocationID(dataFile)
-	fsize := datafileSize(h.mcdir, dataFileIDToUse)
+	dfLocationID := datafileLocationID(dataFile)
+	fsize := datafileSize(h.mcdir, dfLocationID)
 
 	switch {
 	case fsize == -1:
@@ -39,7 +37,17 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 		if offset, err = responseOffset(fsize, req.Size); err != nil {
 			return nil, err
 		}
-		return &protocol.UploadResp{DataFileID: dataFileIDToUse, Offset: offset}, nil
+		dfid := dfLocationID
+
+		// If there is nothing to write then we send back the original id.
+		// Otherwise, if we have bytes to write we send back the id to
+		// write to. Since the file could point to another file that is
+		// a duplicate (but hasn't been completely uploaded), the id could
+		// be different as it could point to the duplicate.
+		if offset == dataFile.Size {
+			dfid = dataFile.ID
+		}
+		return &protocol.UploadResp{DataFileID: dfid, Offset: offset}, nil
 
 	case dataFile.Size != req.Size:
 		// Invalid request. The correct size was set at the time createFile was called.
