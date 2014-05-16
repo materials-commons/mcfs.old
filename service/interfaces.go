@@ -54,3 +54,11 @@ type Projects interface {
 	Insert(*schema.Project) (*schema.Project, error)
 	AddDirectories(project *schema.Project, directoryIDs ...string) error
 }
+
+// Groups is the common API to groups.
+type Groups interface {
+	ByID(id string) (*schema.Group, error)
+	Insert(*schema.Group) (*schema.Group, error)
+	Delete(id string) error
+	HasAccess(owner, user string) bool
+}

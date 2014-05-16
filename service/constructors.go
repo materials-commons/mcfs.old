@@ -47,3 +47,15 @@ func NewProjects(serviceDatabase ServiceDatabase) Projects {
 		panic("Unknown service type")
 	}
 }
+
+// NewGroups creates a new Groups instance connecting to a specific database backend.
+func NewGroups(serviceDatabase ServiceDatabase) Groups {
+	switch serviceDatabase {
+	case RethinkDB:
+		return newRGroups()
+	case SQL:
+		panic("SQL ServiceDatabase not supported")
+	default:
+		panic("Unknown service type")
+	}
+}
