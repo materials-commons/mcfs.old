@@ -32,6 +32,7 @@ import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
 	"github.com/jessevdk/go-flags"
+	"github.com/materials-commons/base/db"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/materials/util"
@@ -43,7 +44,6 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
-	"github.com/materials-commons/base/db"
 )
 
 // Options for server startup
