@@ -6,6 +6,7 @@ import (
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/service"
 )
 
 type lookupHandler struct {
@@ -95,5 +96,5 @@ func (l *lookupHandler) hasAccess(v interface{}) bool {
 	case *schema.File:
 		owner = t.Owner
 	}
-	return OwnerGaveAccessTo(owner, l.user, l.session)
+	return service.Group.HasAccess(owner, l.user)
 }

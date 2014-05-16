@@ -44,6 +44,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"github.com/materials-commons/mcfs/service"
 )
 
 // Options for server startup
@@ -141,7 +142,7 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	switch {
 	case err != nil:
 		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	case !request.OwnerGaveAccessTo(df.Owner, u.Email, session):
+	case !service.Group.HasAccess(df.Owner, u.Email):
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	default:
 		var path string

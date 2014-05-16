@@ -19,7 +19,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 		return nil, mc.Errorm(mc.ErrNotFound, err)
 	}
 
-	if !OwnerGaveAccessTo(dataFile.Owner, h.user, h.session) {
+	if !service.Group.HasAccess(dataFile.Owner, h.user) {
 		return nil, mc.ErrNoAccess
 	}
 

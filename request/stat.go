@@ -5,6 +5,7 @@ import (
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/service"
 )
 
 func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, error) {
@@ -12,7 +13,7 @@ func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, error) {
 	switch {
 	case err != nil:
 		return nil, mc.Errorf(mc.ErrNotFound, "Unknown id %s", req.DataFileID)
-	case !OwnerGaveAccessTo(df.Owner, h.user, h.session):
+	case !service.Group.HasAccess(df.Owner, h.user):
 		return nil, mc.Errorf(mc.ErrNoAccess, "You do not have permission to access this datafile %s", req.DataFileID)
 	default:
 		return respStat(df), nil

@@ -1,7 +1,6 @@
 package request
 
 import (
-	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -20,7 +19,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	cfh := newCreateFileHandler(h.user)
 
 	// Make sure we have a valid request.
-	if err := cfh.validateRequest(req, h.session); err != nil {
+	if err := cfh.validateRequest(req); err != nil {
 		return nil, err
 	}
 
@@ -80,13 +79,13 @@ func newCreateFileHandler(user string) *createFileHandler {
 
 // validateRequest will validate the CreateFileReq. It does sanity checking on the file
 // size and checksum. We rely on the client to send us a good checksum.
-func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq, session *r.Session) error {
+func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq) error {
 	proj, err := service.Project.ByID(req.ProjectID)
 	if err != nil {
 		return mc.Errorf(mc.ErrInvalid, "Bad projectID %s", req.ProjectID)
 	}
 
-	if !OwnerGaveAccessTo(proj.Owner, cfh.user, session) {
+	if !service.Group.HasAccess(proj.Owner, cfh.user) {
 		return mc.ErrNoAccess
 	}
 
