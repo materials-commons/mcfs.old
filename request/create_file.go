@@ -66,9 +66,11 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		return &createResp, nil
 
 	default:
-		// At this point the file exists and is fully uploaded. So we can create a new file
-		// to upload to. We also need to update all entries entries to point to this new file.
-		// New file has parent set to the old file.
+		// At this point the file exists and is fully uploaded, and the request has a
+		// different checksum. This means a new version of the file is being uploaded.
+		// We will create a new file entry to upload to. We also need to update all
+		// objects to point to this new file and hide the old file. To keep track of
+		// the graph the ew file has parent set to the old file entry it is replacing.
 		return cfh.createNewFileVersion(f, req)
 	}
 }
