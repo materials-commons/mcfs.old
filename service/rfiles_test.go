@@ -3,9 +3,9 @@ package service
 import (
 	"fmt"
 	"github.com/materials-commons/base/db"
+	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"testing"
-	"github.com/materials-commons/base/mc"
 )
 
 var _ = fmt.Println
