@@ -1,45 +1,33 @@
 package request
 
 import (
-	"fmt"
-	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/base/dir"
 	"github.com/materials-commons/base/mc"
-	"github.com/materials-commons/base/model"
-	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/service"
 )
 
-var _ = fmt.Println
-
-type statProjectHandler struct {
-	session *r.Session
-	user    string
-	files   []dir.FileInfo
-}
-
+// statProject returns the list of entries (files and directories) for a given project.
+// It can look up a project by its ID, or by its name. In the case of name lookup the
+// owner of the project must match the user making the request.
 func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatProjectResp, error) {
-	p := &statProjectHandler{
-		session: h.session,
-		user:    h.user,
-	}
-
 	var projectID string
+
 	switch {
 	case req.Name != "":
-		project, err := p.getProjectByName(req.Name)
+		// Lookup the project by its name.
+		project, err := service.Project.ByName(req.Name, h.user)
 		if err != nil {
 			return nil, mc.Errorm(mc.ErrNotFound, err)
 		}
 		projectID = project.ID
 	case req.ID != "":
+		// Use the project id we were given.
 		projectID = req.ID
 	default:
 		return nil, mc.Errorm(mc.ErrInvalid, nil)
 	}
 
-	entries, err := p.projectDirList(projectID, req.Base)
+	entries, err := service.Project.Files(projectID, req.Base)
 	if err != nil {
 		return nil, mc.Errorm(mc.ErrNotFound, err)
 	}
@@ -49,20 +37,4 @@ func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatPr
 		Entries:   entries,
 	}
 	return &resp, nil
-}
-
-func (p *statProjectHandler) getProjectByName(name string) (*schema.Project, error) {
-	rql := r.Table("projects").GetAllByIndex("owner", p.user).Filter(r.Row.Field("name").Eq(name))
-	var project schema.Project
-	err := model.GetRow(rql, p.session, &project)
-	if err != nil {
-		return nil, err
-	}
-	return &project, nil
-}
-
-func (p *statProjectHandler) projectDirList(projectID, base string) ([]dir.FileInfo, error) {
-	projects := service.NewProjects(service.RethinkDB)
-	files, err := projects.Files(projectID, base)
-	return files, err
 }

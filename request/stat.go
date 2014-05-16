@@ -2,32 +2,33 @@ package request
 
 import (
 	"github.com/materials-commons/base/mc"
-	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/service"
 )
 
+// stat is like the file system stat call but returns information from our document store.
 func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, error) {
-	df, err := model.GetFile(req.DataFileID, h.session)
+	file, err := service.File.ByID(req.DataFileID)
 	switch {
 	case err != nil:
 		return nil, mc.Errorf(mc.ErrNotFound, "Unknown id %s", req.DataFileID)
-	case !service.Group.HasAccess(df.Owner, h.user):
+	case !service.Group.HasAccess(file.Owner, h.user):
 		return nil, mc.Errorf(mc.ErrNoAccess, "You do not have permission to access this datafile %s", req.DataFileID)
 	default:
-		return respStat(df), nil
+		return respStat(file), nil
 	}
 }
 
-func respStat(df *schema.File) *protocol.StatResp {
+// respStat creates the StatResp object from the file.
+func respStat(file *schema.File) *protocol.StatResp {
 	return &protocol.StatResp{
-		DataFileID: df.ID,
-		Name:       df.Name,
-		DataDirs:   df.DataDirs,
-		Checksum:   df.Checksum,
-		Size:       df.Size,
-		Birthtime:  df.Birthtime,
-		MTime:      df.MTime,
+		DataFileID: file.ID,
+		Name:       file.Name,
+		DataDirs:   file.DataDirs,
+		Checksum:   file.Checksum,
+		Size:       file.Size,
+		Birthtime:  file.Birthtime,
+		MTime:      file.MTime,
 	}
 }

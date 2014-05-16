@@ -19,6 +19,9 @@ var Project Projects
 // Global Group service
 var Group Groups
 
+// Global User service
+var User Users
+
 // Setup the services in the init so that they can be configured to
 // the type of database to connect to.
 func init() {
@@ -35,6 +38,7 @@ func init() {
 		Dir = NewDirs(RethinkDB)
 		Project = NewProjects(RethinkDB)
 		Group = NewGroups(RethinkDB)
+		User = NewUsers(RethinkDB)
 	default:
 		panic(fmt.Sprintf("Unsupported database type: %s", dbType))
 	}

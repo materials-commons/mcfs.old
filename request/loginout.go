@@ -1,14 +1,14 @@
 package request
 
 import (
-	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/mc"
-	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/service"
 )
 
+// login validates a login request.
 func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, error) {
-	if validLogin(req.User, req.APIKey, h.session) {
+	if validLogin(req.User, req.APIKey) {
 		h.user = req.User
 		return &protocol.LoginResp{}, nil
 	}
@@ -16,8 +16,10 @@ func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, error) 
 	return nil, mc.Errorf(mc.ErrInvalid, "Bad login %s/%s", req.User, req.APIKey)
 }
 
-func validLogin(user, apikey string, session *r.Session) bool {
-	u, err := model.GetUser(user, session)
+// validLogin looks the user up in the database and compares the APIKey passed in with
+// the APIKey in the database.
+func validLogin(user, apikey string) bool {
+	u, err := service.User.ByID(user)
 	switch {
 	case err != nil:
 		return false
@@ -28,6 +30,8 @@ func validLogin(user, apikey string, session *r.Session) bool {
 	}
 }
 
+// logout responds to a logout request. It currently doesn't do anything but the
+// state machine will treat this request specially and will terminate.
 func (h *ReqHandler) logout(req *protocol.LogoutReq) (*protocol.LogoutResp, error) {
 	return &protocol.LogoutResp{}, nil
 }
