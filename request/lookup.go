@@ -2,6 +2,7 @@ package request
 
 import (
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/base/db"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
@@ -15,8 +16,9 @@ type lookupHandler struct {
 }
 
 func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
+	session, _ := db.RSession()
 	l := &lookupHandler{
-		session: h.session,
+		session: session,
 		user:    h.user,
 	}
 

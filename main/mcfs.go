@@ -30,10 +30,8 @@ package main
 
 import (
 	"fmt"
-	r "github.com/dancannon/gorethink"
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/base/db"
-	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/materials/util"
 	_ "github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/request"
@@ -133,13 +131,13 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	default:
 		var path string
 		if isTiff(df.Name) && download == "" {
-			path = tiffConversionPath(mcDir, idToUse(df))
+			path = tiffConversionPath(mcDir, df.FileID())
 		} else {
 			extension := strings.ToLower(filepath.Ext(df.Name))
 			if mimetype := mime.TypeByExtension(extension); mimetype != "" {
 				writer.Header().Set("Content-Type", mimetype)
 			}
-			path = request.DataFilePath(mcDir, idToUse(df))
+			path = request.DataFilePath(mcDir, df.FileID())
 		}
 		http.ServeFile(writer, req, path)
 	}
@@ -156,18 +154,6 @@ func isTiff(name string) bool {
 
 func tiffConversionPath(mcdir, id string) string {
 	return filepath.Join(request.DataFileDir(mcdir, id), ".conversion", id+".jpg")
-}
-
-// idToUse looks at a datafile and if UsesID is set returns that id
-// otherwise it returns Id. UsesID is set when a file has already
-// been uploaded and their is a duplicate entry. Duplicates point
-// to the real file through UsesID.
-func idToUse(dataFile *schema.File) string {
-	if dataFile.UsesID != "" {
-		return dataFile.UsesID
-	}
-
-	return dataFile.ID
 }
 
 // createListener creates the net connection. It connects to the specified host
@@ -199,27 +185,16 @@ func acceptConnections(listener *net.TCPListener) {
 			continue
 		}
 
-		session, err := r.Connect(map[string]interface{}{
-			"address":  dbAddress,
-			"database": dbName,
-		})
-		if err != nil {
-			conn.Close()
-			continue
-		}
-
 		m := util.NewGobMarshaler(conn)
-		r := request.NewReqHandler(m, session, mcDir)
-		go handleConnection(r, conn, session)
+		r := request.NewReqHandler(m, mcDir)
+		go handleConnection(r, conn)
 	}
 }
 
 // handleConnection handles connection requests by running the state machine. It also
 // takes care of book keeping like shutting down the net and database connections when
 // the connection is terminated.
-func handleConnection(reqHandler *request.ReqHandler, conn net.Conn, session *r.Session) {
+func handleConnection(reqHandler *request.ReqHandler, conn net.Conn) {
 	defer conn.Close()
-	defer session.Close()
-
 	reqHandler.Run()
 }

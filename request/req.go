@@ -2,7 +2,6 @@ package request
 
 import (
 	"fmt"
-	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/gohandy/marshaling"
 	"github.com/materials-commons/mcfs/protocol"
@@ -16,18 +15,16 @@ type reqStateFN func() reqStateFN
 
 // ReqHandler is an instance of the request state machine for handling client requests.
 type ReqHandler struct {
-	session *r.Session
-	user    string
-	mcdir   string
+	user  string
+	mcdir string
 	marshaling.MarshalUnmarshaler
 	badRequestCount int
 }
 
 // NewReqHandler creates a new ReqHandlerInstance. Each ReqHandler is a thread safe state machine for
 // handling client requests.
-func NewReqHandler(m marshaling.MarshalUnmarshaler, session *r.Session, mcdir string) *ReqHandler {
+func NewReqHandler(m marshaling.MarshalUnmarshaler, mcdir string) *ReqHandler {
 	return &ReqHandler{
-		session:            session,
 		MarshalUnmarshaler: m,
 		mcdir:              mcdir,
 	}

@@ -2,6 +2,7 @@ package request
 
 import (
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/base/db"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/protocol"
@@ -87,6 +88,7 @@ type uploadHandler struct {
 	w          io.WriteCloser
 	dataFileID string
 	nbytes     int64
+	session    *r.Session
 	*ReqHandler
 }
 
@@ -133,11 +135,13 @@ func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uplo
 		return nil, err
 	}
 
+	session, _ := db.RSession()
 	handler := &uploadHandler{
 		w:          f,
 		dataFileID: dataFileID,
 		nbytes:     0,
 		ReqHandler: h,
+		session:    session,
 	}
 
 	return handler, nil
