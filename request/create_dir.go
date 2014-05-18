@@ -98,9 +98,7 @@ func (cdh *createDirHandler) createDir() (*schema.Directory, error) {
 // getParent retrieves the parent directory for a directory path. It does
 // this by getting the parent in the path name and then querying the database
 // by name for this particular entry. The query is filtered by the project
-// which prevents any collisions since a project is a rooted tree. Two trees
-// could be the same, but no singular tree can have two different children with
-// the exact same path.
+// which prevents any collisions since a project is a rooted tree.
 func (cdh *createDirHandler) getParent() (*schema.Directory, error) {
 	var (
 		parent *schema.Directory
