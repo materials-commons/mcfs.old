@@ -41,7 +41,7 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 		switch {
 		case err == mc.ErrNotFound:
 			// There isn't a matching directory so attempt to create a new one.
-			dataDir, err := cdh.createDir()
+			dataDir, err := cdh.createNewDir()
 			if err != nil {
 				return nil, mc.Errorm(mc.ErrInvalid, err)
 			}
@@ -71,9 +71,9 @@ func newCreateDirHandler(req *protocol.CreateDirReq, user string) *createDirHand
 	}
 }
 
-// createDir takes care of creating the directory and attaching it up to
+// createNewDir takes care of creating the directory and attaching it up to
 // all the other components and dependencies.
-func (cdh *createDirHandler) createDir() (*schema.Directory, error) {
+func (cdh *createDirHandler) createNewDir() (*schema.Directory, error) {
 	// Each directory has a pointer to its parent directory. Retrieve
 	// the parent for the new directory we are creating.
 	parent, err := cdh.getParent()

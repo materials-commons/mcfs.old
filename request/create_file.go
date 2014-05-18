@@ -14,16 +14,16 @@ type createFileHandler struct {
 
 // createFile will create a new file, or use an existing file. Existing files are
 // returned if the existing files upload was interrupted. In the case where an
-// existing file is returned, the checksums must match.
+// existing file is returned, the checksums must match between the request and
+// the existing file.
 func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
 	cfh := newCreateFileHandler(h.user)
 
-	// Make sure we have a valid request.
 	if err := cfh.validateRequest(req); err != nil {
 		return nil, err
 	}
 
-	// Check if the file status.
+	// Check the file status.
 	f, err := service.File.ByPath(req.Name, req.DataDirID)
 	switch {
 	case err == mc.ErrNotFound:
