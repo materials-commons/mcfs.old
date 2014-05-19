@@ -4,7 +4,7 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
-	"github.com/materials-commons/gohandy/arrays"
+	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs"
 )
 
@@ -137,7 +137,7 @@ func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.F
 // RemoveFiles removes matching file ids from the directory and the dependent denorm
 // table entries.
 func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
-	dir.DataFiles = arrays.Strings.Remove(dir.DataFiles, fileIDs...)
+	dir.DataFiles = collections.Strings.Remove(dir.DataFiles, fileIDs...)
 	if err := d.Update(dir); err != nil {
 		return err
 	}
