@@ -31,6 +31,7 @@ type Files interface {
 	Hide(*schema.File) error
 	Update(*schema.File) error
 	Insert(file *schema.File) (*schema.File, error)
+	InsertEntry(file *schema.File) (*schema.File, error)
 	Delete(id string) error
 	AddDirectories(file *schema.File, dirIDs ...string) error
 }

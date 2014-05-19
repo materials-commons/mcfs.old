@@ -64,7 +64,8 @@ func (f rFiles) Update(file *schema.File) error {
 	return nil
 }
 
-// Insert creates a new file entry.
+// Insert creates a new file entry. Insert updates the directory and other
+// dependent objects in the system.
 func (f rFiles) Insert(file *schema.File) (*schema.File, error) {
 	var newFile schema.File
 	if err := model.Files.Q().Insert(file, &newFile); err != nil {
@@ -72,6 +73,18 @@ func (f rFiles) Insert(file *schema.File) (*schema.File, error) {
 	}
 	if err := f.AddDirectories(&newFile, file.DataDirs...); err != nil {
 		return &newFile, err
+	}
+	return &newFile, nil
+}
+
+// InsertEntry creates a new file entry. It does not update any dependent
+// objects. You can use AddDirectory to add/update the directory this file
+// belongs in. This method exists to allow for the creation of new file
+// objects that will be linked into the rest of the system at a late date.
+func (f rFiles) InsertEntry(file *schema.File) (*schema.File, error) {
+	var newFile schema.File
+	if err := model.Files.Q().Insert(file, &newFile); err != nil {
+		return nil, err
 	}
 	return &newFile, nil
 }
