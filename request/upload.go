@@ -84,6 +84,8 @@ func responseOffset(fsize, reqSize int64) (int64, error) {
 	}
 }
 
+/* ********************* upload file bytes section ********************* */
+
 type uploadHandler struct {
 	w          io.WriteCloser
 	dataFileID string
@@ -92,42 +94,16 @@ type uploadHandler struct {
 	*ReqHandler
 }
 
-func datafileWrite(w io.WriteCloser, bytes []byte) (int, error) {
-	return w.Write(bytes)
-}
-
-func datafileClose(w io.WriteCloser, dataFileID string, session *r.Session) error {
-	// Update datafile in db?
-	w.Close()
-	return nil
-}
-
-func datafileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
-	path := datafilePath(mcdir, dfid)
-	switch {
-	case file.Exists(path):
-		mode := os.O_RDWR
-		if offset != 0 {
-			mode = mode | os.O_APPEND
-		}
-		return os.OpenFile(path, mode, 0660)
-	default:
-		err := createDataFileDir(mcdir, dfid)
-		if err != nil {
-			return nil, err
-		}
-		return os.Create(path)
+func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
+	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
+	if err != nil {
+		h.respError(nil, mc.Errorm(mc.ErrInternal, err))
+		return h.nextCommand
 	}
-}
 
-/*
-The following variables define functions for interacting with the datafile. They also
-allow these functions to be replaced during testing when the test doesn't really
-need to do anything with the datafile.
-*/
-var dfWrite = datafileWrite
-var dfClose = datafileClose
-var dfOpen = datafileOpen
+	h.respOk(resp)
+	return uploadHandler.uploadState
+}
 
 func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uploadHandler, error) {
 	f, err := dfOpen(h.mcdir, dataFileID, offset)
@@ -145,17 +121,6 @@ func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uplo
 	}
 
 	return handler, nil
-}
-
-func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
-	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
-	if err != nil {
-		h.respError(nil, mc.Errorm(mc.ErrInternal, err))
-		return h.nextCommand
-	}
-
-	h.respOk(resp)
-	return uploadHandler.uploadState
 }
 
 func (h *uploadHandler) uploadState() reqStateFN {
@@ -188,6 +153,43 @@ func (h *uploadHandler) uploadState() reqStateFN {
 	default:
 		dfClose(h.w, h.dataFileID, h.session)
 		return h.badRequestNext(mc.Errorf(mc.ErrInvalid, "Unknown Request Type %T", req))
+	}
+}
+
+/*
+The following variables define functions for interacting with the datafile. They also
+allow these functions to be replaced during testing when the test doesn't really
+need to do anything with the datafile.
+*/
+var dfWrite = datafileWrite
+var dfClose = datafileClose
+var dfOpen = datafileOpen
+
+func datafileWrite(w io.WriteCloser, bytes []byte) (int, error) {
+	return w.Write(bytes)
+}
+
+func datafileClose(w io.WriteCloser, dataFileID string, session *r.Session) error {
+	// Update datafile in db?
+	w.Close()
+	return nil
+}
+
+func datafileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
+	path := datafilePath(mcdir, dfid)
+	switch {
+	case file.Exists(path):
+		mode := os.O_RDWR
+		if offset != 0 {
+			mode = mode | os.O_APPEND
+		}
+		return os.OpenFile(path, mode, 0660)
+	default:
+		err := createDataFileDir(mcdir, dfid)
+		if err != nil {
+			return nil, err
+		}
+		return os.Create(path)
 	}
 }
 
