@@ -209,9 +209,3 @@ func createDataFileDir(mcdir, dataFileID string) error {
 	dirpath := datafileDir(mcdir, dataFileID)
 	return os.MkdirAll(dirpath, 0777)
 }
-
-
-
-
-
-
