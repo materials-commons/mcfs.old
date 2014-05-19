@@ -12,7 +12,7 @@ import (
 func TestCreateDir(t *testing.T) {
 	db.SetAddress("localhost:30815")
 	db.SetDatabase("materialscommons")
-	h := NewReqHandler(nil, session, "")
+	h := NewReqHandler(nil, "")
 	h.user = "test@mc.org"
 
 	// Test valid path

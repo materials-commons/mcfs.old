@@ -45,19 +45,13 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 			if err != nil {
 				return nil, mc.Errorm(mc.ErrInvalid, err)
 			}
-			resp := &protocol.CreateResp{
-				ID: dataDir.ID,
-			}
-			return resp, nil
+			return &protocol.CreateResp{ID: dataDir.ID}, nil
 		case err != nil:
 			// Lookup failed with an error other than not found.
 			return nil, mc.Errorm(mc.ErrNotFound, err)
 		default:
 			// No error, and the directory already exists, just return it.
-			resp := &protocol.CreateResp{
-				ID: dataDir.ID,
-			}
-			return resp, nil
+			return &protocol.CreateResp{ID: dataDir.ID}, nil
 		}
 	}
 }

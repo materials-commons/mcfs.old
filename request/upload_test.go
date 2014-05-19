@@ -15,7 +15,7 @@ var _ = fmt.Println
 
 func TestUploadCases(t *testing.T) {
 	// Test New File
-	h := NewReqHandler(nil, session, "")
+	h := NewReqHandler(nil, "")
 	h.user = "test@mc.org"
 
 	// Test bad upload with non existant DataFileID
@@ -121,7 +121,7 @@ func TestUploadCases(t *testing.T) {
 }
 
 func TestUploadNewFile(t *testing.T) {
-	h := NewReqHandler(nil, session, "/tmp/mcdir")
+	h := NewReqHandler(nil, "/tmp/mcdir")
 	h.user = "test@mc.org"
 	testfilePath := "/tmp/mcdir/testfile.txt"
 	testfileData := "Hello world for testing"
@@ -192,7 +192,7 @@ func TestUploadNewFile(t *testing.T) {
 }
 
 func TestPartialToCompleted(t *testing.T) {
-	h := NewReqHandler(nil, session, "/tmp/mcdir")
+	h := NewReqHandler(nil, "/tmp/mcdir")
 	h.user = "test@mc.org"
 	testfilePath := "/tmp/mcdir/testfile.txt"
 	testfileData := "Hello world for testing"
@@ -289,7 +289,7 @@ func TestPartialToCompleted(t *testing.T) {
 }
 
 func TestUploadNewFileExistingFileMatches(t *testing.T) {
-	h := NewReqHandler(nil, session, "/tmp/mcdir")
+	h := NewReqHandler(nil, "/tmp/mcdir")
 	h.user = "test@mc.org"
 	testfilePath := "/tmp/mcdir/testfile.txt"
 	testfileData := "Hello world for testing"

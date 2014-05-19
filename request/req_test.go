@@ -12,7 +12,7 @@ var _ = fmt.Println
 
 func TestReq(t *testing.T) {
 	m := util.NewRequestResponseMarshaler()
-	h := NewReqHandler(m, session, "")
+	h := NewReqHandler(m, "")
 
 	m.SetError(io.EOF)
 	switch h.req().(type) {
