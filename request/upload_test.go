@@ -183,7 +183,7 @@ func TestUploadNewFile(t *testing.T) {
 		t.Fatalf("Unable to checksum datafile %s", createdID)
 	}
 
-	fileClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
+	fileClose(uploadHandler.w, uploadHandler.dataFileID)
 
 	nchecksumHex := fmt.Sprintf("%x", nchecksum)
 	if nchecksumHex != checksumHex {
@@ -248,7 +248,7 @@ func TestPartialToCompleted(t *testing.T) {
 	if n != 3 {
 		t.Fatalf("Wrong number of bytes written, expected 3, got %d", n)
 	}
-	fileClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
+	fileClose(uploadHandler.w, uploadHandler.dataFileID)
 
 	// Start a new uploadReq so we can finish the upload
 	resp, err = h.upload(&uploadReq)
@@ -280,7 +280,7 @@ func TestPartialToCompleted(t *testing.T) {
 		t.Fatalf("Unable to checksum datafile %s", createdID)
 	}
 
-	fileClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
+	fileClose(uploadHandler.w, uploadHandler.dataFileID)
 
 	nchecksumHex := fmt.Sprintf("%x", nchecksum)
 	if nchecksumHex != checksumHex {
@@ -336,7 +336,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	if n != len(testfileData)-1 {
 		t.Fatalf("Wrong number of bytes written, expected %d, got %d", testfileLen, n)
 	}
-	fileClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
+	fileClose(uploadHandler.w, uploadHandler.dataFileID)
 
 	// Now we are going to try and upload the same file to a different
 	// datadir. The system should detect that we have already uploaded

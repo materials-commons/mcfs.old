@@ -1,8 +1,6 @@
 package request
 
 import (
-	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/base/db"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/protocol"
@@ -91,7 +89,6 @@ type uploadFileHandler struct {
 	w          io.WriteCloser
 	dataFileID string
 	nbytes     int64
-	session    *r.Session
 	*ReqHandler
 }
 
@@ -115,13 +112,11 @@ func createUploadFileHandler(h *ReqHandler, dataFileID string, offset int64) (*u
 		return nil, err
 	}
 
-	session, _ := db.RSession()
 	handler := &uploadFileHandler{
 		w:          f,
 		dataFileID: dataFileID,
 		nbytes:     0,
 		ReqHandler: h,
-		session:    session,
 	}
 
 	return handler, nil
@@ -137,7 +132,7 @@ func (u *uploadFileHandler) uploadFile() reqStateFN {
 	case protocol.SendReq:
 		n, err := u.sendReqWrite(&req)
 		if err != nil {
-			fileClose(u.w, u.dataFileID, u.session)
+			fileClose(u.w, u.dataFileID)
 			u.respError(nil, err)
 			return u.nextCommand
 		}
@@ -145,21 +140,21 @@ func (u *uploadFileHandler) uploadFile() reqStateFN {
 		u.respOk(&protocol.SendResp{BytesWritten: n})
 		return u.uploadFile
 	case errorReq:
-		fileClose(u.w, u.dataFileID, u.session)
+		fileClose(u.w, u.dataFileID)
 		return nil
 	case protocol.LogoutReq:
-		fileClose(u.w, u.dataFileID, u.session)
+		fileClose(u.w, u.dataFileID)
 		u.respOk(&protocol.LogoutResp{})
 		return u.startState
 	case protocol.CloseReq:
-		fileClose(u.w, u.dataFileID, u.session)
+		fileClose(u.w, u.dataFileID)
 		return nil
 	case protocol.DoneReq:
-		fileClose(u.w, u.dataFileID, u.session)
+		fileClose(u.w, u.dataFileID)
 		u.respOk(&protocol.DoneResp{})
 		return u.nextCommand
 	default:
-		fileClose(u.w, u.dataFileID, u.session)
+		fileClose(u.w, u.dataFileID)
 		return u.badRequestNext(mc.Errorf(mc.ErrInvalid, "Unknown Request Type %T", req))
 	}
 }
@@ -168,7 +163,7 @@ func fileWrite(w io.WriteCloser, bytes []byte) (int, error) {
 	return w.Write(bytes)
 }
 
-func fileClose(w io.WriteCloser, dataFileID string, session *r.Session) error {
+func fileClose(w io.WriteCloser, dataFileID string) error {
 	// Update datafile in db?
 	w.Close()
 	return nil
