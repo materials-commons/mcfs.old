@@ -4,6 +4,7 @@ import (
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/request/inprogress"
 	"github.com/materials-commons/mcfs/service"
 	"io"
 	"os"
@@ -45,6 +46,12 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 		// be different as it could point to the duplicate.
 		if offset == dataFile.Size {
 			dfid = dataFile.ID
+		}
+
+		if inprogress.Mark(dfid) {
+			// Attempt to mark file as in progress. If Mark returns true then
+			// the file was already in progress, so return error.
+			return nil, mc.Errorf(mc.ErrInvalid, "File upload already in progress: %s", dataFile.ID)
 		}
 		return &protocol.UploadResp{DataFileID: dfid, Offset: offset}, nil
 
@@ -96,6 +103,7 @@ type uploadFileHandler struct {
 func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
 	uploadHandler, err := createUploadFileHandler(h, resp.DataFileID, resp.Offset)
 	if err != nil {
+		inprogress.Unmark(resp.DataFileID)
 		h.respError(nil, mc.Errorm(mc.ErrInternal, err))
 		return h.nextCommand
 	}
@@ -132,7 +140,7 @@ func (u *uploadFileHandler) uploadFile() reqStateFN {
 	case protocol.SendReq:
 		n, err := u.sendReqWrite(&req)
 		if err != nil {
-			fileClose(u.w, u.dataFileID)
+			u.fileClose()
 			u.respError(nil, err)
 			return u.nextCommand
 		}
@@ -140,34 +148,34 @@ func (u *uploadFileHandler) uploadFile() reqStateFN {
 		u.respOk(&protocol.SendResp{BytesWritten: n})
 		return u.uploadFile
 	case errorReq:
-		fileClose(u.w, u.dataFileID)
+		u.fileClose()
 		return nil
 	case protocol.LogoutReq:
-		fileClose(u.w, u.dataFileID)
+		u.fileClose()
 		u.respOk(&protocol.LogoutResp{})
 		return u.startState
 	case protocol.CloseReq:
-		fileClose(u.w, u.dataFileID)
+		u.fileClose()
 		return nil
 	case protocol.DoneReq:
-		fileClose(u.w, u.dataFileID)
+		u.fileClose()
 		u.respOk(&protocol.DoneResp{})
 		return u.nextCommand
 	default:
-		fileClose(u.w, u.dataFileID)
+		u.fileClose()
 		return u.badRequestNext(mc.Errorf(mc.ErrInvalid, "Unknown Request Type %T", req))
 	}
 }
 
-func fileWrite(w io.WriteCloser, bytes []byte) (int, error) {
-	return w.Write(bytes)
+func (u *uploadFileHandler) fileWrite(bytes []byte) (int, error) {
+	return u.w.Write(bytes)
 }
 
-func fileClose(w io.WriteCloser, dataFileID string) error {
+func (u *uploadFileHandler) fileClose() error {
 	// Update datafile in db?
-	w.Close()
+	u.w.Close()
+	inprogress.Unmark(u.dataFileID)
 	return nil
-
 }
 
 // fileOpen opens the actual on disk file that the database file points to.
@@ -196,7 +204,7 @@ func (u *uploadFileHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
 		return 0, mc.Errorf(mc.ErrInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, u.dataFileID)
 	}
 
-	n, err := fileWrite(u.w, req.Bytes)
+	n, err := u.fileWrite(req.Bytes)
 	if err != nil {
 		return 0, mc.Errorf(mc.ErrInternal, "Write unexpectedly failed for %s", req.DataFileID)
 	}

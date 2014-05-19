@@ -4,7 +4,6 @@ import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/model"
-	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"testing"
 )
@@ -99,16 +98,6 @@ func TestCreateFile(t *testing.T) {
 	resp, err = h.createFile(&createFileRequest)
 	if err != nil {
 		t.Fatalf("Failed creating an existing file")
-	}
-
-	// There should now be 2 entries because the first one was uploaded.
-
-	rql := model.Files.T().GetAllByIndex("name", createFileRequest.Name)
-	var files []schema.File
-	err = model.Files.Qs(session).Rows(rql, &files)
-	fmt.Println("len of files = ", len(files))
-	for _, f := range files {
-		fmt.Printf("file = %#v\n", f)
 	}
 
 	// Delete created files

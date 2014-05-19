@@ -15,10 +15,10 @@ type reqStateFN func() reqStateFN
 
 // ReqHandler is an instance of the request state machine for handling client requests.
 type ReqHandler struct {
-	user  string
-	mcdir string
+	user            string // User who connected
+	mcdir           string // Location of the materials commons data directory
+	badRequestCount int    // Keep track of bad requests. Close connection when too many.
 	marshaling.MarshalUnmarshaler
-	badRequestCount int
 }
 
 // NewReqHandler creates a new ReqHandlerInstance. Each ReqHandler is a thread safe state machine for
@@ -30,8 +30,9 @@ func NewReqHandler(m marshaling.MarshalUnmarshaler, mcdir string) *ReqHandler {
 	}
 }
 
-// Run run the ReqHandler state machine. The state machine accepts and processes request according
-// to the mcfs.protocol package.
+// Run run the ReqHandler state machine. It also performs any needed cleanup when
+// the state machine finishes. The state machine accepts and processes request
+// according to the mcfs.protocol package.
 func (h *ReqHandler) Run() {
 	for reqStateFN := h.startState; reqStateFN != nil; {
 		reqStateFN = reqStateFN()
