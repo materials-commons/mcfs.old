@@ -164,10 +164,8 @@ func (cfh *createFileHandler) createNewFileVersion(file *schema.File, req *proto
 	// Hide the old file, but keep it around so we can get to it if needed.
 	service.File.Hide(file)
 
-	// Insert the new file into the database.
 	created, err := service.File.Insert(f)
 	if err != nil {
-		// Insert into database failed
 		return nil, err
 	}
 
