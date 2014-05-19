@@ -100,7 +100,7 @@ func TestUploadCases(t *testing.T) {
 	h.mcdir = "/tmp/mcdir"
 	h.user = "test@mc.org"
 	os.MkdirAll(h.mcdir, 0777)
-	w, _ := datafileOpen(h.mcdir, createdID, 0)
+	w, _ := fileOpen(h.mcdir, createdID, 0)
 	w.Write([]byte("Hello"))
 	w.(*os.File).Sync()
 
@@ -162,7 +162,7 @@ func TestUploadNewFile(t *testing.T) {
 		t.Fatalf("Wrong offset")
 	}
 
-	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
+	uploadHandler, err := createUploadFileHandler(h, resp.DataFileID, resp.Offset)
 	if err != nil {
 		t.Fatalf("Couldn't create uploadHandler %s", err)
 	}
@@ -183,7 +183,7 @@ func TestUploadNewFile(t *testing.T) {
 		t.Fatalf("Unable to checksum datafile %s", createdID)
 	}
 
-	dfClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
+	fileClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
 
 	nchecksumHex := fmt.Sprintf("%x", nchecksum)
 	if nchecksumHex != checksumHex {
@@ -234,7 +234,7 @@ func TestPartialToCompleted(t *testing.T) {
 		t.Fatalf("Wrong offset")
 	}
 
-	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
+	uploadHandler, err := createUploadFileHandler(h, resp.DataFileID, resp.Offset)
 	if err != nil {
 		t.Fatalf("Couldn't create uploadHandler %s", err)
 	}
@@ -248,7 +248,7 @@ func TestPartialToCompleted(t *testing.T) {
 	if n != 3 {
 		t.Fatalf("Wrong number of bytes written, expected 3, got %d", n)
 	}
-	dfClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
+	fileClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
 
 	// Start a new uploadReq so we can finish the upload
 	resp, err = h.upload(&uploadReq)
@@ -264,7 +264,7 @@ func TestPartialToCompleted(t *testing.T) {
 		t.Fatalf("Wrong offset expected 3, got %d", resp.Offset)
 	}
 
-	uploadHandler, err = prepareUploadHandler(h, resp.DataFileID, resp.Offset)
+	uploadHandler, err = createUploadFileHandler(h, resp.DataFileID, resp.Offset)
 	if err != nil {
 		t.Fatalf("Couldn't create uploadHandler %s", err)
 	}
@@ -280,7 +280,7 @@ func TestPartialToCompleted(t *testing.T) {
 		t.Fatalf("Unable to checksum datafile %s", createdID)
 	}
 
-	dfClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
+	fileClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
 
 	nchecksumHex := fmt.Sprintf("%x", nchecksum)
 	if nchecksumHex != checksumHex {
@@ -322,7 +322,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 		t.Fatalf("error %s", err)
 	}
 
-	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
+	uploadHandler, err := createUploadFileHandler(h, resp.DataFileID, resp.Offset)
 	if err != nil {
 		t.Fatalf("Couldn't create uploadHandler %s", err)
 	}
@@ -336,7 +336,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	if n != len(testfileData)-1 {
 		t.Fatalf("Wrong number of bytes written, expected %d, got %d", testfileLen, n)
 	}
-	dfClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
+	fileClose(uploadHandler.w, uploadHandler.dataFileID, uploadHandler.session)
 
 	// Now we are going to try and upload the same file to a different
 	// datadir. The system should detect that we have already uploaded
@@ -365,7 +365,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 
 	// Then we will write the rest of the file and request an upload. Now we should get back
 	// the newly created id and an offset equal to the length of the file
-	w, err := datafileOpen(h.mcdir, createdID, testfileLen-1)
+	w, err := fileOpen(h.mcdir, createdID, testfileLen-1)
 	w.Write([]byte(testfileData[len(testfileData)-1:]))
 	w.Close()
 	resp, err = h.upload(&uploadReq)

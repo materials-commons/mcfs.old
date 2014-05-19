@@ -84,9 +84,10 @@ func responseOffset(fsize, reqSize int64) (int64, error) {
 	}
 }
 
-/* ********************* upload file bytes section ********************* */
+/* ********************* upload loop section ********************* */
 
-type uploadHandler struct {
+// uploadFileHandler holds internal state and methods used by the upload loop.
+type uploadFileHandler struct {
 	w          io.WriteCloser
 	dataFileID string
 	nbytes     int64
@@ -94,25 +95,28 @@ type uploadHandler struct {
 	*ReqHandler
 }
 
+// uploadLoop sets up the loop to upload the files bytes.
 func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
-	uploadHandler, err := prepareUploadHandler(h, resp.DataFileID, resp.Offset)
+	uploadHandler, err := createUploadFileHandler(h, resp.DataFileID, resp.Offset)
 	if err != nil {
 		h.respError(nil, mc.Errorm(mc.ErrInternal, err))
 		return h.nextCommand
 	}
 
 	h.respOk(resp)
-	return uploadHandler.uploadState
+	return uploadHandler.uploadFile
 }
 
-func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uploadHandler, error) {
-	f, err := dfOpen(h.mcdir, dataFileID, offset)
+// createUploadFileHandler creates an instance of the uploadHandler. This instance depends
+// on having the file open. If it can't open the file it returns an error.
+func createUploadFileHandler(h *ReqHandler, dataFileID string, offset int64) (*uploadFileHandler, error) {
+	f, err := fileOpen(h.mcdir, dataFileID, offset)
 	if err != nil {
 		return nil, err
 	}
 
 	session, _ := db.RSession()
-	handler := &uploadHandler{
+	handler := &uploadFileHandler{
 		w:          f,
 		dataFileID: dataFileID,
 		nbytes:     0,
@@ -123,59 +127,57 @@ func prepareUploadHandler(h *ReqHandler, dataFileID string, offset int64) (*uplo
 	return handler, nil
 }
 
-func (h *uploadHandler) uploadState() reqStateFN {
-	request := h.req()
+// uploadFile performs the actual file upload. It accepts requests holding bytes
+// and writes them to the file. At the moment this function is not optimized
+// for speed. Each write requires a response back to the client before more bytes
+// are sent.
+func (u *uploadFileHandler) uploadFile() reqStateFN {
+	request := u.req()
 	switch req := request.(type) {
 	case protocol.SendReq:
-		n, err := h.sendReqWrite(&req)
+		n, err := u.sendReqWrite(&req)
 		if err != nil {
-			dfClose(h.w, h.dataFileID, h.session)
-			h.respError(nil, err)
-			return h.nextCommand
+			fileClose(u.w, u.dataFileID, u.session)
+			u.respError(nil, err)
+			return u.nextCommand
 		}
-		h.nbytes = h.nbytes + int64(n)
-		h.respOk(&protocol.SendResp{BytesWritten: n})
-		return h.uploadState
+		u.nbytes = u.nbytes + int64(n)
+		u.respOk(&protocol.SendResp{BytesWritten: n})
+		return u.uploadFile
 	case errorReq:
-		dfClose(h.w, h.dataFileID, h.session)
+		fileClose(u.w, u.dataFileID, u.session)
 		return nil
 	case protocol.LogoutReq:
-		dfClose(h.w, h.dataFileID, h.session)
-		h.respOk(&protocol.LogoutResp{})
-		return h.startState
+		fileClose(u.w, u.dataFileID, u.session)
+		u.respOk(&protocol.LogoutResp{})
+		return u.startState
 	case protocol.CloseReq:
-		dfClose(h.w, h.dataFileID, h.session)
+		fileClose(u.w, u.dataFileID, u.session)
 		return nil
 	case protocol.DoneReq:
-		dfClose(h.w, h.dataFileID, h.session)
-		h.respOk(&protocol.DoneResp{})
-		return h.nextCommand
+		fileClose(u.w, u.dataFileID, u.session)
+		u.respOk(&protocol.DoneResp{})
+		return u.nextCommand
 	default:
-		dfClose(h.w, h.dataFileID, h.session)
-		return h.badRequestNext(mc.Errorf(mc.ErrInvalid, "Unknown Request Type %T", req))
+		fileClose(u.w, u.dataFileID, u.session)
+		return u.badRequestNext(mc.Errorf(mc.ErrInvalid, "Unknown Request Type %T", req))
 	}
 }
 
-/*
-The following variables define functions for interacting with the datafile. They also
-allow these functions to be replaced during testing when the test doesn't really
-need to do anything with the datafile.
-*/
-var dfWrite = datafileWrite
-var dfClose = datafileClose
-var dfOpen = datafileOpen
-
-func datafileWrite(w io.WriteCloser, bytes []byte) (int, error) {
+func fileWrite(w io.WriteCloser, bytes []byte) (int, error) {
 	return w.Write(bytes)
 }
 
-func datafileClose(w io.WriteCloser, dataFileID string, session *r.Session) error {
+func fileClose(w io.WriteCloser, dataFileID string, session *r.Session) error {
 	// Update datafile in db?
 	w.Close()
 	return nil
+
 }
 
-func datafileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
+// fileOpen opens the actual on disk file that the database file points to.
+// It takes care of creating the directory structure if the file doesn't exist.
+func fileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
 	path := datafilePath(mcdir, dfid)
 	switch {
 	case file.Exists(path):
@@ -193,12 +195,13 @@ func datafileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
 	}
 }
 
-func (h *uploadHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
-	if req.DataFileID != h.dataFileID {
-		return 0, mc.Errorf(mc.ErrInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, h.dataFileID)
+// sendReqWrite writes bytes to the file.
+func (u *uploadFileHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
+	if req.DataFileID != u.dataFileID {
+		return 0, mc.Errorf(mc.ErrInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, u.dataFileID)
 	}
 
-	n, err := dfWrite(h.w, req.Bytes)
+	n, err := fileWrite(u.w, req.Bytes)
 	if err != nil {
 		return 0, mc.Errorf(mc.ErrInternal, "Write unexpectedly failed for %s", req.DataFileID)
 	}
@@ -206,7 +209,14 @@ func (h *uploadHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
 	return n, nil
 }
 
+// createDataFileDir creates the directory where a datafile is stored.
 func createDataFileDir(mcdir, dataFileID string) error {
 	dirpath := datafileDir(mcdir, dataFileID)
 	return os.MkdirAll(dirpath, 0777)
 }
+
+
+
+
+
+
