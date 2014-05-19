@@ -15,7 +15,7 @@ var _ = fmt.Println
 
 func TestUploadCases(t *testing.T) {
 	// Test New File
-	h := NewReqHandler(nil, "")
+	h := NewReqHandler(nil, "/tmp/mcdir")
 	h.user = "test@mc.org"
 
 	// Test bad upload with non existant DataFileID
