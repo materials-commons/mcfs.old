@@ -114,7 +114,6 @@ func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*proto
 	file := cfh.newFile(req, cfh.user)
 	created, err := service.File.Insert(file)
 	if err != nil {
-		// Insert into database failed
 		return nil, err
 	}
 
