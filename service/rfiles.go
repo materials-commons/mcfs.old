@@ -36,6 +36,33 @@ func (f rFiles) ByPath(name, dirID string) (*schema.File, error) {
 	return &file, nil
 }
 
+// ByPathPartials returns all the partials matching name in the given directory. A
+// partial is a file that has not completed uploading. A file is a partial when its
+// size is not equal to uploaded.
+func (f rFiles) ByPathPartials(name, dirID string) ([]schema.File, error) {
+	rql := model.Files.T().GetAllByIndex("name", name).
+		Filter(r.Row.Field("datadirs").Contains(dirID).
+		And(r.Row.Field("uploaded").Ne(r.Row.Field("size"))))
+	var files []schema.File
+	if err := model.Files.Q().Rows(rql, &files); err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
+// ByPathChecksum looks up a file by its name, checksum and directory. This method
+// can return files that are only partially uploaded. It can return
+func (f rFiles) ByPathChecksum(name, dirID, checksum string) ([]schema.File, error) {
+	var files []schema.File
+	rql := model.Files.T().GetAllByIndex("name", name).
+		Filter(r.Row.Field("datadirs").Contains(dirID).
+		And(r.Row.Field("checksum").Eq(checksum)))
+	if err := model.Files.Q().Rows(rql, &files); err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
 // ByChecksum looks up a file by its checksum. This routine only returns the original
 // root entry, it will not return entries that are duplicates and point at the root.
 func (f rFiles) ByChecksum(checksum string) (*schema.File, error) {

@@ -27,6 +27,8 @@ type Users interface {
 type Files interface {
 	ByID(id string) (*schema.File, error)
 	ByPath(name, dirID string) (*schema.File, error)
+	ByPathChecksum(name, dirID, checksum string) ([]schema.File, error)
+	ByPathPartials(name, dirID string) ([]schema.File, error)
 	ByChecksum(checksum string) (*schema.File, error)
 	Hide(*schema.File) error
 	Update(*schema.File) error
