@@ -10,7 +10,7 @@ import (
 )
 
 func TestCreateProject(t *testing.T) {
-	h := NewReqHandler(nil, session, "")
+	h := NewReqHandler(nil, "")
 	h.user = "test@mc.org"
 
 	createProjectRequest := protocol.CreateProjectReq{

@@ -13,7 +13,7 @@ var _ = fmt.Println
 var _ = r.Table
 
 func TestCreateFile(t *testing.T) {
-	h := NewReqHandler(nil, session, "")
+	h := NewReqHandler(nil, "")
 	h.user = "test@mc.org"
 
 	// Test create with no size

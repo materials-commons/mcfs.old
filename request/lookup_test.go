@@ -78,7 +78,7 @@ func TestLookupInvalidItem(t *testing.T) {
 }
 
 func conductTest(t *testing.T, tests []lookupTest, whichType string) {
-	h := NewReqHandler(nil, session, "")
+	h := NewReqHandler(nil, "")
 	h.user = "test@mc.org"
 	for _, test := range tests {
 		req := &protocol.LookupReq{

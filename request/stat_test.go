@@ -9,7 +9,7 @@ import (
 var _ = fmt.Println
 
 func TestStat(t *testing.T) {
-	h := NewReqHandler(nil, session, "")
+	h := NewReqHandler(nil, "")
 	h.user = "test@mc.org"
 
 	statRequest := protocol.StatReq{
