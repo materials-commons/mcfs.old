@@ -47,26 +47,20 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		}
 
 		// If we are here then the user is uploading the remaining bits of an existing file.
-		createResp := protocol.CreateResp{
-			ID: f.ID,
-		}
-		return &createResp, nil
+		return &protocol.CreateResp{ID: f.ID}, nil
 
 	case f.Checksum == req.Checksum:
 		// File exists, is fully uploaded, and the request is to upload
 		// a file with the same checksum. Just return the existing file
 		// and the let the upload take care of the number of bytes.
-		createResp := protocol.CreateResp{
-			ID: f.ID,
-		}
-		return &createResp, nil
+		return &protocol.CreateResp{ID: f.ID}, nil
 
 	default:
 		// At this point the file exists and is fully uploaded, and the request has a
 		// different checksum. This means a new version of the file is being uploaded.
 		// We will create a new file entry to upload to. We also need to update all
 		// objects to point to this new file and hide the old file. To keep track of
-		// the graph the ew file has parent set to the old file entry it is replacing.
+		// the graph the new file has parent set to the old file entry it is replacing.
 		return cfh.createNewFileVersion(f, req)
 	}
 }
