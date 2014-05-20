@@ -118,7 +118,7 @@ func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*proto
 		// Database error occurred.
 		return nil, err
 	default:
-		// There is a current entry, so create the new one with a parent pointing
+		// There is a current entry, so create the new one with the parent pointing
 		// to the current entry.
 		f = cfh.newFile(req)
 		f.Parent = currentFile.ID
