@@ -42,20 +42,26 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	default:
 		// There are multiple matches. That means we could have old versions,
 		// or a partial. Lets see if there is a partial. If there is then
-		// this is easy, we just return the partial. If there isn't then we
-		// need to create a new file version.
+		// this is easy, we just return the partial. If there isn't then the
+		// checksum could match the current file. Return that if true, otherwise
+		// we need to create a new file version.
 		current := schema.Files.Find(files, func(f schema.File) bool { return f.Current })
 		partial := schema.Files.Find(files, func(f schema.File) bool { return f.Size != f.Uploaded })
-		if partial != nil {
+		switch {
+		case partial != nil:
+			// There is an existing partial. Use that so the upload can complete.
 			return &protocol.CreateResp{ID: partial.FileID()}, nil
-		}
 
-		if current != nil {
-			// Matched on a current file. Just return it.
+		case current != nil:
+			// The checksum matches the current file. Return that and let
+			// the uploader take care of things.
 			return &protocol.CreateResp{ID: current.FileID()}, nil
-		}
 
-		return cfh.createNewFile(req)
+		default:
+			// No partial, and not match on existing. Create a new
+			// file entry to write to.
+			return cfh.createNewFile(req)
+		}
 	}
 }
 
@@ -97,21 +103,24 @@ func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq) error
 	return nil
 }
 
-// createNewFile will create the file object in the database.
+// createNewFile will create the file object in the database. It inserts a new file entry
+// but doesn't attach it up to dependent objects. This will happen when the upload has
+// completed. If we did it before we could end up with file entries that look valid but
+// their backing physical file doesn't contain all the bytes.
 func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
 	var f *schema.File
 	currentFile, err := service.File.ByPath(req.Name, req.DataDirID)
 	switch {
 	case err == mc.ErrNotFound:
-		// There is no current entry, just create a new one.
-		f := cfh.newFile(req)
+		// There is no current entry, create a new one.
+		f = cfh.newFile(req)
 	case err != nil:
-		// Database error occured.
+		// Database error occurred.
 		return nil, err
 	default:
 		// There is a current entry, so create the new one with a parent pointing
 		// to the current entry.
-		f := cfh.newFile(req)
+		f = cfh.newFile(req)
 		f.Parent = currentFile.ID
 	}
 
