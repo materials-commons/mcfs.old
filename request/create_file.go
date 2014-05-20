@@ -55,7 +55,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 			// Matched on a current file. Just return it.
 			return &protocol.CreateResp{ID: current.FileID()}, nil
 		}
-		
+
 		return cfh.createNewFile(req)
 	}
 	/*
