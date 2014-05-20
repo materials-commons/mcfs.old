@@ -140,24 +140,3 @@ func (cfh *createFileHandler) newFile(req *protocol.CreateFileReq) *schema.File 
 
 	return &file
 }
-
-// createNewFileVersion creates a new version of an existing file. It handles hiding the old
-// version and setting the parent on the new version to point at the old file.
-func (cfh *createFileHandler) createNewFileVersion(file *schema.File, req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
-	f := cfh.newFile(req, cfh.user)
-	f.Parent = file.ID
-
-	// Hide the old file, but keep it around so we can get to it if needed.
-	service.File.Hide(file)
-
-	created, err := service.File.Insert(f)
-	if err != nil {
-		return nil, err
-	}
-
-	// New file entry created
-	createResp := protocol.CreateResp{
-		ID: created.ID,
-	}
-	return &createResp, nil
-}
