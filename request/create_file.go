@@ -28,23 +28,35 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	switch {
 	case len(files) == 0:
 		// This is the easy case. No matching files were found, so we just create a
-		// new file. There may be an existing current file so we need to handle
-		// that case as well.
+		// new file. There may be an existing current file with a different checksum
+		// so we need to handle that case as well.
 		return cfh.createNewFile(req)
 
 	case len(files) == 1:
 		// Only one match. We have either a partial, or a fully uploaded file.
-		// Let the upload state figure out what to do.
+		// Either way it doesn't matter we just let the upload state figure out
+		// what to do.
 		f := files[0]
 		return &protocol.CreateResp{ID: f.FileID()}, nil
 
 	default:
-		// There are multiple matches. That means some of them are old versions,
-		// and we may have a partial. Lets see if there are any partials. If
-		// there is, then this is easy, we just return the partial. If there
-		// isn't then we need to create a new file version.
-		current := cfh.findCurrent(files)
-		partial := cfh.findPartial(files)
+		// There are multiple matches. That means we could have old versions,
+		// or a partial. Lets see if there is a partial. If there is then
+		// this is easy, we just return the partial. If there isn't then we
+		// need to create a new file version.
+		current := schema.Files.Find(files, func(f schema.File) bool { return f.Current })
+		partial := schema.Files.Find(files, func(f schema.File) bool { return f.Size != f.Uploaded })
+		//partial := cfh.findPartial(files)
+		if partial != nil {
+			return &protocol.CreateResp{ID: partial.FileID()}, nil
+		}
+
+		if current != nil {
+			// Matched on a current file. Just return it.
+			return &protocol.CreateResp{ID: current.FileID()}, nil
+		}
+		
+		return cfh.createNewFile(req)
 	}
 	/*
 		case cfh.partiallyUploaded(f, h.mcdir):
