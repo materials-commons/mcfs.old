@@ -46,7 +46,6 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		// need to create a new file version.
 		current := schema.Files.Find(files, func(f schema.File) bool { return f.Current })
 		partial := schema.Files.Find(files, func(f schema.File) bool { return f.Size != f.Uploaded })
-		//partial := cfh.findPartial(files)
 		if partial != nil {
 			return &protocol.CreateResp{ID: partial.FileID()}, nil
 		}
@@ -94,26 +93,6 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	*/
 }
 
-func (cfh *createFileHandler) findCurrent(files []schema.File) *schema.File {
-	for _, file := range files {
-		if file.Current {
-			return &file
-		}
-	}
-
-	return nil
-}
-
-func (cfh *createFileHandler) findPartial(files []schema.File) *schema.File {
-	for _, file := range files {
-		if file.Size != file.Uploaded {
-			return &file
-		}
-	}
-
-	return nil
-}
-
 func newCreateFileHandler(user string) *createFileHandler {
 	return &createFileHandler{
 		user: user,
@@ -154,47 +133,46 @@ func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq) error
 
 // createNewFile will create the file object in the database.
 func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
-	file := cfh.newFile(req, cfh.user)
-	created, err := service.File.Insert(file)
+	var f *schema.File
+	currentFile, err := service.File.ByPath(req.Name, req.DataDirID)
+	switch {
+	case err == mc.ErrNotFound:
+		// There is no current entry, just create a new one.
+		f := cfh.newFile(req)
+	case err != nil:
+		// Database error occured.
+		return nil, err
+	default:
+		// There is a current entry, so create the new one with a parent pointing
+		// to the current entry.
+		f := cfh.newFile(req)
+		f.Parent = currentFile.ID
+	}
+	
+	created, err := service.File.InsertEntry(f)
 	if err != nil {
 		return nil, err
 	}
 
-	// New file entry created
-	createResp := protocol.CreateResp{
-		ID: created.ID,
-	}
-	return &createResp, nil
+	return &createResp := protocol.CreateResp{ID: created.ID}, nil
 }
 
 // newFile creates a new file object to insert into the database. It also handles the
 // bookkeeping task of setting the usesid field if the upload is for a previously
 // uploaded file.
-func (cfh *createFileHandler) newFile(req *protocol.CreateFileReq, user string) *schema.File {
-	file := schema.NewFile(req.Name, user)
+func (cfh *createFileHandler) newFile(req *protocol.CreateFileReq) *schema.File {
+	file := schema.NewFile(req.Name, cfh.user)
 	file.DataDirs = append(file.DataDirs, req.DataDirID)
 	file.Checksum = req.Checksum
 	file.Size = req.Size
 
 	dup, err := service.File.ByChecksum(file.Checksum)
-	if err == nil {
+	if err == nil && dup != nil {
 		// Found a matching entry, set usesid to it
 		file.UsesID = dup.ID
 	}
 
 	return &file
-}
-
-// partiallyUploaded checks if the file request is for a file that has not completed
-// its upload.
-func (cfh *createFileHandler) partiallyUploaded(file *schema.File, mcdir string) bool {
-	id := datafileLocationID(file)
-	dfSize := datafileSize(mcdir, id)
-
-	// If the expected size of the file in the database doesn't match
-	// the size of the file on disk, then the file has not been
-	// completely uploaded.
-	return dfSize != file.Size
 }
 
 // createNewFileVersion creates a new version of an existing file. It handles hiding the old
