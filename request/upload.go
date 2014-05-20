@@ -172,6 +172,12 @@ func (u *uploadFileHandler) fileWrite(bytes []byte) (int, error) {
 }
 
 func (u *uploadFileHandler) fileClose() error {
+	/*
+	Things we need to do:
+	   1. Check if file has completed upload.
+	   2. Mark all partials dependent on this as completed and mark their
+          Current files as false.
+	*/
 	// Update datafile in db?
 	u.w.Close()
 	inprogress.Unmark(u.dataFileID)
