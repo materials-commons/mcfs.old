@@ -57,40 +57,6 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 
 		return cfh.createNewFile(req)
 	}
-	/*
-		case cfh.partiallyUploaded(f, h.mcdir):
-			// File exists and the previous upload was only partially finished.
-			// Hopefully the user is asking us to complete the upload.
-			if f.Checksum != req.Checksum {
-				// Uh oh, they are sending us a new version of the file when
-				// the previous version has not completed its upload.
-				//
-				// Currently this is an unrecoverable error. The situation
-				// here is that we have an existing file that has not completed
-				// its upload. Now we are trying to upload a new version of the
-				// file. We know its a new version because the checksums don't
-				// match. This is a situation we will need to deal with.
-				return nil, mc.Errorf(mc.ErrInvalid, "Attempt to upload a new file version when the previous has not completed")
-			}
-
-			// If we are here then the user is uploading the remaining bits of an existing file.
-			return &protocol.CreateResp{ID: f.ID}, nil
-
-		case f.Checksum == req.Checksum:
-			// File exists, is fully uploaded, and the request is to upload
-			// a file with the same checksum. Just return the existing file
-			// and the let the upload take care of the number of bytes.
-			return &protocol.CreateResp{ID: f.ID}, nil
-
-		default:
-			// At this point the file exists and is fully uploaded, and the request has a
-			// different checksum. This means a new version of the file is being uploaded.
-			// We will create a new file entry to upload to. We also need to update all
-			// objects to point to this new file and hide the old file. To keep track of
-			// the graph the new file has parent set to the old file entry it is replacing.
-			return cfh.createNewFileVersion(f, req)
-		}
-	*/
 }
 
 func newCreateFileHandler(user string) *createFileHandler {
@@ -148,13 +114,13 @@ func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*proto
 		f := cfh.newFile(req)
 		f.Parent = currentFile.ID
 	}
-	
+
 	created, err := service.File.InsertEntry(f)
 	if err != nil {
 		return nil, err
 	}
 
-	return &createResp := protocol.CreateResp{ID: created.ID}, nil
+	return &protocol.CreateResp{ID: created.ID}, nil
 }
 
 // newFile creates a new file object to insert into the database. It also handles the
