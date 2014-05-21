@@ -1,4 +1,4 @@
-package inprogress
+package inuse
 
 import (
 	"sync"
@@ -20,9 +20,8 @@ func NewTracker() *Tracker {
 	}
 }
 
-// Mark marks a particular item as in progress. Mark returns
-// the previous value. This means that if Mark returns true,
-// the file was already in progress.
+// Mark marks a particular item as in progress. It returns
+// true if the item wasn't already inuse.
 func (t *Tracker) Mark(id string) bool {
 	defer t.mutex.Unlock()
 	t.mutex.Lock()
@@ -30,8 +29,7 @@ func (t *Tracker) Mark(id string) bool {
 	if !val {
 		t.tracking[id] = true
 	}
-
-	return val
+	return !val
 }
 
 // Unmark marks an item as untracked.
@@ -48,9 +46,8 @@ func (t *Tracker) Is(id string) bool {
 	return t.tracking[id]
 }
 
-// Mark uses the global tracking list. It marks a particular item as in progress.
-// Mark returns the previous value. This means that if Mark returns true, the
-// file was already in progress.
+// Mark uses the global tracking list. It marks a particular item
+// as in use. It returns true if the item wasn't already inuse.
 func Mark(id string) bool {
 	return tracker.Mark(id)
 }
