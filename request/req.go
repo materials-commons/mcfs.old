@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/gohandy/marshaling"
+	"github.com/materials-commons/mcfs/inuse"
 	"github.com/materials-commons/mcfs/protocol"
 	"io"
 	"reflect"
@@ -16,6 +17,7 @@ type reqStateFN func() reqStateFN
 // ReqHandler is an instance of the request state machine for handling client requests.
 type ReqHandler struct {
 	user            string // User who connected
+	projectID       string // The project that is being uploaded
 	mcdir           string // Location of the materials commons data directory
 	badRequestCount int    // Keep track of bad requests. Close connection when too many.
 	marshaling.MarshalUnmarshaler
@@ -37,6 +39,9 @@ func (h *ReqHandler) Run() {
 	for reqStateFN := h.startState; reqStateFN != nil; {
 		reqStateFN = reqStateFN()
 	}
+
+	// Release project lock.
+	inuse.Unmark(h.projectID)
 }
 
 type errorReq struct{}

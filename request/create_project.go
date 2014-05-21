@@ -3,6 +3,7 @@ package request
 import (
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/mcfs/inuse"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/service"
 	"strings"
@@ -18,7 +19,8 @@ type createProjectHandler struct {
 // TODO: This method needs to be updated to work with collaboration. Right now a
 // user cannot upload files to a project they have access to. Only the owner can
 // upload files.
-func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protocol.CreateProjectResp, err error) {
+func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.CreateProjectResp, error) {
+	var resp protocol.CreateProjectResp
 	cph := newCreateProjectHandler()
 
 	if !cph.validateRequest(req) {
@@ -29,11 +31,9 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protoc
 	switch {
 	case err == nil:
 		// Found project
-		resp := &protocol.CreateProjectResp{
-			ProjectID: proj.ID,
-			DataDirID: proj.DataDir,
-		}
-		return resp, mc.ErrExists
+		resp.ProjectID = proj.ID
+		resp.DataDirID = proj.DataDir
+		err = mc.ErrExists
 
 	default:
 		// Project doesn't exist. Create a new one and return it.
@@ -41,12 +41,20 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (resp *protoc
 		if err != nil {
 			return nil, err
 		}
-		resp := &protocol.CreateProjectResp{
-			ProjectID: p.ID,
-			DataDirID: p.DataDir,
-		}
-		return resp, nil
+
+		resp.ProjectID = p.ID
+		resp.DataDirID = p.DataDir
 	}
+
+	// Lock the project so no one else can upload to it.
+	if !inuse.Mark(resp.ProjectID) {
+		// Project already in use
+		return nil, mc.Errorf(mc.ErrInUse, "Project %s is currently in use by someone else.", resp.ProjectID)
+	}
+
+	// Save project id so state machine can unlock it at termination.
+	h.projectID = resp.ProjectID
+	return &resp, err
 }
 
 func newCreateProjectHandler() *createProjectHandler {
