@@ -74,6 +74,16 @@ func (f rFiles) ByChecksum(checksum string) (*schema.File, error) {
 	return &file, nil
 }
 
+// MatchOn looks up files by key.
+func (f rFiles) MatchOn(key, value string) ([]schema.File, error) {
+	var files []schema.File
+	rql := model.Files.T().GetAllByIndex(key, value)
+	if err := model.Files.Q().Rows(rql, &files); err != nil {
+		return nil, err
+	}
+	return files, nil
+}
+
 // Hide keeps the file around, but removes it from all dependent objects. This allows
 // multiple versions of a file to exist, but only the current version to be used.
 func (f rFiles) Hide(file *schema.File) error {
