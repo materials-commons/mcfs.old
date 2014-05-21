@@ -2,12 +2,9 @@ package request
 
 import (
 	"github.com/materials-commons/base/mc"
-	"github.com/materials-commons/gohandy/file"
+	"github.com/materials-commons/mcfs/inuse"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/request/inprogress"
 	"github.com/materials-commons/mcfs/service"
-	"io"
-	"os"
 )
 
 // upload handles the upload request. It validates the request and sends back the
@@ -48,9 +45,8 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 			dfid = dataFile.ID
 		}
 
-		if inprogress.Mark(dfid) {
-			// Attempt to mark file as in progress. If Mark returns true then
-			// the file was already in progress, so return error.
+		if !inuse.Mark(dfid) {
+			// Attempt to mark file as in use, but file was in use.
 			return nil, mc.Errorf(mc.ErrInvalid, "File upload already in progress: %s", dataFile.ID)
 		}
 		return &protocol.UploadResp{DataFileID: dfid, Offset: offset}, nil
@@ -87,139 +83,4 @@ func responseOffset(fsize, reqSize int64) (int64, error) {
 		// fsize > reqSize. This is a problem on the client side.
 		return 0, mc.Errorf(mc.ErrInvalid, "Fatal error fsize (%d) > ureqSize (%d) with equal checksums", fsize, reqSize)
 	}
-}
-
-/* ********************* upload loop section ********************* */
-
-// uploadFileHandler holds internal state and methods used by the upload loop.
-type uploadFileHandler struct {
-	w          io.WriteCloser
-	dataFileID string
-	nbytes     int64
-	*ReqHandler
-}
-
-// uploadLoop sets up the loop to upload the files bytes.
-func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
-	uploadHandler, err := createUploadFileHandler(h, resp.DataFileID, resp.Offset)
-	if err != nil {
-		inprogress.Unmark(resp.DataFileID)
-		h.respError(nil, mc.Errorm(mc.ErrInternal, err))
-		return h.nextCommand
-	}
-
-	h.respOk(resp)
-	return uploadHandler.uploadFile
-}
-
-// createUploadFileHandler creates an instance of the uploadHandler. This instance depends
-// on having the file open. If it can't open the file it returns an error.
-func createUploadFileHandler(h *ReqHandler, dataFileID string, offset int64) (*uploadFileHandler, error) {
-	f, err := fileOpen(h.mcdir, dataFileID, offset)
-	if err != nil {
-		return nil, err
-	}
-
-	handler := &uploadFileHandler{
-		w:          f,
-		dataFileID: dataFileID,
-		nbytes:     0,
-		ReqHandler: h,
-	}
-
-	return handler, nil
-}
-
-// uploadFile performs the actual file upload. It accepts requests holding bytes
-// and writes them to the file. At the moment this function is not optimized
-// for speed. Each write requires a response back to the client before more bytes
-// are sent.
-func (u *uploadFileHandler) uploadFile() reqStateFN {
-	request := u.req()
-	switch req := request.(type) {
-	case protocol.SendReq:
-		n, err := u.sendReqWrite(&req)
-		if err != nil {
-			u.fileClose()
-			u.respError(nil, err)
-			return u.nextCommand
-		}
-		u.nbytes = u.nbytes + int64(n)
-		u.respOk(&protocol.SendResp{BytesWritten: n})
-		return u.uploadFile
-	case errorReq:
-		u.fileClose()
-		return nil
-	case protocol.LogoutReq:
-		u.fileClose()
-		u.respOk(&protocol.LogoutResp{})
-		return u.startState
-	case protocol.CloseReq:
-		u.fileClose()
-		return nil
-	case protocol.DoneReq:
-		u.fileClose()
-		u.respOk(&protocol.DoneResp{})
-		return u.nextCommand
-	default:
-		u.fileClose()
-		return u.badRequestNext(mc.Errorf(mc.ErrInvalid, "Unknown Request Type %T", req))
-	}
-}
-
-func (u *uploadFileHandler) fileWrite(bytes []byte) (int, error) {
-	return u.w.Write(bytes)
-}
-
-func (u *uploadFileHandler) fileClose() error {
-	/*
-	Things we need to do:
-	   1. Check if file has completed upload.
-	   2. Mark all partials dependent on this as completed and mark their
-          Current files as false.
-	*/
-	// Update datafile in db?
-	u.w.Close()
-	inprogress.Unmark(u.dataFileID)
-	return nil
-}
-
-// fileOpen opens the actual on disk file that the database file points to.
-// It takes care of creating the directory structure if the file doesn't exist.
-func fileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
-	path := datafilePath(mcdir, dfid)
-	switch {
-	case file.Exists(path):
-		mode := os.O_RDWR
-		if offset != 0 {
-			mode = mode | os.O_APPEND
-		}
-		return os.OpenFile(path, mode, 0660)
-	default:
-		err := createDataFileDir(mcdir, dfid)
-		if err != nil {
-			return nil, err
-		}
-		return os.Create(path)
-	}
-}
-
-// sendReqWrite writes bytes to the file.
-func (u *uploadFileHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
-	if req.DataFileID != u.dataFileID {
-		return 0, mc.Errorf(mc.ErrInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, u.dataFileID)
-	}
-
-	n, err := u.fileWrite(req.Bytes)
-	if err != nil {
-		return 0, mc.Errorf(mc.ErrInternal, "Write unexpectedly failed for %s", req.DataFileID)
-	}
-
-	return n, nil
-}
-
-// createDataFileDir creates the directory where a datafile is stored.
-func createDataFileDir(mcdir, dataFileID string) error {
-	dirpath := datafileDir(mcdir, dataFileID)
-	return os.MkdirAll(dirpath, 0777)
 }
