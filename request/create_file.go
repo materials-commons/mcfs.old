@@ -46,16 +46,16 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		// checksum could match the current file. Return that if true, otherwise
 		// we need to create a new file version.
 		current := schema.Files.Find(files, func(f schema.File) bool { return f.Current })
-		partial := schema.Files.Find(files, func(f schema.File) bool { return f.Size != f.Uploaded })
+		partial := schema.Files.Find(files, func(f schema.File) bool { return f.Size != f.Uploaded && !f.Current })
 		switch {
 		case partial != nil:
 			// There is an existing partial. Use that so the upload can complete.
-			return &protocol.CreateResp{ID: partial.FileID()}, nil
+			return &protocol.CreateResp{ID: partial.ID}, nil
 
 		case current != nil:
 			// The checksum matches the current file. Return that and let
 			// the uploader take care of things.
-			return &protocol.CreateResp{ID: current.FileID()}, nil
+			return &protocol.CreateResp{ID: current.ID}, nil
 
 		default:
 			// No partial, and not match on existing. Create a new
