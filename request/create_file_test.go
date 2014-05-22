@@ -174,3 +174,41 @@ func TestNewFile(t *testing.T) {
 
 	service.File.Delete(newf.ID)
 }
+
+func TestCreateNewFile(t *testing.T) {
+	cfh := newCreateFileHandler("test@mc.org")
+
+	req := &protocol.CreateFileReq{
+		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
+		Name:      "newFile.txt",
+		Checksum:  "abc123new",
+		Size:      2,
+	}
+
+	// Create a new file and make sure it is setup correctly
+	resp, _ := cfh.createNewFile(req)
+	f, _ := service.File.ByID(resp.ID)
+
+	f.Current = true
+	service.File.Update(f)
+
+	// The only thing to test at this point is Parent
+	if f.Parent != "" {
+		t.Errorf("Expected no parent and got one: %#v\n", f)
+	}
+
+	// Now create another version of the file. It should have f.Parent == f.ID
+	// set to f.ID
+	req.Name = "newFile.txt"
+	req.Checksum = "abc123v2new"
+	resp, _ = cfh.createNewFile(req)
+	f2, _ := service.File.ByID(resp.ID)
+
+	if f2.Parent != f.ID {
+		t.Errorf("Expected new file with matching checksum to ")
+	}
+
+	service.File.Delete(f.ID)
+	service.File.Delete(f2.ID)
+}
