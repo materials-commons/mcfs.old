@@ -37,7 +37,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		// Either way it doesn't matter we just let the upload state figure out
 		// what to do.
 		f := files[0]
-		return &protocol.CreateResp{ID: f.FileID()}, nil
+		return &protocol.CreateResp{ID: f.ID}, nil
 
 	default:
 		// There are multiple matches. That means we could have old versions,
