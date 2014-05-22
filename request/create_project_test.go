@@ -5,6 +5,7 @@ import (
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/mcfs/inuse"
 	"github.com/materials-commons/mcfs/protocol"
 	"testing"
 )
@@ -52,6 +53,15 @@ func TestCreateProject(t *testing.T) {
 	if p2d.DataDirID != datadirID {
 		t.Errorf("Wrong datadir for project %#v expected %s", p2d, datadirID)
 	}
+
+	// Test that the project is locked:
+	resp, err = h.createProject(&createProjectRequest)
+	if !mc.Is(err, mc.ErrInUse) {
+		t.Fatalf("Attempted to access/create a project that should be locked, and got access: %s", err)
+	}
+
+	// Unlock it so we can test further
+	inuse.Unmark(projectID)
 
 	// Test create existing project
 	resp, err = h.createProject(&createProjectRequest)
