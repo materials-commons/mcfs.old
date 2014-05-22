@@ -172,7 +172,8 @@ func (u *uploadFileHandler) fileClose() error {
 		// an error and truncate the on disk version.
 		u.truncate()
 	default:
-		// Nothing to do, file hasn't completed uploading.
+		// File hasn't completed uploading.
+		u.updateUploaded()
 	}
 	inuse.Unmark(u.file.ID)
 	return nil
@@ -196,7 +197,7 @@ func (u *uploadFileHandler) fileState() fileState {
 		switch {
 		case err != nil:
 			return fileStateIncomplete
-		case finfo.Size() >= u.file.Size:
+		case finfo.Size() > u.file.Size:
 			// At this point we know the checksums don't match.
 			// If the size is greater than or equal to what we
 			// expect then the client sent us garbage.
@@ -204,7 +205,6 @@ func (u *uploadFileHandler) fileState() fileState {
 		default:
 			// File size on disk < expected size, so not finished
 			// uploading yet.
-			u.updateUploaded()
 			return fileStateIncomplete
 		}
 	}
