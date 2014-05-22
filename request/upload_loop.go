@@ -2,6 +2,7 @@ package request
 
 import (
 	"crypto/md5"
+	"fmt"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/gohandy/file"
@@ -216,7 +217,12 @@ func (u *uploadFileHandler) markCurrent() {
 	u.makeFileCurrent(u.file)
 	files, _ := service.File.MatchOn("usesid", u.file.ID)
 	for _, file := range files {
-		u.makeFileCurrent(&file)
+		// MatchOn query could return the current file if it has a usesid.
+		// We don't want to update it twice because then it will add itself
+		// to dependent objects twice.
+		if file.ID != u.file.ID {
+			u.makeFileCurrent(&file)
+		}
 	}
 }
 
@@ -227,9 +233,12 @@ func (u *uploadFileHandler) makeFileCurrent(file *schema.File) {
 	file.Current = true
 	service.File.Update(file)
 	service.File.AddDirectories(file, file.DataDirs...)
+	fmt.Printf("makeFileCurrent %#v\n", file)
 	if file.Parent != "" {
 		f, err := service.File.ByID(file.Parent)
-		if err != nil {
+		fmt.Println("Lookup parent err = ", err)
+		if err == nil {
+			fmt.Printf("Hiding %#v\n", f)
 			service.File.Hide(f)
 		}
 	}
