@@ -156,7 +156,7 @@ func (h *ReqHandler) respOk(respData interface{}) {
 	}
 	err := h.Marshal(resp)
 	if err != nil {
-		fmt.Println("respOk, marshal error = ", err)
+		fmt.Println("respOk: marshal error = ", err)
 	}
 }
 
@@ -170,12 +170,12 @@ func (h *ReqHandler) respError(respData interface{}, err error) {
 		resp.Status = mc.ErrorToErrorCode(err)
 	}
 
-	if !reflect.ValueOf(respData).IsNil() {
+	if respData != nil && !reflect.ValueOf(respData).IsNil() {
 		resp.Resp = respData
 	}
 
 	marshalErr := h.Marshal(resp)
 	if marshalErr != nil {
-		fmt.Println("respError, marshal error = ", marshalErr)
+		fmt.Println("respError: marshal error = ", marshalErr)
 	}
 }
