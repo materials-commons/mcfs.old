@@ -140,6 +140,7 @@ func (cfh *createFileHandler) newFile(req *protocol.CreateFileReq) *schema.File 
 	file.DataDirs = append(file.DataDirs, req.DataDirID)
 	file.Checksum = req.Checksum
 	file.Size = req.Size
+	file.Current = false
 
 	dup, err := service.File.ByChecksum(file.Checksum)
 	if err == nil && dup != nil {
