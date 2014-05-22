@@ -20,31 +20,33 @@ type createProjectHandler struct {
 // user cannot upload files to a project they have access to. Only the owner can
 // upload files.
 func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.CreateProjectResp, error) {
-	var resp protocol.CreateProjectResp
+	var (
+		proj *schema.Project
+		resp protocol.CreateProjectResp
+		err  error
+	)
 	cph := newCreateProjectHandler()
 
 	if !cph.validateRequest(req) {
 		return nil, mc.Errorf(mc.ErrInvalid, "Invalid project name %s", req.Name)
 	}
 
-	proj, err := service.Project.ByName(req.Name, h.user)
+	proj, err = service.Project.ByName(req.Name, h.user)
 	switch {
 	case err == nil:
 		// Found project
-		resp.ProjectID = proj.ID
-		resp.DataDirID = proj.DataDir
 		err = mc.ErrExists
 
 	default:
-		// Project doesn't exist. Create a new one and return it.
-		p, err := cph.createNewProject(req.Name, h.user)
+		// Project doesn't exist: Attempt to create a new one.
+		proj, err = cph.createNewProject(req.Name, h.user)
 		if err != nil {
 			return nil, err
 		}
-
-		resp.ProjectID = p.ID
-		resp.DataDirID = p.DataDir
 	}
+
+	resp.ProjectID = proj.ID
+	resp.DataDirID = proj.DataDir
 
 	// Lock the project so no one else can upload to it.
 	if !inuse.Mark(resp.ProjectID) {
