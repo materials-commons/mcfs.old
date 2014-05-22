@@ -24,7 +24,7 @@ func TestCreateProject(t *testing.T) {
 	datadirID := resp.DataDirID
 
 	if err != nil {
-		t.Fatalf("Unable to create project")
+		t.Fatalf("Unable to create project: %s", err)
 	}
 
 	// Make sure the created project is properly setup
