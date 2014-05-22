@@ -228,7 +228,10 @@ func (u *uploadFileHandler) makeFileCurrent(file *schema.File) {
 	service.File.Update(file)
 	service.File.AddDirectories(file, file.DataDirs...)
 	if file.Parent != "" {
-		service.File.Hide(file)
+		f, err := service.File.ByID(file.Parent)
+		if err != nil {
+			service.File.Hide(f)
+		}
 	}
 }
 
