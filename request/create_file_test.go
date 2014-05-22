@@ -2,14 +2,14 @@ package request
 
 import (
 	"fmt"
-	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/model"
+	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/service"
 	"testing"
 )
 
 var _ = fmt.Println
-var _ = r.Table
 
 func TestCreateFile(t *testing.T) {
 	h := NewReqHandler(nil, "")
@@ -126,5 +126,51 @@ func TestCreateFile(t *testing.T) {
 	if err == nil {
 		t.Fatalf("Allowed creation of file in a datadir not in project")
 	}
+}
 
+func TestNewFile(t *testing.T) {
+	cfh := newCreateFileHandler("test@mc.org")
+
+	req := &protocol.CreateFileReq{
+		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
+		Name:      "newFile.txt",
+		Checksum:  "abc123",
+		Size:      2,
+	}
+
+	// Test that parameters are setup correctly
+	f := cfh.newFile(req)
+
+	if f.Name != req.Name {
+		t.Errorf("Wrong name %s/%s", f.Name, req.Name)
+	}
+
+	if f.Checksum != req.Checksum {
+		t.Errorf("Wrong checksum %s/%s", f.Checksum, req.Checksum)
+	}
+
+	if f.Size != req.Size {
+		t.Errorf("Wrong size %d/%d", f.Size, req.Size)
+	}
+
+	if f.Current != false {
+		t.Errorf("Expected current to be false")
+	}
+
+	index := collections.Strings.Find(f.DataDirs, "f0ebb733-c75d-4983-8d68-242d688fcf73")
+	if index == -1 {
+		t.Errorf("Expected to find directory %s in list of directories %#v", "f0ebb733-c75d-4983-8d68-242d688fcf73", f.DataDirs)
+	}
+
+	// Insert file and then test to make sure we can find a duplicate when creating a new file.
+	newf, _ := service.File.InsertEntry(f)
+
+	req.Name = "newFilev2.txt"
+	f = cfh.newFile(req)
+	if f.UsesID != newf.ID {
+		t.Errorf("Should have found a dup and set UsesID to it.")
+	}
+
+	service.File.Delete(newf.ID)
 }
