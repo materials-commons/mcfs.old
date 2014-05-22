@@ -206,7 +206,7 @@ func TestCreateNewFile(t *testing.T) {
 	f2, _ := service.File.ByID(resp.ID)
 
 	if f2.Parent != f.ID {
-		t.Errorf("Expected new file with matching checksum to ")
+		t.Errorf("Expected new version of file to have its parent set to previous version.")
 	}
 
 	service.File.Delete(f.ID)
