@@ -83,7 +83,9 @@ func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 	// Add fileIds to the Directory
 	for _, id := range fileIDs {
-		dir.DataFiles = append(dir.DataFiles, id)
+		if index := collections.Strings.Find(dir.DataFiles, id); index == -1 {
+			dir.DataFiles = append(dir.DataFiles, id)
+		}
 	}
 
 	if err := model.Dirs.Q().Update(dir.ID, dir); err != nil {
@@ -92,7 +94,7 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 
 	// Add entries to the denorm table for this dir.
 	var dirDenorm schema.DataDirDenorm
-	newEntries, err := d.createDataFiles(fileIDs)
+	fileEntries, err := d.createDataFiles(dir.DataFiles)
 	if err != nil {
 		return mcfs.ErrDBRelatedUpdateFailed
 	}
@@ -101,7 +103,7 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 		return mcfs.ErrDBRelatedUpdateFailed
 	}
 
-	dirDenorm.DataFiles = append(dirDenorm.DataFiles, newEntries...)
+	dirDenorm.DataFiles = fileEntries
 	if err := model.DirsDenorm.Q().Update(dirDenorm.ID, dirDenorm); err != nil {
 		return mcfs.ErrDBRelatedUpdateFailed
 	}
