@@ -2,7 +2,6 @@ package request
 
 import (
 	"crypto/md5"
-	"fmt"
 	"github.com/materials-commons/base/mc"
 	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/gohandy/file"
@@ -183,7 +182,7 @@ func (u *uploadFileHandler) fileClose() error {
 // fileState determines an uploaded files state. It determines
 // the state by comparing expected checksums and sizes.
 func (u *uploadFileHandler) fileState() fileState {
-	path := datafilePath(u.mcdir, u.file.ID)
+	path := datafilePath(u.mcdir, u.file.FileID())
 	checksum, err := file.HashStr(md5.New(), path)
 	switch {
 	case err != nil:
@@ -233,12 +232,9 @@ func (u *uploadFileHandler) makeFileCurrent(file *schema.File) {
 	file.Current = true
 	service.File.Update(file)
 	service.File.AddDirectories(file, file.DataDirs...)
-	fmt.Printf("makeFileCurrent %#v\n", file)
 	if file.Parent != "" {
 		f, err := service.File.ByID(file.Parent)
-		fmt.Println("Lookup parent err = ", err)
 		if err == nil {
-			fmt.Printf("Hiding %#v\n", f)
 			service.File.Hide(f)
 		}
 	}
