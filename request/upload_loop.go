@@ -90,20 +90,7 @@ func (u *uploadFileHandler) uploadFile() reqStateFN {
 	request := u.req()
 	switch req := request.(type) {
 	case protocol.SendReq:
-		n, err := u.sendReqWrite(&req)
-		if err != nil {
-			u.fileClose()
-			u.respError(nil, err)
-			return u.nextCommand
-		}
-		u.nbytes = u.nbytes + int64(n)
-		if u.nbytes+u.file.Uploaded > u.file.Size {
-			u.fileClose()
-			u.respError(nil, mc.Errorf(mc.ErrInvalid, "Attempt to write more bytes to file than its expected size."))
-			return u.nextCommand
-		}
-		u.respOk(&protocol.SendResp{BytesWritten: n})
-		return u.uploadFile
+		return u.writeRequest(&req)
 	case errorReq:
 		u.fileClose()
 		return nil
@@ -121,6 +108,32 @@ func (u *uploadFileHandler) uploadFile() reqStateFN {
 	default:
 		u.fileClose()
 		return u.badRequestNext(mc.Errorf(mc.ErrInvalid, "Unknown Request Type %T", req))
+	}
+}
+
+// writeRequest writes the bytes to the file, checking status and validating
+// that the write hasn't exceeded the expected size.
+func (u *uploadFileHandler) writeRequest(req *protocol.SendReq) reqStateFN {
+	n, err := u.sendReqWrite(req)
+	u.nbytes = u.nbytes + int64(n)
+
+	switch {
+	case err != nil:
+		// Problem writing to file.
+		u.fileClose()
+		u.respError(nil, err)
+		return u.nextCommand
+
+	case u.nbytes+u.file.Uploaded > u.file.Size:
+		// Client is sending us more bytes than expecte file size.
+		u.fileClose()
+		u.respError(nil, mc.Errorf(mc.ErrInvalid, "Attempt to write more bytes to file than its expected size."))
+		return u.nextCommand
+
+	default:
+		// No errors, continue accepting more bytes
+		u.respOk(&protocol.SendResp{BytesWritten: n})
+		return u.uploadFile
 	}
 }
 
