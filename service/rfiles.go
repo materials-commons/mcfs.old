@@ -4,6 +4,7 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/base/model"
 	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs"
 )
 
@@ -167,11 +168,15 @@ func (f rFiles) AddDirectories(file *schema.File, dirIDs ...string) error {
 	rdirs := newRDirs()
 	var rv error
 	for _, ddirID := range dirIDs {
+		if index := collections.Strings.Find(file.DataDirs, ddirID); index == -1 {
+			file.DataDirs = append(file.DataDirs, ddirID)
+		}
 		dir, err := rdirs.ByID(ddirID)
 		rdirs.AddFiles(dir, file.ID)
 		if err != nil {
 			rv = mcfs.ErrDBRelatedUpdateFailed
 		}
 	}
+	f.Update(file)
 	return rv
 }
