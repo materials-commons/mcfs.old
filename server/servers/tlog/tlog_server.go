@@ -6,9 +6,9 @@ import (
 
 type tlogServer struct {
 	isRunning bool
-	request chan interface{}
-	response chan bool
-	tlogFile *os.File
+	request   chan interface{}
+	response  chan bool
+	tlogFile  *os.File
 }
 
 var server = &tlogServer{}
@@ -36,7 +36,7 @@ func (s *tlogServer) Run(stopChan <-chan struct{}) {
 	s.isRunning = true
 	for {
 		select {
-		case request := <- s.request:
+		case request := <-s.request:
 			s.writeEntry(request)
 		case <-stopChan:
 		}
@@ -45,23 +45,3 @@ func (s *tlogServer) Run(stopChan <-chan struct{}) {
 
 func (s *tlogServer) writeEntry(item interface{}) {
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

@@ -3,8 +3,8 @@ package request
 import (
 	"crypto/md5"
 	"fmt"
-	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/gohandy/file"
+	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/server/protocol"
 	"io/ioutil"
 	"os"

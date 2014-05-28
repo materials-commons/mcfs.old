@@ -3,8 +3,8 @@ package mcfs
 import (
 	"errors"
 	"fmt"
-	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/gohandy/file"
+	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/client/db"
 	"github.com/materials-commons/mcfs/client/db/schema"
 	"github.com/materials-commons/mcfs/server/protocol"

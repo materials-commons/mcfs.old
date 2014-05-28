@@ -11,10 +11,11 @@ import (
 var _ = fmt.Println
 
 var (
-	session, _ = r.Connect(map[string]interface{}{
-		"address":  "localhost:30815",
-		"database": "materialscommons",
-	})
+	session, _ = r.Connect(
+		r.ConnectOpts{
+			Address:  "localhost:30815",
+			Database: "materialscommons",
+		})
 )
 
 func TestGetUserModel(t *testing.T) {

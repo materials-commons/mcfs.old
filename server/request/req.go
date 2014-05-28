@@ -2,8 +2,8 @@ package request
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/gohandy/marshaling"
+	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"github.com/materials-commons/mcfs/server/protocol"
 	"io"

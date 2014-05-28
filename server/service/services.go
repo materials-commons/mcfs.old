@@ -2,8 +2,8 @@ package service
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/gohandy/env"
+	"github.com/materials-commons/mcfs/base/db"
 	"strings"
 )
 

@@ -8,6 +8,7 @@ import (
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/client/db"
 	"github.com/materials-commons/mcfs/client/db/schema"
+	"github.com/materials-commons/mcfs/server/inuse"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"testing"
@@ -86,6 +87,9 @@ func TestCreateProject(t *testing.T) {
 	dataDirID := proj.DataDirID
 
 	// Test Create Existing Project
+
+	// First unlock
+	inuse.Unmark(projectID)
 	proj2, err := c.CreateProject("NewProject")
 
 	// Delete before testing
@@ -93,7 +97,7 @@ func TestCreateProject(t *testing.T) {
 	model.Delete("datadirs", dataDirID, session)
 
 	if err != mc.ErrExists {
-		t.Errorf("Creating an existing project should have returned mc.ErrExists")
+		t.Errorf("Creating an existing project should have returned mc.ErrExists: %s", err)
 	}
 
 	if proj2 == nil {

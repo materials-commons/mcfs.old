@@ -4,10 +4,10 @@ import (
 	"crypto/md5"
 	"fmt"
 	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/mcfs/base/db"
-	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/gohandy/marshaling"
+	"github.com/materials-commons/mcfs/base/db"
+	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/client/util"
 	"github.com/materials-commons/mcfs/server/request"
 	"io/ioutil"
@@ -28,9 +28,9 @@ const MCDir = "/tmp/mcdir"
 
 func init() {
 	os.RemoveAll(MCDir)
-	session, _ = r.Connect(map[string]interface{}{
-		"address":  "localhost:30815",
-		"database": "materialscommons",
+	session, _ = r.Connect(r.ConnectOpts{
+		Address:  "localhost:30815",
+		Database: "materialscommons",
 	})
 	db.SetAddress("localhost:30815")
 	db.SetDatabase("materialscommons")
@@ -162,7 +162,7 @@ func cleanup(dataFileID string) {
 }
 
 func mcfsServer(m marshaling.MarshalUnmarshaler) {
-	h := request.NewReqHandler(m, session, MCDir)
+	h := request.NewReqHandler(m, MCDir)
 	os.MkdirAll("/tmp/mcdir", 0777)
 	h.Run()
 }

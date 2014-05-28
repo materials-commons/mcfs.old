@@ -38,9 +38,9 @@ func TestBinaryUrl(t *testing.T) {
 
 func TestDownloadNewBinary(t *testing.T) {
 	testBinary := map[string]string{
-		"windows": "materials.test.exe",
-		"darwin":  "materials.test",
-		"linux":   "materials.test",
+		"windows": "client.test.exe",
+		"darwin":  "client.test",
+		"linux":   "client.test",
 	}
 	ts := httptest.NewServer(http.FileServer(http.Dir("test_data")))
 	defer ts.Close()

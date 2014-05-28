@@ -28,7 +28,7 @@ func (g groupsResource) register(container *restful.Container) {
 
 	ws.Route(ws.GET("").To(g.all).
 		Doc("List all groups for user.").
-		Writes([]schema.UserGroup{}))
+		Writes([]schema.Group{}))
 
 	container.Add(ws)
 }
@@ -38,7 +38,7 @@ func (g groupsResource) all(request *restful.Request, response *restful.Response
 	_ = user
 	_ = err
 	rql := model.Groups.T().GetAllByIndex("owner", "")
-	var groups []schema.UserGroup
+	var groups []schema.Group
 	if err := model.Groups.Q().Rows(rql, &groups); err != nil {
 		response.WriteErrorString(http.StatusNotFound, fmt.Sprintf("Error querying database %s", err))
 		return

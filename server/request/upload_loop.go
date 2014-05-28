@@ -2,9 +2,9 @@ package request
 
 import (
 	"crypto/md5"
+	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"github.com/materials-commons/mcfs/server/protocol"
 	"github.com/materials-commons/mcfs/server/service"

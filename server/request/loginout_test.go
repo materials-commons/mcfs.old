@@ -13,10 +13,11 @@ import (
 var session *r.Session
 
 func init() {
-	session, _ = r.Connect(map[string]interface{}{
-		"address":  "localhost:30815",
-		"database": "materialscommons",
-	})
+	session, _ = r.Connect(
+		r.ConnectOpts{
+			Address:  "localhost:30815",
+			Database: "materialscommons",
+		})
 }
 
 type client struct {

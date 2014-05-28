@@ -1,4 +1,4 @@
-.PHONY: bin test all fmt deploy docs test-client test-server test-base bin-client bin-server
+.PHONY: bin test all fmt deploy docs test-client test-server test-base bin-client bin-server libs
 
 all: fmt test bin
 
@@ -26,6 +26,9 @@ docs:
 
 fmt:
 	-go fmt ./...
+
+libs:
+	-godep go install ./...
 
 deploy: test-server bin-server
 	-cp server/main/mcfs $$GOPATH/bin

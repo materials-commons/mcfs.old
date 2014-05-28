@@ -2,9 +2,9 @@ package service
 
 import (
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/server"
 )
 
