@@ -1,0 +1,19 @@
+PACKAGE DOCUMENTATION
+
+package db
+    import "github.com/materials-commons/base/db"
+
+
+
+FUNCTIONS
+
+func RSession() (*r.Session, error)
+    RSession creates a new RethinkDB session.
+
+func SetAddress(address string)
+    SetAddress sets the address to connect to the RethinkDB database.
+
+func SetDatabase(db string)
+    SetDatabase sets the default database to use.
+
+

@@ -1,7 +1,0 @@
-PACKAGE DOCUMENTATION
-
-package mcapi
-    import "github.com/materials-commons/mcfs/resource/mcapi"
-
-
-

@@ -1,0 +1,26 @@
+PACKAGE DOCUMENTATION
+
+package site
+    import "github.com/materials-commons/materials/site"
+
+
+
+FUNCTIONS
+
+func Deploy(downloaded string) bool
+    Deploy attempts to deploy the new materials website archive. It will
+    replace the current archive with newly downloaded one and unpack it.
+
+func Download() (to string, err error)
+    Download will attempt to download the materials.tar.gz file from the
+    MCDownload site. If it downloads the file it will return the path to the
+    downloaded file. It downloads to the OS TempDir.
+
+func IsNew(downloaded string) bool
+    IsNew checks if a downloaded file is newer than the current file. It
+    does this by comparing the checksum of the currently downloaded file to
+    the newly downloaded one. If they are different then it assumes the new
+    one is more recent. If there is no currently downloaded file then by
+    default the new one is more recent.
+
+

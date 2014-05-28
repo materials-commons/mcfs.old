@@ -1,0 +1,9 @@
+* Run in background on Mac
+  To run the materials server in the background on the Mac we use launchctl to launch the
+  server at login. The file org.materialscommons.materials.plist contains the setup for
+  launching the materials server at login.
+*** Steps
+    - cp materials /usr/local/bin
+    - cp org.materialscommons.materials.plist ~/Library/LaunchAgents
+    - launchctl load ~/Library/LaunchAgents/org.materialscommons.materials.plist
+      

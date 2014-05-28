@@ -1,0 +1,111 @@
+PACKAGE DOCUMENTATION
+
+package mc
+    import "github.com/materials-commons/mcfs/base/mc"
+
+
+
+VARIABLES
+
+var (
+    // ErrNotFound Item not found
+    ErrNotFound = errors.New("not found")
+
+    // ErrInvalid Invalid request
+    ErrInvalid = errors.New("invalid")
+
+    // ErrExists Items already exists
+    ErrExists = errors.New("exists")
+
+    // ErrNoAccess Access to item not allowed
+    ErrNoAccess = errors.New("no access")
+
+    // ErrCreate Create failed reason unknown
+    ErrCreate = errors.New("unable to create")
+
+    // ErrInternal Internal fatal error
+    ErrInternal = errors.New("internal error")
+
+    // ErrInUse object is locked and in use by someone else
+    ErrInUse = errors.New("in use")
+)
+
+
+FUNCTIONS
+
+func ErrorCodeToError(ec ErrorCode) error
+    ErrorCodeToError maps a given ErrorCode to an error.
+
+func Is(err error, what error) bool
+
+
+TYPES
+
+type Error struct {
+    Err     error
+    Message string
+}
+    Error holds the error code and additional messages.
+
+
+func Errorf(err error, message string, args ...interface{}) *Error
+    Errorf takes and error, a message string and a set of arguments and
+    produces a new Error.
+
+
+func Errorm(err error, err2 error) *Error
+    Errorm takes an mc error code, and another error, treats the other error
+    as a status message to put in the Message field.
+
+
+func FromErrorCode(errorCode ErrorCode) *Error
+    FromErrorCode takes an error code and returns the corresponding Error.
+
+
+func (e *Error) Error() string
+    Implement error interface.
+
+func (e *Error) ToErrorCode() ErrorCode
+    ToErrorCode converts an Error to an ErrorCode
+
+
+type ErrorCode int
+    ErrorCode is an integer representation of a error that we can encode and
+    send over the network.
+
+const (
+    // ErrorCodeSuccess err == nil
+    ErrorCodeSuccess ErrorCode = iota
+
+    // ErrorCodeNotFound ErrNotFound
+    ErrorCodeNotFound
+
+    // ErrorCodeInvalid ErrInvalid
+    ErrorCodeInvalid
+
+    // ErrorCodeExists ErrCodeExists
+    ErrorCodeExists
+
+    // ErrorCodeNoAccess ErrNoAccess
+    ErrorCodeNoAccess
+
+    // ErrorCodeCreate ErrCreate
+    ErrorCodeCreate
+
+    // ErrorCodeInternal ErrInternal
+    ErrorCodeInternal
+
+    // ErrorCodeInUse ErrInUse
+    ErrorCodeInUse
+
+    // ErrorCodeUnknown Catch all when we can't map an error
+    ErrorCodeUnknown
+)
+
+
+func ErrorToErrorCode(err error) ErrorCode
+    ErrorToErrorCode maps from an error to an ErrorCode.
+
+
+
+

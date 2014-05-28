@@ -1,0 +1,128 @@
+PACKAGE DOCUMENTATION
+
+package model
+    import "github.com/materials-commons/base/model"
+
+
+
+VARIABLES
+
+var Dirs = &Model{
+    schema: schema.Directory{},
+    table:  "datadirs",
+}
+    Dirs is a default model for the datadirs table.
+
+var DirsDenorm = &Model{
+    schema: schema.DataDirDenorm{},
+    table:  "datadirs_denorm",
+}
+    DirsDenorm is a default model for the denormalized datadirs_denorm table
+
+var Files = &Model{
+    schema: schema.File{},
+    table:  "datafiles",
+}
+    Files is a default model for the datafiles table
+
+var Groups = &Model{
+    schema: schema.Group{},
+    table:  "usergroups",
+}
+    Groups is a default model for the usergroups table.
+
+var Projects = &Model{
+    schema: schema.Project{},
+    table:  "projects",
+}
+    Projects is a default model for the projects table
+
+var Users = &Model{
+    schema: schema.User{},
+    table:  "users",
+}
+    Users is a default model for the users table.
+
+
+FUNCTIONS
+
+func Delete(table, id string, session *r.Session) error
+    Delete deletes an item by id in the given table.
+
+func GetFile(id string, session *r.Session) (*schema.File, error)
+    GetFile retrieves an existing datafile by id.
+
+func GetItem(id, table string, session *r.Session, obj interface{}) error
+    GetItem retrieves an item by id in the given table.
+
+func GetProject(id string, session *r.Session) (*schema.Project, error)
+    GetProject retrieves an existing project by id.
+
+func GetRow(query r.RqlTerm, session *r.Session, obj interface{}) error
+    GetRow runs a query and returns a single item.
+
+func GetRows(query r.RqlTerm, session *r.Session, results interface{}) error
+    GetRows runs a query an returns a list of results.
+
+func MatchingGroups(query r.RqlTerm, session *r.Session) ([]schema.Group, error)
+    MatchingGroups finds user groups matching on query.
+
+
+TYPES
+
+type Model struct {
+    // contains filtered or unexported fields
+}
+    Model holds the schema definition and the table for the schema.
+
+
+func (m *Model) Q() *Query
+    Q constructs a Query and fills in its Session by calling db.RSession().
+
+func (m *Model) Qs(session *r.Session) *Query
+    Qs constructs a query and accepts a database Session to use.
+
+func (m *Model) T() r.RqlTerm
+    T is a shortcut for Table.
+
+func (m *Model) Table() r.RqlTerm
+    Table returns the RqlTerm for the table. It abstracts away having to
+    know the particular table for a given model.
+
+
+type Query struct {
+    *Model
+    Rql     r.RqlTerm
+    Session *r.Session
+}
+    Query holds the model and database references, such as the query to run
+    and the database session.
+
+
+func (q *Query) ByID(id string, obj interface{}) error
+    ByID retrieves an entry by its id field.
+
+func (q *Query) Delete(id string) error
+    Delete deletes an existing database model entry.
+
+func (q *Query) Insert(what interface{}, dest interface{}) error
+    Insert inserts a new model entry into the database
+
+func (q *Query) InsertRaw(table string, what interface{}, dest interface{}) error
+    Insert a new entry into the database using the specified table. This is
+    available so that models can be used to update dependent tables without
+    having to create a model for them. For example, a join table doesn't
+    really need a model.
+
+func (q *Query) Row(query r.RqlTerm, obj interface{}) error
+    Row returns a single item. It takes an arbitrary query.
+
+func (q *Query) Rows(query r.RqlTerm, results interface{}) error
+    Rows returns a list of items from the database. It takes an arbitrary
+    query.
+
+func (q *Query) Update(id string, what interface{}) error
+    Update updates an existing database model entry.
+
+
+

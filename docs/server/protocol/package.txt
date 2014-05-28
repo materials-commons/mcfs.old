@@ -1,0 +1,277 @@
+PACKAGE DOCUMENTATION
+
+package protocol
+    import "github.com/materials-commons/mcfs/server/protocol"
+
+    Package protocol contains the protocol definitions for
+    uploads/downloads.
+
+
+FUNCTIONS
+
+func ValidItemType(t ItemType) bool
+    ValidItemType checks if the ItemType is known.
+
+
+TYPES
+
+type CloseReq struct{}
+    CloseReq close request.
+
+
+
+type CreateDirReq struct {
+    ProjectID string
+    Path      string
+}
+    CreateDirReq requests the creation of a new directory on the server.
+
+
+
+type CreateFileReq struct {
+    ProjectID string
+    DataDirID string
+    Name      string
+    Checksum  string
+    Size      int64
+}
+    CreateFileReq requests the creation of a new file on the server.
+
+
+
+type CreateProjectReq struct {
+    Name string
+}
+    CreateProjectReq requests the creation of a new project on the server.
+
+
+
+type CreateProjectResp struct {
+    ProjectID string
+    DataDirID string
+}
+    CreateProjectResp is the response to creating a new project on the
+    server. It returns the id for the project and its top level directory.
+
+
+
+type CreateResp struct {
+    ID string
+}
+    CreateResp is a generic response to a create that returns the id of the
+    item created.
+
+
+
+type DeleteReq struct {
+}
+    DeleteReq is a file or directory move request.
+
+
+
+type DeleteResp struct {
+}
+    DeleteResp is a file or directory move response.
+
+
+
+type DoneReq struct{}
+    DoneReq done request.
+
+
+
+type DoneResp struct{}
+    DoneResp done response.
+
+
+
+type DownloadReq struct {
+    Type ItemType
+    ID   string
+}
+    DownloadReq is an download request.
+
+
+
+type DownloadResp struct {
+    Ok bool
+}
+    DownloadResp is an download response.
+
+
+
+type EndReq struct {
+}
+    EndReq specifies that no more requests are coming.
+
+
+
+type EndResp struct {
+    Ok bool
+}
+    EndResp is the response to a EndReq.
+
+
+
+type IndexReq struct{}
+    IndexReq index request.
+
+
+
+type ItemType int
+    ItemType is the type of item.
+
+const (
+    // DataDir directory
+    DataDir ItemType = iota
+
+    // DataFile file
+    DataFile
+
+    //Project project
+    Project
+
+    // DataSet dataset
+    DataSet
+)
+
+
+
+type LoginReq struct {
+    User   string
+    APIKey string
+}
+    LoginReq login request.
+
+
+
+type LoginResp struct{}
+    LoginResp login response.
+
+
+
+type LogoutReq struct{}
+    LogoutReq logout request.
+
+
+
+type LogoutResp struct{}
+    LogoutResp logout response.
+
+
+
+type LookupReq struct {
+    Field     string
+    Value     string
+    Type      string
+    LimitToID string
+}
+    LookupReq lookup request.
+
+
+
+type MoveReq struct {
+}
+    MoveReq is a file or directory move request.
+
+
+
+type MoveResp struct {
+}
+    MoveResp is a file or directory move response.
+
+
+
+type Request struct {
+    Req interface{}
+}
+    Request defines the request being made.
+
+
+
+type Response struct {
+    Status        mc.ErrorCode
+    StatusMessage string
+    Resp          interface{}
+}
+    Response contains the response to a given request.
+
+
+
+type SendReq struct {
+    DataFileID string
+    Bytes      []byte
+}
+    SendReq is request to send a set of bytes from a file.
+
+
+
+type SendResp struct {
+    BytesWritten int
+}
+    SendResp is the response to the SenReq.
+
+
+
+type StartResp struct {
+    Ok bool
+}
+    StartResp response to a start.
+
+
+
+type StatProjectReq struct {
+    Name string
+    ID   string
+    Base string
+}
+    StatProjectReq project entries request.
+
+
+
+type StatProjectResp struct {
+    ProjectID string
+    Entries   []dir.FileInfo
+}
+    StatProjectResp response to a ProjectEntriesReq.
+
+
+
+type StatReq struct {
+    DataFileID string
+}
+    StatReq is a status request to get information on a datafile.
+
+
+
+type StatResp struct {
+    DataFileID string
+    Name       string
+    DataDirs   []string
+    Checksum   string
+    Size       int64
+    Birthtime  time.Time
+    MTime      time.Time
+}
+    StatResp is the response for a StatReq.
+
+
+
+type UploadReq struct {
+    DataFileID string
+    Checksum   string
+    Size       int64
+}
+    UploadReq is an upload request.
+
+
+
+type UploadResp struct {
+    DataFileID string
+    Offset     int64
+}
+    UploadResp is an upload response.
+
+
+
+

@@ -1,0 +1,45 @@
+PACKAGE DOCUMENTATION
+
+package autoupdate
+    import "github.com/materials-commons/materials/autoupdate"
+
+
+
+FUNCTIONS
+
+func StartUpdateMonitor()
+    StartUpdateMonitor starts a back ground task that periodically checks
+    for update to the materials command and website, downloads and deploys
+    them. If the materials command is updated then the materials server is
+    restarted.
+
+
+TYPES
+
+type Updater struct {
+    // contains filtered or unexported fields
+}
+    A Updater keeps track of the status of binary and website updates and
+    downloads updates when they are avaiable.
+
+
+func NewUpdater() *Updater
+    NewUpdater creates a new Updater instance.
+
+
+func (u *Updater) ApplyUpdates()
+    ApplyUpdates deploys updates that have been downloaded. If the materials
+    binary has been updated then it restarts the server.
+
+func (u *Updater) BinaryUpdate() bool
+    BinaryUpdate returns true if the materials binary has been updated.
+
+func (u *Updater) UpdatesAvailable() bool
+    UpdatesAvailable checks if updates are available for either the website
+    or the materials binary. If updates are available it will download them.
+
+func (u *Updater) WebsiteUpdate() bool
+    WebsiteUpdate returns true if the website has been updated.
+
+
+

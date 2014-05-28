@@ -1,0 +1,326 @@
+PACKAGE DOCUMENTATION
+
+package materials
+    import "github.com/materials-commons/materials"
+
+
+
+CONSTANTS
+
+const UnsetOption = 0
+    UnsetOption unsets the option.
+
+
+VARIABLES
+
+var (
+    // ErrBadProjectFileStatusString status string is unknown.
+    ErrBadProjectFileStatusString = fmt.Errorf("unknown string value for ProjectFileStatus")
+
+    // ErrBadProjectFileLocationString file location is unknown
+    ErrBadProjectFileLocationString = fmt.Errorf("unknown string value for ProjectFileLocation")
+)
+
+var EnvironmentVariables = []string{
+    "MATERIALS_PORT", "MATERIALS_ADDRESS", "MATERIALS_SOCKETIO_PORT",
+    "MATERIALS_UPDATE_CHECK_INTERVAL", "MATERIALS_WEBDIR", "MCAPIURL",
+    "MCURL", "MCDOWNLOADURL", "MCFS_HOST", "MCFS_PORT",
+}
+    EnvironmentVariables is a list of the environment variables the server
+    looks for to override default settings.
+
+
+FUNCTIONS
+
+func ConfigInitialize(user *User)
+    ConfigInitialize initializes the configuration.
+
+func Restart()
+    Restart restarts the materials command. It starts a new command and then
+    exits the current command. The new command is started using nohup so the
+    parent exiting doesn't terminate it. The new command also does a retry
+    on the port to give the parent some time to exit and release it.
+
+func Update(url string) bool
+    Update replaces the current binary with a new one if they are different.
+    It determines if they are different by comparing their checksum's.
+    Update downloads the binary at the specified url. It modifies the url to
+    include the os type in the path. This is determined by using
+    runtime.GOOS.
+
+
+TYPES
+
+type ConfigSettings struct {
+    MaterialsCommons MaterialsCommonsConfig
+    Server           ServerConfig
+    User             UserConfig
+}
+    ConfigSettings holds all the individual configuration items.
+
+var Config ConfigSettings
+    Config is the single instance of the servers configuration settings.
+
+
+func (c ConfigSettings) APIURLPath(service string) string
+    APIURLPath constructs the url to access an api service. Includes the
+    apikey. Prepends a "/" if needed.
+
+
+type MaterialsCommonsConfig struct {
+    API        string
+    URL        string
+    Download   string
+    UploadHost string
+    UploadPort int
+}
+    MaterialsCommonsConfig holds all the configuration information for
+    accessing Materials Commons services.
+
+
+
+type Project struct {
+    Name        string
+    Path        string
+    Status      string
+    ModTime     time.Time
+    MCId        string
+    Changes     map[string]ProjectFileChange
+    Ignore      []string
+    *leveldb.DB `json:"-"`
+}
+    Project describes the information we track about a users projects. Here
+    we keep the name of the project and the directory path. The name of the
+    project is the top level directory of the project. The path is the full
+    path to the project including the name (top level directory).
+
+
+func NewProject(name, path, status string) (*Project, error)
+    NewProject creates a new project instance.
+
+
+func (p *Project) AddFileChange(fileChange ProjectFileChange)
+    AddFileChange adds a file change event to the project.
+
+func (p *Project) OpenDB() error
+    OpenDB opens the project database for a project.
+
+func (p *Project) RemoveFileChange(path string)
+    RemoveFileChange removes the change for a file path.
+
+func (p Project) Tree() ([]*ProjectFileEntry, error)
+    Tree builds the tree for a project that can be used to traverse and
+    display the files and directories in a project.
+
+func (p Project) Upload() error
+    Upload uploads a project by doing posts. No longer supported.
+
+func (project *Project) Walk(options *TrackingOptions) error
+    Walk walks a project and determines status.
+
+
+type ProjectDB struct {
+    // contains filtered or unexported fields
+}
+    ProjectDB contains a list of user projects and information that is
+    needed by the methods to load the projects file.
+
+
+func CurrentUserProjectDB() *ProjectDB
+    CurrentUserProjectDB opens the project database for a user contained in
+    $HOME/.materials/projectdb. Only opens the database once per process,
+    regardless of how many times it is called.
+
+
+func OpenProjectDB(path string) (*ProjectDB, error)
+    OpenProjectDB loads projects from the database directory at path.
+    Project files are JSON files ending with a .project extension.
+
+
+func (p *ProjectDB) Add(proj Project) error
+    Add adds a new project to and writes the corresponding project file.
+
+func (p *ProjectDB) Exists(projectName string) bool
+    Exists returns true if there is a project matching the given Name.
+
+func (p *ProjectDB) Find(projectName string) (*Project, bool)
+    Find returns (Project, true) if the project is found otherwise it
+    returns (Project{}, false).
+
+func (p *ProjectDB) Projects() []*Project
+    Projects returns the list of loaded projects.
+
+func (p *ProjectDB) Reload() error
+    Reload re-reads and loads the projects file.
+
+func (p *ProjectDB) Remove(projectName string) error
+    Remove removes a project and its file.
+
+func (p *ProjectDB) Update(f func() *Project) error
+    Update updates an existing project and its file.
+
+
+type ProjectFileChange struct {
+    Path string
+    Type string
+    When time.Time
+}
+    ProjectFileChange contains information about the change that occurred to
+    a file in a project.
+
+
+
+type ProjectFileEntry struct {
+    ID          string              `json:"id"`
+    ParentID    string              `json:"parent_id"`
+    Level       int                 `json:"level"`
+    Path        string              `json:"path"`
+    HrefPath    string              `json:"hrefpath"`
+    DisplayName string              `json:"displayname"`
+    Type        string              `json:"type"`
+    Children    []*ProjectFileEntry `json:"children"`
+}
+    ProjectFileEntry is a file entry in a project.
+
+
+
+type ProjectFileInfo struct {
+    Path     string
+    Size     int64
+    Hash     string
+    ModTime  time.Time
+    ID       string
+    Status   ProjectFileStatus
+    Location ProjectFileLocation
+}
+    ProjectFileInfo holds all the information on a project file.
+
+
+
+type ProjectFileLocation int
+    ProjectFileLocation is the location of a file.
+
+const (
+    // LocalOnly the file exists only on the local client
+    LocalOnly ProjectFileLocation = iota
+
+    // RemoteOnly the file exists only on the server
+    RemoteOnly
+
+    // LocalAndRemote the file exists both on the local client and the server
+    LocalAndRemote
+
+    // LocalAndRemoteUnknown the exact location of the file cannot be determined
+    LocalAndRemoteUnknown
+)
+
+
+func String2ProjectFileLocation(pfl string) (p ProjectFileLocation, err error)
+    String2ProjectFileLocation converts a string to ProjectFileLocation
+
+
+func (pfl ProjectFileLocation) String() string
+    String implements the Stringer interface for ProjectFileLocation.
+
+
+type ProjectFileStatus int
+    ProjectFileStatus is the state of a file in the project.
+
+const (
+    // Synchronized the file has been synchronized with the server
+    Synchronized ProjectFileStatus = iota
+
+    // Unsynchronized the file hasn't been synched with the server
+    Unsynchronized
+
+    // New the file is new on the client
+    New
+
+    // Deleted the file has been deleted
+    Deleted
+
+    // UnknownFileStatus we can't determine the files status
+    UnknownFileStatus
+)
+
+
+func String2ProjectFileStatus(pfs string) (ProjectFileStatus, error)
+    String2ProjectFileStatus converts a string to a ProjectFileStatus
+
+
+func (pfs ProjectFileStatus) String() string
+    String implements the string interface for ProjectFileStatus
+
+
+type ServerConfig struct {
+    Port                uint
+    SocketIOPort        uint
+    Address             string
+    Webdir              string
+    UpdateCheckInterval time.Duration
+    LastUpdateCheck     string
+    NextUpdateCheck     string
+    LastWebsiteUpdate   string
+    LastServerUpdate    string
+}
+    ServerConfig holds all the configuration for this server.
+
+
+
+type TrackingOptions struct {
+    FileStatus   ProjectFileStatus
+    FileLocation ProjectFileLocation
+}
+    TrackingOptions describes a files status and location.
+
+
+
+type User struct {
+    Username string
+    APIKey   string
+    // contains filtered or unexported fields
+}
+    User struct defines the information we need to know about a user in
+    order to use the materials commons web services.
+
+
+func NewCurrentUser() (*User, error)
+    NewCurrentUser creates a new User, and looks up the materials commons
+    information by using the path to the .user file based on the current
+    users home directory.
+
+
+func NewUserFrom(path string) (*User, error)
+    NewUserFrom creates a new user User and reads the materials commons
+    information from the .user file in the given path.
+
+
+func (u *User) DotMaterialsPath() string
+    DotMaterialsPath returns the path to the users .materials directory.
+
+func (u *User) Save() error
+    Save writes the materials commons user information to the .user file
+
+
+type UserConfig struct {
+    *User
+    DefaultProject string
+}
+    UserConfig hold configuration for the user.
+
+
+
+
+SUBDIRECTORIES
+
+	autoupdate
+	db
+	docs
+	main
+	mcfs
+	scripts
+	site
+	test_data
+	util
+	ws
+

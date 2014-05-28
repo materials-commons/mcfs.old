@@ -1,0 +1,23 @@
+PACKAGE DOCUMENTATION
+
+package log
+    import "github.com/materials-commons/base/log"
+
+
+
+VARIABLES
+
+var L = logrus.New()
+    Global log variable.
+
+
+FUNCTIONS
+
+func Field(name, value string) logrus.Fields
+    Field is a convenience function to create a single field that is used in
+    a file or package.
+
+func SetOutput(out io.Writer)
+    SetOutput sets the output for the global logger.
+
+

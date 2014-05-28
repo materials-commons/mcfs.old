@@ -1,0 +1,12 @@
+PACKAGE DOCUMENTATION
+
+package tlog
+    import "github.com/materials-commons/mcfs/server/servers/tlog"
+
+
+
+FUNCTIONS
+
+func Server() *tlogServer
+
+

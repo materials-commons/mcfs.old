@@ -1,0 +1,78 @@
+PACKAGE DOCUMENTATION
+
+package config
+    import "github.com/materials-commons/mcfs/client/config"
+
+
+
+VARIABLES
+
+var EnvironmentVariables = []string{
+    "MATERIALS_PORT", "MATERIALS_ADDRESS", "MATERIALS_SOCKETIO_PORT",
+    "MATERIALS_UPDATE_CHECK_INTERVAL", "MATERIALS_WEBDIR", "MCAPIURL",
+    "MCURL", "MCDOWNLOADURL", "MCFS_HOST", "MCFS_PORT",
+}
+    EnvironmentVariables is a list of the environment variables the server
+    looks for to override default settings.
+
+
+FUNCTIONS
+
+func ConfigInitialize(user *user.User)
+    ConfigInitialize initializes the configuration.
+
+
+TYPES
+
+type ConfigSettings struct {
+    MaterialsCommons MaterialsCommonsConfig
+    Server           ServerConfig
+    User             UserConfig
+}
+    ConfigSettings holds all the individual configuration items.
+
+var Config ConfigSettings
+    Config is the single instance of the servers configuration settings.
+
+
+func (c ConfigSettings) APIURLPath(service string) string
+    APIURLPath constructs the url to access an api service. Includes the
+    apikey. Prepends a "/" if needed.
+
+
+type MaterialsCommonsConfig struct {
+    API        string
+    URL        string
+    Download   string
+    UploadHost string
+    UploadPort int
+}
+    MaterialsCommonsConfig holds all the configuration information for
+    accessing Materials Commons services.
+
+
+
+type ServerConfig struct {
+    Port                uint
+    SocketIOPort        uint
+    Address             string
+    Webdir              string
+    UpdateCheckInterval time.Duration
+    LastUpdateCheck     string
+    NextUpdateCheck     string
+    LastWebsiteUpdate   string
+    LastServerUpdate    string
+}
+    ServerConfig holds all the configuration for this server.
+
+
+
+type UserConfig struct {
+    *user.User
+    DefaultProject string
+}
+    UserConfig hold configuration for the user.
+
+
+
+

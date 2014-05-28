@@ -1,0 +1,170 @@
+PACKAGE DOCUMENTATION
+
+package schema
+    import "github.com/materials-commons/base/schema"
+
+
+
+VARIABLES
+
+var Files fs
+    Files gives access to help routines that work on lists of files.
+
+
+TYPES
+
+type DataDirDenorm struct {
+    ID        string      `gorethink:"id"`
+    Name      string      `gorethink:"name"`
+    Owner     string      `gorethink:"owner"`
+    Birthtime time.Time   `gorethink:"birthtime"`
+    DataFiles []FileEntry `gorethink:"datafiles"`
+}
+    DataDirDenorm is a denormalized instance of a datadir used in the
+    datadirs_denorm table.
+
+
+func (d DataDirDenorm) Filter(keep func(f FileEntry) bool) []FileEntry
+    Filter will filter out non matching FileEntry items.
+
+
+type Directory struct {
+    ID        string    `gorethink:"id,omitempty"`
+    Owner     string    `gorethink:"owner"`
+    Name      string    `gorethink:"name"`
+    Project   string    `gorethink:"project"`
+    Parent    string    `gorethink:"parent"`
+    Birthtime time.Time `gorethink:"birthtime"`
+    MTime     time.Time `gorethink:"mtime"`
+    ATime     time.Time `gorethink:"atime"`
+    DataFiles []string  `gorethink:"datafiles"`
+}
+    Directory models a directory of user files. A dir is an abstract
+    representation of a users file system directory plus the metadata needed
+    by the system.
+
+
+func NewDirectory(name, owner, project, parent string) Directory
+    NewDirectory creates a new Directory instance.
+
+
+
+type File struct {
+    ID          string    `gorethink:"id,omitempty"` // Primary key.
+    Current     bool      `gorethink:"current"`      // Is this the most current version.
+    Name        string    `gorethink:"name"`         // Name of file.
+    Birthtime   time.Time `gorethink:"birthtime"`    // Creation time.
+    MTime       time.Time `gorethink:"mtime"`        // Modification time.
+    ATime       time.Time `gorethink:"atime"`        // Last access time.
+    Description string    `gorethink:"description"`
+    Notes       []string  `gorethink:"notes"`
+    Owner       string    `gorethink:"owner"`     // Who owns the file.
+    Checksum    string    `gorethink:"checksum"`  // MD5 Hash.
+    Size        int64     `gorethink:"size"`      // Size of file.
+    Uploaded    int64     `gorethink:"uploaded"`  // Number of bytes uploaded. When Size != Uploaded file is only partially uploaded.
+    MediaType   string    `gorethink:"mediatype"` // mime type.
+    Parent      string    `gorethink:"parent"`    // If there are multiple ids then parent is the id of the previous version.
+    UsesID      string    `gorethink:"usesid"`    // If file is a duplicate, then usesid points to the real file. This allows multiple files to share a single physical file.
+    DataDirs    []string  `gorethink:"datadirs"`  // List of the directories the file can be found in.
+}
+    File models a user file. A datafile is an abstract representation of a
+    real file plus the attributes that we need in our model for access, and
+    other metadata.
+
+
+func NewFile(name, owner string) File
+    NewFile creates a new File instance.
+
+
+func (f *File) FileID() string
+    FileID returns the id to use for the file. Because files can be
+    duplicates, all duplicates are stored under a single ID. UsesID is set
+    to the ID that an entry points to when it is a duplicate.
+
+
+type FileEntry struct {
+    ID        string    `gorethink:"id"`
+    Name      string    `gorethink:"name"`
+    Owner     string    `gorethink:"owner"`
+    Birthtime time.Time `gorethink:"birthtime"`
+    Checksum  string    `gorethink:"checksum"`
+    Size      int64     `gorethink:"size"`
+}
+    FileEntry is a denormalized instance of a datafile used in the
+    datadirs_denorm table.
+
+
+
+type Group struct {
+    ID          string    `gorethink:"id,omitempty"`
+    Owner       string    `gorethink:"owner"`
+    Name        string    `gorethink:"name"`
+    Description string    `gorethink:"description"`
+    Birthtime   time.Time `gorethink:"birthtime"`
+    MTime       time.Time `gorethink:"mtime"`
+    Access      string    `gorethink:"access"`
+    Users       []string  `gorethink:"users"`
+}
+    Group models users groups and access permissions to user data.
+
+
+func NewGroup(owner, name string) Group
+    NewGroup creates a new UserGroup instance.
+
+
+
+type Project struct {
+    ID          string    `gorethink:"id,omitempty"`
+    Name        string    `gorethink:"name"`
+    Description string    `gorethink:"description"`
+    DataDir     string    `gorethink:"datadir" db:"-"`
+    Owner       string    `gorethink:"owner" db:"-"`
+    Birthtime   time.Time `gorethink:"birthtime"`
+    MTime       time.Time `gorethink:"mtime"`
+    Notes       []string  `gorethink:"notes" db:"-"`
+    Tags        []string  `gorethink:"tags" db:"-"`
+    Reviews     []string  `gorethink:"reviews" db:"-"`
+    MyTags      []string  `gorethink:"mytags" db:"-"`
+}
+    Project models a users project. A project is an instance of a users
+    workspace where they conduct their research. A project can be shared.
+
+
+func NewProject(name, datadir, owner string) Project
+    NewProject creates a new Project instance.
+
+
+
+type Project2DataDir struct {
+    ID        string `gorethink:"id,omitempty" db:"-"`
+    ProjectID string `gorethink:"project_id" db:"project_id"`
+    DataDirID string `gorethink:"datadir_id" db:"datadir_id"`
+}
+    Project2DataDir is a join table that maps projects to their datadirs.
+
+
+
+type User struct {
+    ID          string    `gorethink:"id,omitempty"`
+    Name        string    `gorethink:"name"`
+    Email       string    `gorethink:"email"`
+    Fullname    string    `gorethink:"fullname"`
+    Password    string    `gorethink:"password"`
+    APIKey      string    `gorethink:"apikey"`
+    Birthtime   time.Time `gorethink:"birthtime"`
+    MTime       time.Time `gorethink:"mtime"`
+    Avatar      string    `gorethink:"avatar"`
+    Description string    `gorethink:"description"`
+    Affiliation string    `gorethink:"affiliation"`
+    HomePage    string    `gorethink:"homepage"`
+    Notes       []string  `gorethink:"notes"`
+}
+    User models a user in the system.
+
+
+func NewUser(name, email, password, apikey string) User
+    NewUser creates a new User instance.
+
+
+
+

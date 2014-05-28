@@ -1,0 +1,25 @@
+{
+  "Name": "proj 2",
+  "Path": "/tmp/proj 2",
+  "Status": "Unloaded",
+  "ModTime": "2013-12-17T13:13:44.113289109-05:00",
+  "MCId": "abcdef",
+  "Changes": {
+    "hash1": {
+      "Path": "/tmp/proj 2/a.txt",
+      "Type": "create",
+      "When": "2013-12-17T13:13:44.113286739-05:00",
+      "Hash": "AAEC"
+    },
+    "hash2": {
+      "Path": "/tmp/proj 2/b.txt",
+      "Type": "modify",
+      "When": "2013-12-17T13:13:44.113286799-05:00",
+      "Hash": "AAED"
+    }
+  },
+  "Ignore": [
+    "._DotFiles_.",
+    "*.save"
+  ]
+}

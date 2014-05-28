@@ -1,0 +1,44 @@
+PACKAGE DOCUMENTATION
+
+package db
+    import "github.com/materials-commons/mcfs/client/db"
+
+
+
+VARIABLES
+
+var (
+
+    // Projects is the query model for projects
+    Projects *model.Query
+
+    // ProjectEvents is the query model for project events
+    ProjectEvents *model.Query
+
+    // ProjectFiles is the query model for project files
+    ProjectFiles *model.Query
+)
+
+
+FUNCTIONS
+
+func Exists() bool
+    Exists returns true if the database exists. This is determined by
+    looking for a database file entry.
+
+func Open() error
+    Open sets up the models and the database. If the database doesn't exist
+    then Open will create the database and it's schema.
+
+func Path() string
+    Path returns the full path to the database file.
+
+func Use(db *sqlx.DB)
+    Use sets the database connection for all the models.
+
+
+SUBDIRECTORIES
+
+	model
+	schema
+

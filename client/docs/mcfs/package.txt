@@ -1,0 +1,107 @@
+PACKAGE DOCUMENTATION
+
+package mcfs
+    import "github.com/materials-commons/materials/mcfs"
+
+
+
+VARIABLES
+
+var ErrBadResponseType = fmt.Errorf("unexpected response type")
+    ErrBadResponseType is an error where the server sent us a response we do
+    not recognize.
+
+var (
+    // ErrPathsDiffer the expected and received paths differ.
+    ErrPathsDiffer = errors.New("paths differ")
+)
+
+
+TYPES
+
+type Client struct {
+    marshaling.MarshalUnmarshaler
+    // contains filtered or unexported fields
+}
+    Client represents a client connection to the sever.
+
+
+func NewClient(host string, port int) (*Client, error)
+    NewClient creates a new connection to the file server.
+
+
+func (c *Client) Close()
+    Close closes the connection to the server.
+
+func (c *Client) CreateDir(projectID, projectName, path string) (dataDirID string, err error)
+    CreateDir makes a request to the server to create a directory.
+
+func (c *Client) CreateProject(projectName string) (*Project, error)
+    CreateProject creates a project on the server.
+
+func (c *Client) IndexProject(path string) error
+    IndexProject placeholder - asks the server for the current view of the
+    project and compares it with the local view.
+
+func (c *Client) LoadFromRemote(path string) error
+    LoadFromRemote placeholder.
+
+func (c *Client) Login(user, apikey string) error
+    Login performs a login request.
+
+func (c *Client) Logout() error
+    Logout performs a logout request.
+
+func (c *Client) LookupProject()
+    LookupProject placeholder.
+
+func (c *Client) RestartFileUpload(dataFileID, path string) (bytesUploaded int64, err error)
+    RestartFileUpload restarts a partially completed upload.
+
+func (c *Client) StatProject(projectName string) (*ProjectStat, error)
+    StatProject sends a request to the server to get its view of the
+    project.
+
+func (c *Client) UploadDirectory(projectID, dataDirID string, path string) ([]DataFileUpload, error)
+    UploadDirectory uploads a directory. ** Not Implemented and may be
+    removed. **
+
+func (c *Client) UploadNewFile(projectID, dataDirID, path string) (bytesUploaded int64, dataFileID string, err error)
+    UploadNewFile uploads a new file to the server.
+
+func (c *Client) UploadNewProject(path string) error
+    UploadNewProject uploads all files in a project.
+
+
+type DataFileUpload struct {
+    ProjectID     string
+    DataDirID     string
+    DataFileID    string
+    Path          string
+    Size          int64
+    Checksum      string
+    BytesUploaded int64
+    Err           error
+}
+    DataFileUpload tracks a particular upload request.
+
+
+
+type Project struct {
+    ProjectID string
+    DataDirID string
+}
+    Project holds ids the server uses for a project.
+
+
+
+type ProjectStat struct {
+    ID      string         // ID of project on server
+    Name    string         // Name of project
+    Entries []dir.FileInfo // All files and directories in project
+}
+    ProjectStat describes the project on the server.
+
+
+
+

@@ -1,12 +1,25 @@
-.PHONY: bin test all fmt deploy docs
+.PHONY: bin test all fmt deploy docs test-client test-server test-base bin-client bin-server
 
 all: fmt test bin
 
-bin:
-	(cd ./main; godep go build mcfs.go)
+bin: bin-client bin-server
 
-test:
-	-godep go test -v ./...
+bin-client:
+	(cd ./client/main; godep go build materials.go)
+
+bin-server:
+	(cd ./server/main; godep go build mcfs.go)
+
+test: test-client test-server test-base
+
+test-client:
+	(cd ./client; make test)
+
+test-server:
+	(cd ./server; make test)
+
+test-base:
+	(cd ./base; make test)
 
 docs:
 	./makedocs.sh
@@ -14,5 +27,5 @@ docs:
 fmt:
 	-go fmt ./...
 
-deploy: test bin
-	-cp main/mcfs $$GOPATH/bin
+deploy: test-server bin-server
+	-cp server/main/mcfs $$GOPATH/bin

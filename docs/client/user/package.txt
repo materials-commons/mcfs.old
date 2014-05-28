@@ -1,0 +1,37 @@
+PACKAGE DOCUMENTATION
+
+package user
+    import "github.com/materials-commons/mcfs/client/user"
+
+
+
+TYPES
+
+type User struct {
+    Username string
+    APIKey   string
+    // contains filtered or unexported fields
+}
+    User struct defines the information we need to know about a user in
+    order to use the materials commons web services.
+
+
+func NewCurrentUser() (*User, error)
+    NewCurrentUser creates a new User, and looks up the materials commons
+    information by using the path to the .user file based on the current
+    users home directory.
+
+
+func NewUserFrom(path string) (*User, error)
+    NewUserFrom creates a new user User and reads the materials commons
+    information from the .user file in the given path.
+
+
+func (u *User) DotMaterialsPath() string
+    DotMaterialsPath returns the path to the users .materials directory.
+
+func (u *User) Save() error
+    Save writes the materials commons user information to the .user file
+
+
+

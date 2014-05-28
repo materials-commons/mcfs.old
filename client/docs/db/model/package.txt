@@ -1,0 +1,55 @@
+PACKAGE DOCUMENTATION
+
+package model
+    import "github.com/materials-commons/materials/db/model"
+
+
+
+TYPES
+
+type Model struct {
+    // contains filtered or unexported fields
+}
+    Model describes the data model for a table/object.
+
+
+func New(schema interface{}, table string, mq ModelQueries) *Model
+    New creates a new Model for a specific table, along with the CRUD
+    queries for interacting with that model.
+
+
+func (m *Model) Q(db *sqlx.DB) *Query
+    Q takes a database connection to use for a query.
+
+func (m *Model) T(query string) string
+    T takes a query with a %s token in it and adds the table. This method
+    allows us to divorce a query from the models table.
+
+func (m *Model) Table() string
+    Table returns the name of the table for a model.
+
+
+type ModelQueries struct {
+    Insert string
+}
+    ModelQueries holds the different types of sql queries to perform tasks
+    such as insert on a model
+
+
+
+type Query struct {
+    *Model
+    *sqlx.DB
+}
+    Query holds the model and the connection to the database for performing
+    queries against that model.
+
+
+func (q *Query) ByID(id int) (interface{}, error)
+    ByID queries a model by its primary (integer) key.
+
+func (q *Query) Insert(item interface{}) error
+    Insert performs a database insert.
+
+
+

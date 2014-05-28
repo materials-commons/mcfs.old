@@ -1,0 +1,26 @@
+PACKAGE DOCUMENTATION
+
+package ws
+    import "github.com/materials-commons/materials/ws"
+
+
+
+FUNCTIONS
+
+func JSONPFilter(req *restful.Request, resp *restful.Response, chain *restful.FilterChain)
+    JSONPFilter implements JSONP handling. It looks for a callback argument
+    and modifies the returned response to wrap it in the callback.
+
+func NewRegisteredServicesContainer() *restful.Container
+    NewRegisteredServicesContainer creates a container for all the web
+    services.
+
+func Start()
+    Start starts up all the webservices and the webserver.
+
+func StartRetry(retryCount int)
+    StartRetry attempts a number of times to try connecting to the port
+    address. This is useful when the server is restarting and the old server
+    hasn't exited yet.
+
+

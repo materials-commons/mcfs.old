@@ -1,0 +1,107 @@
+PACKAGE DOCUMENTATION
+
+package util
+    import "github.com/materials-commons/materials/util"
+
+
+
+FUNCTIONS
+
+func FormatTime(t time.Time) string
+    FormatTime formats a time object.
+
+
+TYPES
+
+type ChannelMarshaler struct {
+    // contains filtered or unexported fields
+}
+    ChannelMarshaler a marshaler for channels.
+
+
+func NewChannelMarshaler() *ChannelMarshaler
+    NewChannelMarshaler creates a new instance of a ChannelMarsharler.
+
+
+func (m *ChannelMarshaler) ClearError()
+    ClearError allows us to clear the error.
+
+func (m *ChannelMarshaler) Marshal(data interface{}) error
+    Marshal marshals the data.
+
+func (m *ChannelMarshaler) SetError(err error)
+    SetError allows us to inject an error.
+
+func (m *ChannelMarshaler) Unmarshal(data interface{}) error
+    Unmarshal unmarshals the data.
+
+
+type ChannelReadWriter struct {
+    // contains filtered or unexported fields
+}
+    ChannelReadWriter implements a marshaler for channels.
+
+
+func NewChannelReadWriter() *ChannelReadWriter
+    NewChannelReadWriter creates a new instance.
+
+
+func (crw *ChannelReadWriter) Read(bytes []byte) (n int, err error)
+    Read reads bytes from channel.
+
+func (crw *ChannelReadWriter) Write(bytes []byte) (n int, err error)
+    Write writes to the channel.
+
+
+type GobMarshaler struct {
+    *gob.Encoder
+    *gob.Decoder
+}
+    A GobMarshaler marshals and unmarshals data using Gob.
+
+
+func NewGobMarshaler(rw io.ReadWriter) *GobMarshaler
+    NewGobMarshaler returns a new GobMarshaler.
+
+
+func (m *GobMarshaler) Marshal(data interface{}) error
+    Marshal marshals the data using gob.Encode.
+
+func (m *GobMarshaler) Unmarshal(data interface{}) error
+    Unmarshal unmarshals the data using gob.Decode.
+
+
+type RequestResponseMarshaler struct {
+    // contains filtered or unexported fields
+}
+    A RequestResponseMarshaler saves the data passed and returns it. It can
+    be set to return an error instead. This is useful for testing.
+
+
+func NewRequestResponseMarshaler() *RequestResponseMarshaler
+    NewRequestResponseMarshaler returns a new IdentityMarshaler
+
+
+func (m *RequestResponseMarshaler) ClearError()
+    ClearError clears the error so that Marshal and Unmarshal will no longer
+    return an error when called.
+
+func (m *RequestResponseMarshaler) Marshal(data interface{}) error
+    Marshal saves the data to be returned by the Unmarshal. If SetError has
+    been called it instead returns the error passed to SetError and doesn't
+    save the data.
+
+func (m *RequestResponseMarshaler) SetData(data interface{})
+    SetData will explicitly set the data rather than using Marshal. Useful
+    in some test cases.
+
+func (m *RequestResponseMarshaler) SetError(err error)
+    SetError sets the error that Marshal and Unmarshal should return.
+
+func (m *RequestResponseMarshaler) Unmarshal(data interface{}) error
+    Unmarshal returns the last data successfully passed to Marshal. If
+    SetError has been called it instead returns the error passed to SetError
+    and doesn't set the data.
+
+
+

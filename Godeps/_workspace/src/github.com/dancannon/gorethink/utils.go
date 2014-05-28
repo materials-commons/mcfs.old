@@ -1,13 +1,15 @@
 package gorethink
 
 import (
-	"code.google.com/p/goprotobuf/proto"
-	"github.com/dancannon/gorethink/encoding"
-	p "github.com/dancannon/gorethink/ql2"
+	"fmt"
 	"math"
 	"strconv"
 	"strings"
 	"time"
+
+	"code.google.com/p/goprotobuf/proto"
+	"github.com/dancannon/gorethink/encoding"
+	p "github.com/dancannon/gorethink/ql2"
 )
 
 // Helper functions for constructing terms
@@ -16,6 +18,7 @@ import (
 func newRqlTerm(name string, termType p.Term_TermType, args []interface{}, optArgs map[string]interface{}) RqlTerm {
 	return RqlTerm{
 		name:     name,
+		rootTerm: true,
 		termType: termType,
 		args:     listToTermsList(args),
 		optArgs:  objToTermsObj(optArgs),
@@ -32,6 +35,7 @@ func newRqlTermFromPrevVal(prevVal RqlTerm, name string, termType p.Term_TermTyp
 
 	return RqlTerm{
 		name:     name,
+		rootTerm: false,
 		termType: termType,
 		args:     listToTermsList(args),
 		optArgs:  objToTermsObj(optArgs),
@@ -107,6 +111,22 @@ func reqlTimeToNativeTime(timestamp float64, timezone string) (time.Time, error)
 	}
 
 	return t, nil
+}
+
+func reqlGroupedDataToObj(obj map[string]interface{}) (interface{}, error) {
+	if data, ok := obj["data"]; ok {
+		ret := []interface{}{}
+		for _, v := range data.([]interface{}) {
+			v := v.([]interface{})
+			ret = append(ret, map[string]interface{}{
+				"group":     v[0],
+				"reduction": v[1],
+			})
+		}
+		return ret, nil
+	} else {
+		return nil, fmt.Errorf("pseudo-type GROUPED_DATA object %v does not have the expected field \"data\"", obj)
+	}
 }
 
 // Helper functions for debugging
