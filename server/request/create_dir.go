@@ -75,7 +75,7 @@ func (cdh *createDirHandler) createNewDir() (*schema.Directory, error) {
 		return nil, err
 	}
 
-	datadir := schema.NewDirectory(cdh.req.Path, "private", cdh.user, parent.ID)
+	datadir := schema.NewDirectory(cdh.req.Path, cdh.user, cdh.proj.ID, parent.ID)
 	ddir, err := service.Dir.Insert(&datadir)
 	if err != nil {
 		return ddir, err
