@@ -7,7 +7,7 @@ import (
 	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/client/db"
 	"github.com/materials-commons/mcfs/client/db/schema"
-	"github.com/materials-commons/mcfs/server/protocol"
+	"github.com/materials-commons/mcfs/protocol"
 	"os"
 	"path/filepath"
 )

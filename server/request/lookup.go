@@ -6,7 +6,7 @@ import (
 	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/server/protocol"
+	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 )
 

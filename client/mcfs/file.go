@@ -4,7 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/materials-commons/gohandy/file"
-	"github.com/materials-commons/mcfs/server/protocol"
+	"github.com/materials-commons/mcfs/protocol"
 	"io"
 	"os"
 	"path/filepath"

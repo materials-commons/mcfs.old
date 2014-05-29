@@ -2,7 +2,7 @@ package request
 
 import (
 	"github.com/materials-commons/mcfs/base/mc"
-	"github.com/materials-commons/mcfs/server/protocol"
+	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 )
 

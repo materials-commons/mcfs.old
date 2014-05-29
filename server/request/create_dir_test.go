@@ -5,7 +5,7 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/base/model"
-	"github.com/materials-commons/mcfs/server/protocol"
+	"github.com/materials-commons/mcfs/protocol"
 	"testing"
 )
 

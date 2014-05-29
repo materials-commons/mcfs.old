@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/base/mc"
-	"github.com/materials-commons/mcfs/server/protocol"
+	"github.com/materials-commons/mcfs/protocol"
 	"strings"
 )
 

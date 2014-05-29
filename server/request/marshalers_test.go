@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/client/util"
-	"github.com/materials-commons/mcfs/server/protocol"
+	"github.com/materials-commons/mcfs/protocol"
 	"testing"
 )
 

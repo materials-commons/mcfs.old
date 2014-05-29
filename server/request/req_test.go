@@ -3,7 +3,7 @@ package request
 import (
 	"fmt"
 	"github.com/materials-commons/mcfs/client/util"
-	"github.com/materials-commons/mcfs/server/protocol"
+	"github.com/materials-commons/mcfs/protocol"
 	"io"
 	"testing"
 )

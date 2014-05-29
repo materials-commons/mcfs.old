@@ -33,7 +33,7 @@ import (
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/client/util"
-	_ "github.com/materials-commons/mcfs/server/protocol"
+	_ "github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/request"
 	"github.com/materials-commons/mcfs/server/service"
 	"mime"

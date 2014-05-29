@@ -2,7 +2,7 @@ package mcfs
 
 import (
 	"github.com/materials-commons/mcfs/base/dir"
-	"github.com/materials-commons/mcfs/server/protocol"
+	"github.com/materials-commons/mcfs/protocol"
 )
 
 // ProjectStat describes the project on the server.
