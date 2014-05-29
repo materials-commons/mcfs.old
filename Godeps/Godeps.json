@@ -26,14 +26,6 @@
 			"Rev": "12e4b4183793ac4b061921e7980845e750679fd0"
 		},
 		{
-			"ImportPath": "github.com/Sirupsen/logrus",
-			"Rev": "d4ada4466b1f797ca9aee2bc6bed46dcdfa731ae"
-		},
-		{
-			"ImportPath": "github.com/burke/ttyutils",
-			"Rev": "70f0d73eb47f7033f514f7f8f5138152fe1088fc"
-		},
-		{
 			"ImportPath": "github.com/dancannon/gorethink",
 			"Comment": "0.2.1-1-g39f197b",
 			"Rev": "39f197b0004cd0f20643fb39dcf105e0aa2a3e8b"
@@ -55,6 +47,11 @@
 			"Rev": "441bbc86b167f3c1f4786afae9931403b99fdacf"
 		},
 		{
+			"ImportPath": "github.com/inconshreveable/log15",
+			"Comment": "v1.2-1-g5c91687",
+			"Rev": "5c91687df1898c7964dbc17b99c061672fe1de0b"
+		},
+		{
 			"ImportPath": "github.com/jessevdk/go-flags",
 			"Comment": "v1-154-gcee4db9",
 			"Rev": "cee4db96aec1f7382a0b09d8249c09a8bb8d160b"
@@ -62,6 +59,36 @@
 		{
 			"ImportPath": "github.com/jmoiron/sqlx",
 			"Rev": "f0de39052f8b894d525687a8b37c96e7a8cbc4f6"
+		},
+		{
+			"ImportPath": "github.com/materials-commons/gohandy/collections",
+			"Comment": "v0.1-42-gf7b231f",
+			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+		},
+		{
+			"ImportPath": "github.com/materials-commons/gohandy/env",
+			"Comment": "v0.1-42-gf7b231f",
+			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+		},
+		{
+			"ImportPath": "github.com/materials-commons/gohandy/ezhttp",
+			"Comment": "v0.1-42-gf7b231f",
+			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+		},
+		{
+			"ImportPath": "github.com/materials-commons/gohandy/file",
+			"Comment": "v0.1-42-gf7b231f",
+			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+		},
+		{
+			"ImportPath": "github.com/materials-commons/gohandy/fs",
+			"Comment": "v0.1-42-gf7b231f",
+			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+		},
+		{
+			"ImportPath": "github.com/materials-commons/gohandy/marshaling",
+			"Comment": "v0.1-42-gf7b231f",
+			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-sqlite3",
@@ -74,6 +101,11 @@
 		{
 			"ImportPath": "github.com/ugorji/go/codec",
 			"Rev": "71c2886f5a673a35f909803f38ece5810165097b"
+		},
+		{
+			"ImportPath": "gopkg.in/inconshreveable/log15.v1/term",
+			"Comment": "v1.2",
+			"Rev": "a127215f557c6b7b673e4bcf12ecf3c093ead09a"
 		},
 		{
 			"ImportPath": "launchpad.net/tomb",
