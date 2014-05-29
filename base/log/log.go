@@ -16,13 +16,14 @@ var (
 
 func init() {
 	stdoutHandler := log15.StreamHandler(os.Stdout, log15.LogfmtFormat())
-	L.SetHandler(log15.LvlFilterHandler(log15.LvlInfo, stdoutHandler))
+	SetDefaultHandler(log15.LvlFilterHandler(log15.LvlInfo, stdoutHandler))
+	L.SetHandler(defaultHandler)
 }
 
 // New creates a new instance of the logger using the current default handler
 // for its output.
 func New(ctx ...interface{}) log15.Logger {
-	l := log15.New(ctx)
+	l := log15.New(ctx...)
 	l.SetHandler(defaultHandler)
 	return l
 }
