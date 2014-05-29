@@ -87,7 +87,7 @@ func (s *accessServer) Init() {
 
 // Run implements the server. It is meant to be called by the Server interface.
 func (s *accessServer) Run(stopChan <-chan struct{}) {
-	l.Info("Starting...")
+	l.Info("Starting")
 	s.isRunning = true
 	if err := s.apikeys.load(); err != nil {
 		s.shutdown()
