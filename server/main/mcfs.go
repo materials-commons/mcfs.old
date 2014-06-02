@@ -76,7 +76,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	config.Init(config.TwelveFactorOverride)
+	config.Init(config.TwelveFactorWithOverride)
 
 	listener, err := createListener(opts.Server.Bind, opts.Server.Port)
 	if err != nil {

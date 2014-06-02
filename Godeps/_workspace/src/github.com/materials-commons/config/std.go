@@ -13,8 +13,9 @@ var TwelveFactor = handler.Env()
 // Store configuration in environment, but allow overrides, either by the
 // application setting them internally as defaults, or setting them from
 // the command line. See http://12factor.net/config. Overrides are an
-// extension to the specification.
-var TwelveFactorOverride = handler.Multi(handler.Map(), handler.Env())
+// extension to the specification. This handler is thread safe and can
+// safely be used across multiple go routines.
+var TwelveFactorWithOverride = handler.Multi(handler.Sync(handler.Map()), handler.Env())
 
 var std Configer
 
