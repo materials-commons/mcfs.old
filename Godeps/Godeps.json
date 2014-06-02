@@ -61,6 +61,10 @@
 			"Rev": "f0de39052f8b894d525687a8b37c96e7a8cbc4f6"
 		},
 		{
+			"ImportPath": "github.com/materials-commons/config",
+			"Rev": "6fba7232f5c9c0650572ba9c9d771bbd24114860"
+		},
+		{
 			"ImportPath": "github.com/materials-commons/gohandy/collections",
 			"Comment": "v0.1-42-gf7b231f",
 			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
@@ -93,6 +97,14 @@
 		{
 			"ImportPath": "github.com/mattn/go-sqlite3",
 			"Rev": "58c62dc30cda06e4a74e18f6489bb6c112fc6e5d"
+		},
+		{
+			"ImportPath": "github.com/spf13/cast",
+			"Rev": "99f1223ff64ed0c6a1dd9c850474f5fecba6e0a4"
+		},
+		{
+			"ImportPath": "github.com/spf13/jwalterweatherman",
+			"Rev": "bd90d9f5d6eaeab52a8be0b13382ec840fdaf9fd"
 		},
 		{
 			"ImportPath": "github.com/syndtr/goleveldb/leveldb",
