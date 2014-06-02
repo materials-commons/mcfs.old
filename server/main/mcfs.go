@@ -22,15 +22,13 @@ The protocol for file uploads looks as follows:
        sending data from. For a new upload this will be at
        position 0. For an existing one it will be the offset
        to restart the upload.
-
-The protocol for file downloads looks as follows:
-
 */
 package main
 
 import (
 	"fmt"
 	"github.com/jessevdk/go-flags"
+	"github.com/materials-commons/config"
 	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/client/util"
 	_ "github.com/materials-commons/mcfs/protocol"
@@ -77,6 +75,8 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
+
+	config.Init(config.TwelveFactorOverride)
 
 	listener, err := createListener(opts.Server.Bind, opts.Server.Port)
 	if err != nil {
