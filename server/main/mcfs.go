@@ -29,7 +29,6 @@ import (
 	"fmt"
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/config"
-	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/client/util"
 	_ "github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/request"
@@ -65,9 +64,7 @@ type options struct {
 }
 
 // The following are set to command line argument values
-var mcDir string     // Directory datafiles are stored in
-var dbAddress string // Database address
-var dbName string    // Database name
+var mcDir string // Directory datafiles are stored in
 
 func configErrorHandler(key string, err error, args ...interface{}) {
 
