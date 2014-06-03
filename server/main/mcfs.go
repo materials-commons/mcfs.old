@@ -53,8 +53,9 @@ type serverOptions struct {
 
 // Options for the database
 type databaseOptions struct {
-	Connection string `long:"db-connect" description:"The host/port to connect to database on" default:"localhost:28015"`
-	Name       string `long:"db" description:"Database to use" default:"materialscommons"`
+	Connection string `long:"db-connect" description:"The database connection string"`
+	Name       string `long:"db" description:"Database to use"`
+	Type       string `long:"db-type" description:"The type of database to connect to"`
 }
 
 // Break the options into option groups.
@@ -68,6 +69,15 @@ var mcDir string     // Directory datafiles are stored in
 var dbAddress string // Database address
 var dbName string    // Database name
 
+func configErrorHandler(key string, err error, args ...interface{}) {
+
+}
+
+func init() {
+	config.Init(config.TwelveFactorWithOverride)
+	config.SetErrorHandler(configErrorHandler)
+}
+
 func main() {
 	var opts options
 	_, err := flags.Parse(&opts)
@@ -75,8 +85,6 @@ func main() {
 	if err != nil {
 		os.Exit(1)
 	}
-
-	config.Init(config.TwelveFactorWithOverride)
 
 	listener, err := createListener(opts.Server.Bind, opts.Server.Port)
 	if err != nil {
@@ -88,10 +96,19 @@ func main() {
 	}
 
 	mcDir = opts.Server.MCDir
-	dbAddress = opts.Database.Connection
-	dbName = opts.Database.Name
-	db.SetAddress(dbAddress)
-	db.SetDatabase(dbName)
+	if opts.Database.Connection != "" {
+		config.Set("MCDB_CONNECTION", opts.Database.Connection)
+	}
+
+	if opts.Database.Name != "" {
+		config.Set("MCDB_NAME", opts.Database.Name)
+	}
+
+	if opts.Database.Type != "" {
+		config.Set("MCDB_TYPE", opts.Database.Type)
+	}
+
+	service.Init()
 	go webserver(opts.Server.HTTPPort)
 
 	acceptConnections(listener)

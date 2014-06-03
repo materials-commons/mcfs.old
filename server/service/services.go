@@ -2,7 +2,7 @@ package service
 
 import (
 	"fmt"
-	"github.com/materials-commons/gohandy/env"
+	"github.com/materials-commons/config"
 	"github.com/materials-commons/mcfs/base/db"
 	"strings"
 )
@@ -22,13 +22,12 @@ var Group Groups
 // Global User service
 var User Users
 
-// Setup the services in the init so that they can be configured to
-// the type of database to connect to.
-func init() {
-	dbType := env.GetDefault("MCDB_TYPE", "rethinkdb")
+// Init sets up the services.
+func Init() {
+	dbType := config.GetString("MCDB_TYPE")
 
-	switch strings.ToLower(dbType) {
-	case "rethinkdb":
+	switch {
+	case strings.ToLower(dbType) == "rethinkdb":
 		setupRethinkDB()
 	default:
 		panic(fmt.Sprintf("Unsupported database type: %s", dbType))
@@ -39,11 +38,10 @@ func init() {
 // the environment variables should always be set. The defaults are set to
 // the test environment.
 func setupRethinkDB() {
-	dbPort := env.GetDefault("MCDB_PORT", "30815")
-	dbName := env.GetDefault("MCDB_NAME", "materialscommons")
-	conn := fmt.Sprintf("localhost:%s", dbPort)
+	dbConn := config.GetString("MCDB_CONNECTION")
+	dbName := config.GetString("MCDB_NAME")
 
-	db.SetAddress(conn)
+	db.SetAddress(dbConn)
 	db.SetDatabase(dbName)
 	connectServices(RethinkDB)
 }
