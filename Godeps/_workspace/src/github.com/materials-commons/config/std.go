@@ -7,7 +7,8 @@ import (
 )
 
 // Store configuration in environment as specified for 12 Factor Applications:
-// http://12factor.net/config
+// http://12factor.net/config. The handler is thread safe and can safely be
+// used across multiple go routines.
 var TwelveFactor = handler.Env()
 
 // Store configuration in environment, but allow overrides, either by the
@@ -17,6 +18,8 @@ var TwelveFactor = handler.Env()
 // safely be used across multiple go routines.
 var TwelveFactorWithOverride = handler.Multi(handler.Sync(handler.Map()), handler.Env())
 
+// std is the package global that all the methods in this file refer to. It provides
+// a convenient interface to a package global config.
 var std Configer
 
 func init() {

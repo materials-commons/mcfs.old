@@ -82,12 +82,6 @@ func (c *config) GetBoolErr(key string, args ...interface{}) (bool, error) {
 	return cfg.ToBool(val)
 }
 
-// SetHandler changes the handler for a Configer. If this method is called
-// then you must call Init before accessing any of the keys.
-func (c *config) SetHandler(handler cfg.Handler) {
-	c.handler = handler
-}
-
 // GetInt gets an integer key. It returns the default value of 0 if
 // there is an error. GetLastError can be called to see the error.
 // If a function is set with SetErrorHandler then the function will
@@ -157,6 +151,12 @@ func (c *config) errorHandler(key string, err error, args ...interface{}) {
 	if c.efunc != nil {
 		c.efunc(key, err, args...)
 	}
+}
+
+// SetHandler changes the handler for a Configer. If this method is called
+// then you must call Init before accessing any of the keys.
+func (c *config) SetHandler(handler cfg.Handler) {
+	c.handler = handler
 }
 
 // SetHandlerInit changes the handler for a Configer. It also immediately calls
