@@ -9,7 +9,8 @@ import (
 type Configer interface {
 	cfg.Initer
 	cfg.Getter
-	cfg.TypeGetter
+	cfg.TypeGetterErr
+	cfg.TypeGetterDefault
 	cfg.Setter
 	SetHandler(handler cfg.Handler)
 	SetHandlerInit(handler cfg.Handler) error
@@ -17,7 +18,9 @@ type Configer interface {
 
 // config is a private type for storing configuration information.
 type config struct {
-	handler cfg.Handler
+	handler   cfg.Handler
+	lastError error         // Last error see on get
+	efunc     cfg.ErrorFunc // Error function to call see SetErrorHandler
 }
 
 // New creates a new Configer instance that uses the specified Handler for
@@ -34,12 +37,14 @@ func (c *config) Init() error {
 
 // Get returns the value for a key. It can return any value type.
 func (c *config) Get(key string, args ...interface{}) (interface{}, error) {
-	return c.handler.Get(key, args...)
+	value, err := c.handler.Get(key, args...)
+	c.lastError = err
+	return value, err
 }
 
-// GetInt returns an integer value for a key. See TypeGetter interface for
+// GetIntErr returns an integer value for a key. See TypeGetter interface for
 // error codes.
-func (c *config) GetInt(key string, args ...interface{}) (int, error) {
+func (c *config) GetIntErr(key string, args ...interface{}) (int, error) {
 	val, err := c.Get(key, args...)
 	if err != nil {
 		return 0, err
@@ -47,9 +52,9 @@ func (c *config) GetInt(key string, args ...interface{}) (int, error) {
 	return cfg.ToInt(val)
 }
 
-// GetString returns an string value for a key. See TypeGetter interface for
+// GetStringErr returns an string value for a key. See TypeGetter interface for
 // error codes.
-func (c *config) GetString(key string, args ...interface{}) (string, error) {
+func (c *config) GetStringErr(key string, args ...interface{}) (string, error) {
 	val, err := c.Get(key, args...)
 	if err != nil {
 		return "", err
@@ -57,9 +62,9 @@ func (c *config) GetString(key string, args ...interface{}) (string, error) {
 	return cfg.ToString(val)
 }
 
-// GetTime returns an time.Time value for a key. See TypeGetter interface for
+// GetTimeErr returns an time.Time value for a key. See TypeGetter interface for
 // error codes.
-func (c *config) GetTime(key string, args ...interface{}) (time.Time, error) {
+func (c *config) GetTimeErr(key string, args ...interface{}) (time.Time, error) {
 	val, err := c.Get(key, args...)
 	if err != nil {
 		return time.Time{}, err
@@ -67,9 +72,9 @@ func (c *config) GetTime(key string, args ...interface{}) (time.Time, error) {
 	return cfg.ToTime(val)
 }
 
-// GetBool returns an bool value for a key. See TypeGetter interface for
+// GetBoolErr returns an bool value for a key. See TypeGetter interface for
 // error codes.
-func (c *config) GetBool(key string, args ...interface{}) (bool, error) {
+func (c *config) GetBoolErr(key string, args ...interface{}) (bool, error) {
 	val, err := c.Get(key, args...)
 	if err != nil {
 		return false, err
@@ -81,6 +86,77 @@ func (c *config) GetBool(key string, args ...interface{}) (bool, error) {
 // then you must call Init before accessing any of the keys.
 func (c *config) SetHandler(handler cfg.Handler) {
 	c.handler = handler
+}
+
+// GetInt gets an integer key. It returns the default value of 0 if
+// there is an error. GetLastError can be called to see the error.
+// If a function is set with SetErrorHandler then the function will
+// be called when an error occurs.
+func (c *config) GetInt(key string, args ...interface{}) int {
+	val, err := c.GetIntErr(key, args...)
+	if err != nil {
+		c.errorHandler(key, err, args...)
+	}
+	return val
+}
+
+// GetString gets an integer key. It returns the default value of "" if
+// there is an error. GetLastError can be called to see the error.
+// If a function is set with SetErrorHandler then the function will
+// be called when an error occurs.
+func (c *config) GetString(key string, args ...interface{}) string {
+	val, err := c.GetStringErr(key, args...)
+	if err != nil {
+		c.errorHandler(key, err, args...)
+	}
+	return val
+}
+
+// GetTime gets an integer key. It returns the default value of an
+// empty time.Time if there is an error. GetLastError can be
+// called to see the error. If a function is set with
+// SetErrorHandler then the function will be called when an error occurs.
+func (c *config) GetTime(key string, args ...interface{}) time.Time {
+	val, err := c.GetTimeErr(key, args...)
+	if err != nil {
+		c.errorHandler(key, err, args...)
+	}
+	return val
+}
+
+// GetBool gets an integer key. It returns the default value of false if
+// there is an error. GetLastError can be called to see the error. if a
+// function is set with SetErrorHandler then the function will be called
+// when an error occurs.
+func (c *config) GetBool(key string, args ...interface{}) bool {
+	val, err := c.GetBoolErr(key, args...)
+	if err != nil {
+		c.errorHandler(key, err, args...)
+	}
+	return val
+}
+
+// GetLastError returns any error that occured when GetInt, GetString,
+// GetBool, or GetTime are called. It will return nil if there was
+// no error.
+func (c *config) GetLastError() error {
+	return c.lastError
+}
+
+// SetErrorHandler sets a function to call when GetInt, GetString,
+// GetBool, or GetTime return an error. You can use this function
+// to handle error in an application specific way. For example if
+// an error is fatal you can have this function call os.Exit() or
+// panic. Alternatively you can easily log errors with this.
+func (c *config) SetErrorHandler(f cfg.ErrorFunc) {
+	c.efunc = f
+}
+
+// errorHandler calls the error function set with SetErrorHandler.
+func (c *config) errorHandler(key string, err error, args ...interface{}) {
+	if c.efunc != nil {
+		c.efunc(key, err, args...)
+	}
 }
 
 // SetHandlerInit changes the handler for a Configer. It also immediately calls

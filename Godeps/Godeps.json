@@ -62,7 +62,7 @@
 		},
 		{
 			"ImportPath": "github.com/materials-commons/config",
-			"Rev": "fbb7d8eef89567504f6d117dbdf86642a4d96b36"
+			"Rev": "f05d89a42c310a83a4a9e8c6c02978ef06c1cbc4"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/collections",

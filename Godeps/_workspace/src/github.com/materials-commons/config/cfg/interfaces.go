@@ -10,14 +10,32 @@ type Getter interface {
 	Get(key string, args ...interface{}) (interface{}, error)
 }
 
-// A TypeGetter performs type safe conversion and retrieval of key values. The routines
+// A TypeGetterErr performs type safe conversion and retrieval of key values. The routines
 // have return ErrBadType if the value doesn't match or can't be converted to the
 // getter method called. ErrKeyNotFound is returned if the specified key is not found.
-type TypeGetter interface {
-	GetInt(key string, args ...interface{}) (int, error)
-	GetString(key string, args ...interface{}) (string, error)
-	GetTime(key string, args ...interface{}) (time.Time, error)
-	GetBool(key string, args ...interface{}) (bool, error)
+type TypeGetterErr interface {
+	GetIntErr(key string, args ...interface{}) (int, error)
+	GetStringErr(key string, args ...interface{}) (string, error)
+	GetTimeErr(key string, args ...interface{}) (time.Time, error)
+	GetBoolErr(key string, args ...interface{}) (bool, error)
+}
+
+// ErrorFunc is the signature of the function to call when using
+// one of the TypeGetterDefault calls and the call detects an error.
+type ErrorFunc func(key string, err error, args ...interface{})
+
+// TypeGetterDefault performs type safe conversion and retrieval of key values.
+// The routines mask the error and instead return a default value if an error
+// did occur. You can check for the error by calling GetLastError. Alternatively
+// you can call SetErrorHandler to a function to call when one of the getters
+// sees an error.
+type TypeGetterDefault interface {
+	GetInt(key string, args ...interface{}) int        // return 0 when error occurs
+	GetString(key string, args ...interface{}) string  // return "" when error occurs
+	GetTime(key string, args ...interface{}) time.Time // return empty time.Time when error occurs
+	GetBool(key string, args ...interface{}) bool      // return false when error occurs
+	GetLastError() error                               // Return last error from above Gets
+	SetErrorHandler(f ErrorFunc)                       // Called when one of the above Gets sees an error
 }
 
 // A Setter stores a value for a key. It returns nil on success and ErrKeyNotSet on failure.
