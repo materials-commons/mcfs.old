@@ -8,14 +8,23 @@ type mapHandler struct {
 	values map[string]interface{}
 }
 
+// MapUse creates a Map handler that is preloaded with the hashmap passed in.
+func MapUse(values map[string]interface{}) cfg.Handler {
+	return &mapHandler{values: values}
+}
+
+// Map creates a handler that stores all values in a hashmap. It is commonly used
+// as a component to build more complex handlers.
 func Map() cfg.Handler {
 	return &mapHandler{values: make(map[string]interface{})}
 }
 
+// Init initializes the handler.
 func (h *mapHandler) Init() error {
 	return nil
 }
 
+// Get retrieves a keys value.
 func (h *mapHandler) Get(key string, args ...interface{}) (interface{}, error) {
 	if len(args) != 0 {
 		return nil, cfg.ErrArgsNotSupported

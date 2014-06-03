@@ -12,18 +12,18 @@ type loaderHandler struct {
 // Loader returns a handler that reads the keys in from a loader.
 func Loader(loader cfg.Loader) cfg.Handler {
 	return &loaderHandler{
-		handler: Map(),
-		loader:  loader,
+		loader: loader,
 	}
 }
 
 // Init loads the keys by calling the loader.
 func (h *loaderHandler) Init() error {
-	m := h.handler.(*mapHandler)
-	if err := h.loader.Load(&m.values); err != nil {
+	var m = make(map[string]interface{})
+	if err := h.loader.Load(&m); err != nil {
 		return err
 	}
-	return nil
+	h.handler = MapUse(m)
+	return h.handler.Init()
 }
 
 // Get retrieves keys loaded from the loader.

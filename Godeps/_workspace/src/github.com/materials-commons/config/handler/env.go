@@ -3,8 +3,13 @@ package handler
 import (
 	"github.com/materials-commons/config/cfg"
 	"os"
-	"strings"
 )
+
+// EnvUpper returns a Env handler that first upper cases all keys before
+// getting or setting them.
+func EnvUpper() cfg.Handler {
+	return UppercaseKey(Env())
+}
 
 type envHandler struct{}
 
@@ -18,35 +23,31 @@ func (h *envHandler) Init() error {
 	return nil
 }
 
-// Get retrieves a environment variable. It assumes all keys are upper case.
-// It will uppercase the key before attempting to retrieve its value.
+// Get retrieves a environment variable.
 func (h *envHandler) Get(key string, args ...interface{}) (interface{}, error) {
 	if len(args) != 0 {
 		return "", cfg.ErrArgsNotSupported
 	}
-	ukey := strings.ToUpper(key)
-	val := os.Getenv(ukey)
+	val := os.Getenv(key)
 	if val == "" {
 		return val, cfg.ErrKeyNotFound
 	}
 	return val, nil
 }
 
-// Set sets an environment variable. It assumes all keys are upper case, and that
-// values must be stored as strings. It will uppercase the key, and convert the
-// value to a string before it attempts to store it. If the value cannot be
-// converted to a string it returns ErrBadType.
+// Set sets an environment variable. Values will be stored as strings. It will
+// convert the value to a string before it attempts to store it. If the value
+// cannot be converted to a string it returns ErrBadType.
 func (h *envHandler) Set(key string, value interface{}, args ...interface{}) error {
 	if len(args) != 0 {
 		return cfg.ErrArgsNotSupported
 	}
-	ukey := strings.ToUpper(key)
 	sval, err := cfg.ToString(value)
 	if err != nil {
 		return cfg.ErrBadType
 	}
 
-	err = os.Setenv(ukey, sval)
+	err = os.Setenv(key, sval)
 	if err != nil {
 		return cfg.ErrKeyNotSet
 	}
