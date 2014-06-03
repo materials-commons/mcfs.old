@@ -6,6 +6,10 @@ import (
 	"testing"
 )
 
+func init() {
+	Init()
+}
+
 var _ = fmt.Println
 
 func TestHasAccess(t *testing.T) {

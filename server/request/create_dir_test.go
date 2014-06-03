@@ -3,15 +3,17 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/server/service"
 	"testing"
 )
 
+func init() {
+	service.Init()
+}
+
 func TestCreateDir(t *testing.T) {
-	db.SetAddress("localhost:30815")
-	db.SetDatabase("materialscommons")
 	h := NewReqHandler(nil, "")
 	h.user = "test@mc.org"
 

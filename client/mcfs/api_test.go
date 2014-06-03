@@ -6,10 +6,10 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/gohandy/marshaling"
-	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/client/util"
 	"github.com/materials-commons/mcfs/server/request"
+	"github.com/materials-commons/mcfs/server/service"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -32,8 +32,7 @@ func init() {
 		Address:  "localhost:30815",
 		Database: "materialscommons",
 	})
-	db.SetAddress("localhost:30815")
-	db.SetDatabase("materialscommons")
+	service.Init()
 	go mcfsServer(m)
 }
 
