@@ -3,7 +3,7 @@ package service
 import (
 	"fmt"
 	"github.com/materials-commons/mcfs/base/db"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"testing"
 )
@@ -74,8 +74,8 @@ func TestRFilesByPath(t *testing.T) {
 	}
 
 	_, err = rfiles.ByPath("testfile.test", "c3d72271-4a32-4080-a6a3-b4c6a5c4b986")
-	if err != mc.ErrNotFound {
-		t.Fatalf("Lookup of testfile.test should have returned err 'mc.ErrNotFound', returned %s instead", err)
+	if err != mcerr.ErrNotFound {
+		t.Fatalf("Lookup of testfile.test should have returned err 'mcerr.ErrNotFound', returned %s instead", err)
 	}
 
 	rfiles.Delete(nf.ID)

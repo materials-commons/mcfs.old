@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
@@ -28,14 +28,14 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.Cr
 	cph := newCreateProjectHandler()
 
 	if !cph.validateRequest(req) {
-		return nil, mc.Errorf(mc.ErrInvalid, "Invalid project name %s", req.Name)
+		return nil, mcerr.Errorf(mcerr.ErrInvalid, "Invalid project name %s", req.Name)
 	}
 
 	proj, err = service.Project.ByName(req.Name, h.user)
 	switch {
 	case err == nil:
 		// Found project
-		err = mc.ErrExists
+		err = mcerr.ErrExists
 
 	default:
 		// Project doesn't exist: Attempt to create a new one.
@@ -51,7 +51,7 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.Cr
 	// Lock the project so no one else can upload to it.
 	if !inuse.Mark(resp.ProjectID) {
 		// Project already in use
-		return nil, mc.Errorf(mc.ErrInUse, "Project %s is currently in use by someone else.", resp.ProjectID)
+		return nil, mcerr.Errorf(mcerr.ErrInUse, "Project %s is currently in use by someone else.", resp.ProjectID)
 	}
 
 	// Save project id so state machine can unlock it at termination.

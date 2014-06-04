@@ -3,7 +3,7 @@ package request
 import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/mcfs/base/db"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -39,7 +39,7 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
 		return l.execute(rql, &datadir)
 
 	default:
-		return nil, mc.Errorf(mc.ErrInvalid, "Unknown entry type %s", req.Type)
+		return nil, mcerr.Errorf(mcerr.ErrInvalid, "Unknown entry type %s", req.Type)
 	}
 }
 
@@ -80,9 +80,9 @@ func (l *lookupHandler) execute(query r.RqlTerm, v interface{}) (interface{}, er
 	err := model.GetRow(query, l.session, v)
 	switch {
 	case err != nil:
-		return nil, mc.Errorm(mc.ErrInvalid, err)
+		return nil, mcerr.Errorm(mcerr.ErrInvalid, err)
 	case !l.hasAccess(v):
-		return nil, mc.Errorf(mc.ErrNoAccess, "Permission denied")
+		return nil, mcerr.Errorf(mcerr.ErrNoAccess, "Permission denied")
 	default:
 		return v, nil
 	}

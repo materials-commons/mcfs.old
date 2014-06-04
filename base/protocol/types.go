@@ -1,7 +1,7 @@
 package protocol
 
 import (
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"time"
 )
 
@@ -47,7 +47,7 @@ const (
 // This denotes success or failure of the request. On failure a message with additional details
 // may be included.
 type Status struct {
-	Status  mc.ErrorCode // Error code (can be translated to an error)
+	Status  mcerr.ErrorCode // Error code (can be translated to an error)
 	Message string       // Additional status message
 }
 

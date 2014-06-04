@@ -3,7 +3,7 @@ package mcfs
 import (
 	"fmt"
 	"github.com/materials-commons/gohandy/file"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
 	"strings"
 )
@@ -12,7 +12,7 @@ import (
 func (c *Client) CreateDir(projectID, projectName, path string) (dataDirID string, err error) {
 	i := strings.Index(path, projectName)
 	if i == -1 {
-		return "", mc.ErrInvalid
+		return "", mcerr.ErrInvalid
 	}
 
 	properPath := path[i:] // only send up portion starting from project

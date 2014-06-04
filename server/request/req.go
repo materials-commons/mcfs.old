@@ -3,7 +3,7 @@ package request
 import (
 	"fmt"
 	"github.com/materials-commons/gohandy/marshaling"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"io"
@@ -72,7 +72,7 @@ func (h *ReqHandler) startState() reqStateFN {
 	case protocol.CloseReq:
 		return nil
 	default:
-		return h.badRequestRestart(mc.Errorf(mc.ErrInvalid, "Bad Request %T", req))
+		return h.badRequestRestart(mcerr.Errorf(mcerr.ErrInvalid, "Bad Request %T", req))
 	}
 }
 
@@ -134,7 +134,7 @@ func (h *ReqHandler) nextCommand() reqStateFN {
 	case protocol.IndexReq:
 	default:
 		h.badRequestCount = h.badRequestCount + 1
-		return h.badRequestNext(mc.Errorf(mc.ErrInvalid, "Bad request %T", req))
+		return h.badRequestNext(mcerr.Errorf(mcerr.ErrInvalid, "Bad request %T", req))
 	}
 
 	h.sendResp(resp, err)
@@ -151,7 +151,7 @@ func (h *ReqHandler) sendResp(resp interface{}, err error) {
 
 func (h *ReqHandler) respOk(respData interface{}) {
 	resp := &protocol.Response{
-		Status: mc.ErrorCodeSuccess,
+		Status: mcerr.ErrorCodeSuccess,
 		Resp:   respData,
 	}
 	err := h.Marshal(resp)
@@ -163,11 +163,11 @@ func (h *ReqHandler) respOk(respData interface{}) {
 func (h *ReqHandler) respError(respData interface{}, err error) {
 	var resp protocol.Response
 	switch e := err.(type) {
-	case *mc.Error:
+	case *mcerr.Error:
 		resp.Status = e.ToErrorCode()
 		resp.StatusMessage = e.Error()
 	default:
-		resp.Status = mc.ErrorToErrorCode(err)
+		resp.Status = mcerr.ErrorToErrorCode(err)
 	}
 
 	if respData != nil && !reflect.ValueOf(respData).IsNil() {

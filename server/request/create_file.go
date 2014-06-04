@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
@@ -76,28 +76,28 @@ func newCreateFileHandler(user string) *createFileHandler {
 func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq) error {
 	proj, err := service.Project.ByID(req.ProjectID)
 	if err != nil {
-		return mc.Errorf(mc.ErrInvalid, "Bad projectID %s", req.ProjectID)
+		return mcerr.Errorf(mcerr.ErrInvalid, "Bad projectID %s", req.ProjectID)
 	}
 
 	if !service.Group.HasAccess(proj.Owner, cfh.user) {
-		return mc.ErrNoAccess
+		return mcerr.ErrNoAccess
 	}
 
 	ddir, err := service.Dir.ByID(req.DataDirID)
 	if err != nil {
-		return mc.Errorf(mc.ErrInvalid, "Unknown directory id: %s", req.DataDirID)
+		return mcerr.Errorf(mcerr.ErrInvalid, "Unknown directory id: %s", req.DataDirID)
 	}
 
 	if ddir.Project != req.ProjectID {
-		return mc.Errorf(mc.ErrInvalid, "Directory %s not in project %s", ddir.Name, req.ProjectID)
+		return mcerr.Errorf(mcerr.ErrInvalid, "Directory %s not in project %s", ddir.Name, req.ProjectID)
 	}
 
 	if req.Size < 1 {
-		return mc.Errorf(mc.ErrInvalid, "Invalid size (%d) for file %s", req.Size, req.Name)
+		return mcerr.Errorf(mcerr.ErrInvalid, "Invalid size (%d) for file %s", req.Size, req.Name)
 	}
 
 	if req.Checksum == "" {
-		return mc.Errorf(mc.ErrInvalid, "Bad checksum (%s) for file %s", req.Checksum, req.Name)
+		return mcerr.Errorf(mcerr.ErrInvalid, "Bad checksum (%s) for file %s", req.Checksum, req.Name)
 	}
 
 	return nil
@@ -111,7 +111,7 @@ func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*proto
 	var f *schema.File
 	currentFile, err := service.File.ByPath(req.Name, req.DataDirID)
 	switch {
-	case err == mc.ErrNotFound:
+	case err == mcerr.ErrNotFound:
 		// There is no current entry, create a new one.
 		f = cfh.newFile(req)
 	case err != nil:

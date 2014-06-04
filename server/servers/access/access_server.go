@@ -2,7 +2,7 @@ package access
 
 import (
 	"github.com/materials-commons/mcfs/base/log"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/server"
 	"github.com/materials-commons/mcfs/server/service"
@@ -138,7 +138,7 @@ func (s *accessServer) doGetUser(apikey string) {
 	default:
 		s.response <- &response{
 			user: nil,
-			err:  mc.ErrNotFound,
+			err:  mcerr.ErrNotFound,
 		}
 	}
 }
@@ -147,6 +147,6 @@ func (s *accessServer) doGetUser(apikey string) {
 func (s *accessServer) doInvalidRequest() {
 	s.response <- &response{
 		user: nil,
-		err:  mc.ErrInvalid,
+		err:  mcerr.ErrInvalid,
 	}
 }

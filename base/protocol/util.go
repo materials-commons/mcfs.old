@@ -3,7 +3,7 @@ package protocol
 import (
 	"bytes"
 	"github.com/materials-commons/mcfs/base/codex"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/ugorji/go/codec"
 )
 
@@ -45,7 +45,7 @@ func Decode(buf []byte, out interface{}) error {
 // sent to Decode.
 func Prepare(buf []byte) (pb *codex.PreparedBuffer, err error) {
 	if len(buf) < 3 {
-		return nil, mc.ErrInvalid
+		return nil, mcerr.ErrInvalid
 	}
 
 	pb = &codex.PreparedBuffer{

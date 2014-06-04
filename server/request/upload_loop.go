@@ -3,7 +3,7 @@ package request
 import (
 	"crypto/md5"
 	"github.com/materials-commons/gohandy/file"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
@@ -25,7 +25,7 @@ func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
 	uploadHandler, err := createUploadFileHandler(h, resp.DataFileID, resp.Offset)
 	if err != nil {
 		inuse.Unmark(resp.DataFileID)
-		h.respError(nil, mc.Errorm(mc.ErrInternal, err))
+		h.respError(nil, mcerr.Errorm(mcerr.ErrInternal, err))
 		return h.nextCommand
 	}
 
@@ -107,7 +107,7 @@ func (u *uploadFileHandler) uploadFile() reqStateFN {
 		return u.nextCommand
 	default:
 		u.fileClose()
-		return u.badRequestNext(mc.Errorf(mc.ErrInvalid, "Unknown Request Type %T", req))
+		return u.badRequestNext(mcerr.Errorf(mcerr.ErrInvalid, "Unknown Request Type %T", req))
 	}
 }
 
@@ -127,7 +127,7 @@ func (u *uploadFileHandler) writeRequest(req *protocol.SendReq) reqStateFN {
 	case u.nbytes+u.file.Uploaded > u.file.Size:
 		// Client is sending us more bytes than expecte file size.
 		u.fileClose()
-		u.respError(nil, mc.Errorf(mc.ErrInvalid, "Attempt to write more bytes to file than its expected size."))
+		u.respError(nil, mcerr.Errorf(mcerr.ErrInvalid, "Attempt to write more bytes to file than its expected size."))
 		return u.nextCommand
 
 	default:
@@ -140,12 +140,12 @@ func (u *uploadFileHandler) writeRequest(req *protocol.SendReq) reqStateFN {
 // sendReqWrite writes bytes to the file.
 func (u *uploadFileHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
 	if req.DataFileID != u.file.ID {
-		return 0, mc.Errorf(mc.ErrInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, u.file.ID)
+		return 0, mcerr.Errorf(mcerr.ErrInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, u.file.ID)
 	}
 
 	n, err := u.fileWrite(req.Bytes)
 	if err != nil {
-		return 0, mc.Errorf(mc.ErrInternal, "Write unexpectedly failed for %s", req.DataFileID)
+		return 0, mcerr.Errorf(mcerr.ErrInternal, "Write unexpectedly failed for %s", req.DataFileID)
 	}
 
 	return n, nil

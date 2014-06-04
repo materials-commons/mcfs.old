@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
@@ -27,28 +27,28 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 	switch {
 	case err != nil:
 		// A bad projectID was passed to us
-		return nil, mc.Errorf(mc.ErrInvalid, "Bad projectID %s", req.ProjectID)
+		return nil, mcerr.Errorf(mcerr.ErrInvalid, "Bad projectID %s", req.ProjectID)
 	case cdh.proj.Owner != h.user:
 		// A valid project but the user doesn't have permission to add an entry
 		// to this project.
-		return nil, mc.Errorf(mc.ErrNoAccess, "Access to project %s not allowed", req.ProjectID)
+		return nil, mcerr.Errorf(mcerr.ErrNoAccess, "Access to project %s not allowed", req.ProjectID)
 	case !validDirPath(cdh.proj.Name, req.Path):
 		// The format for the path is incorrect.
-		return nil, mc.Errorf(mc.ErrInvalid, "Invalid directory path %s", req.Path)
+		return nil, mcerr.Errorf(mcerr.ErrInvalid, "Invalid directory path %s", req.Path)
 	default:
 		// The project exists and the user has permission.
 		dataDir, err := service.Dir.ByPath(req.Path, req.ProjectID)
 		switch {
-		case err == mc.ErrNotFound:
+		case err == mcerr.ErrNotFound:
 			// There isn't a matching directory so attempt to create a new one.
 			dataDir, err := cdh.createNewDir()
 			if err != nil {
-				return nil, mc.Errorm(mc.ErrInvalid, err)
+				return nil, mcerr.Errorm(mcerr.ErrInvalid, err)
 			}
 			return &protocol.CreateResp{ID: dataDir.ID}, nil
 		case err != nil:
 			// Lookup failed with an error other than not found.
-			return nil, mc.Errorm(mc.ErrNotFound, err)
+			return nil, mcerr.Errorm(mcerr.ErrNotFound, err)
 		default:
 			// No error, and the directory already exists, just return it.
 			return &protocol.CreateResp{ID: dataDir.ID}, nil
@@ -100,7 +100,7 @@ func (cdh *createDirHandler) getParent() (*schema.Directory, error) {
 	)
 	parentPath := filepath.Dir(cdh.req.Path)
 	if parent, err = service.Dir.ByPath(parentPath, cdh.req.ProjectID); err != nil {
-		return nil, mc.ErrNotFound
+		return nil, mcerr.ErrNotFound
 	}
 	return parent, nil
 }

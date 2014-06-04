@@ -8,7 +8,7 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/gohandy/file"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/client"
 	"github.com/materials-commons/mcfs/client/autoupdate"
 	"github.com/materials-commons/mcfs/client/config"
@@ -81,7 +81,7 @@ func listProjects() {
 func addProject(projectName, projectPath string) error {
 	if materials.CurrentUserProjectDB().Exists(projectName) {
 		fmt.Printf("Project %s already exists\n", projectName)
-		return mc.ErrExists
+		return mcerr.ErrExists
 	}
 
 	p, err := materials.NewProject(projectName, projectPath, "Unloaded")

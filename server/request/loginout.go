@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 )
@@ -13,7 +13,7 @@ func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, error) 
 		return &protocol.LoginResp{}, nil
 	}
 
-	return nil, mc.Errorf(mc.ErrInvalid, "Bad login %s/%s", req.User, req.APIKey)
+	return nil, mcerr.Errorf(mcerr.ErrInvalid, "Bad login %s/%s", req.User, req.APIKey)
 }
 
 // validLogin looks the user up in the database and compares the APIKey passed in with

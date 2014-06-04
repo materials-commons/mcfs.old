@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/materials-commons/gohandy/file"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/client/db"
 	"github.com/materials-commons/mcfs/client/db/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -41,7 +41,7 @@ func (c *Client) UploadNewProject(path string) error {
 	var dataDirs = map[string]string{}
 	projectName := filepath.Base(path)
 	project, err := c.CreateProject(projectName)
-	if err != nil && err != mc.ErrExists {
+	if err != nil && err != mcerr.ErrExists {
 		return err
 	}
 
@@ -97,7 +97,7 @@ func (c *Client) IndexProject(path string) error {
 	var err error
 	project, err = projectByPath(path)
 	switch {
-	case err == mc.ErrNotFound:
+	case err == mcerr.ErrNotFound:
 		return c.loadNewProject(path)
 	case err != nil:
 		return err
@@ -159,7 +159,7 @@ func projectByPath(path string) (*schema.Project, error) {
 	err := db.Projects.Get(&project, "select * from projects where name=$1", projectName)
 	switch {
 	case err != nil:
-		return nil, mc.ErrNotFound
+		return nil, mcerr.ErrNotFound
 	default:
 		return &project, nil
 	}

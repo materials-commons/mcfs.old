@@ -1,7 +1,7 @@
 package request
 
 import (
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 )
@@ -17,19 +17,19 @@ func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatPr
 		// Lookup the project by its name.
 		project, err := service.Project.ByName(req.Name, h.user)
 		if err != nil {
-			return nil, mc.Errorm(mc.ErrNotFound, err)
+			return nil, mcerr.Errorm(mcerr.ErrNotFound, err)
 		}
 		projectID = project.ID
 	case req.ID != "":
 		// Use the project id we were given.
 		projectID = req.ID
 	default:
-		return nil, mc.Errorm(mc.ErrInvalid, nil)
+		return nil, mcerr.Errorm(mcerr.ErrInvalid, nil)
 	}
 
 	entries, err := service.Project.Files(projectID, req.Base)
 	if err != nil {
-		return nil, mc.Errorm(mc.ErrNotFound, err)
+		return nil, mcerr.Errorm(mcerr.ErrNotFound, err)
 	}
 
 	resp := protocol.StatProjectResp{

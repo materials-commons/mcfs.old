@@ -2,7 +2,7 @@ package request
 
 import (
 	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -56,7 +56,7 @@ func TestCreateProject(t *testing.T) {
 
 	// Test that the project is locked:
 	resp, err = h.createProject(&createProjectRequest)
-	if !mc.Is(err, mc.ErrInUse) {
+	if !mcerr.Is(err, mcerr.ErrInUse) {
 		t.Fatalf("Attempted to access/create a project that should be locked, and got access: %s", err)
 	}
 
@@ -65,8 +65,8 @@ func TestCreateProject(t *testing.T) {
 
 	// Test create existing project
 	resp, err = h.createProject(&createProjectRequest)
-	if err != mc.ErrExists {
-		t.Errorf("Creating an existing project should have returned err mc.ErrExists, returned %s instead", err)
+	if err != mcerr.ErrExists {
+		t.Errorf("Creating an existing project should have returned err mcerr.ErrExists, returned %s instead", err)
 	}
 
 	// Delete before test so we can cleanup if there is a failure

@@ -6,7 +6,7 @@ package protocol
 import (
 	"encoding/gob"
 	"github.com/materials-commons/mcfs/base/dir"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"time"
 )
@@ -102,7 +102,7 @@ func ValidItemType(t ItemType) bool {
 
 // Response contains the response to a given request.
 type Response struct {
-	Status        mc.ErrorCode
+	Status        mcerr.ErrorCode
 	StatusMessage string
 	Resp          interface{}
 }

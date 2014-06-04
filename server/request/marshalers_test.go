@@ -2,7 +2,7 @@ package request
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/client/util"
 	"github.com/materials-commons/mcfs/protocol"
 	"testing"
@@ -52,7 +52,7 @@ func responder(m *util.ChannelMarshaler) {
 	fmt.Printf("request = %#v\n", request)
 	logoutResp := protocol.LogoutResp{}
 	resp := protocol.Response{
-		Status: mc.ErrorCodeSuccess,
+		Status: mcerr.ErrorCodeSuccess,
 		Resp:   &logoutResp,
 	}
 	m.Marshal(&resp)

@@ -2,7 +2,7 @@ package mcfs
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/client/util"
 	"github.com/materials-commons/mcfs/protocol"
 	"net"
@@ -62,8 +62,8 @@ func (c *Client) doRequest(arg interface{}) (interface{}, error) {
 		return nil, err
 	}
 
-	if resp.Status != mc.ErrorCodeSuccess {
-		return resp.Resp, mc.ErrorCodeToError(resp.Status)
+	if resp.Status != mcerr.ErrorCodeSuccess {
+		return resp.Resp, mcerr.ErrorCodeToError(resp.Status)
 	}
 
 	return resp.Resp, nil

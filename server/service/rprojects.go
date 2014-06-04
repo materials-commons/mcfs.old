@@ -3,7 +3,7 @@ package service
 import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/mcfs/base/dir"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/server"
@@ -19,7 +19,7 @@ func newRProjects() rProjects {
 func (p rProjects) ByID(id string) (*schema.Project, error) {
 	var project schema.Project
 	if err := model.Projects.Q().ByID(id, &project); err != nil {
-		return nil, mc.ErrNotFound
+		return nil, mcerr.ErrNotFound
 	}
 	return &project, nil
 }
@@ -29,7 +29,7 @@ func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
 	var project schema.Project
 	rql := model.Projects.T().GetAllByIndex("name", name).Filter(r.Row.Field("owner").Eq(owner))
 	if err := model.Projects.Q().Row(rql, &project); err != nil {
-		return nil, mc.ErrNotFound
+		return nil, mcerr.ErrNotFound
 	}
 	return &project, nil
 }
@@ -45,7 +45,7 @@ func (p rProjects) Files(projectID, base string) ([]dir.FileInfo, error) {
 	}
 	if len(entries) == 0 {
 		// Nothing was found, treat as invalid project.
-		return nil, mc.ErrNotFound
+		return nil, mcerr.ErrNotFound
 	}
 	dirlist := &dirList{}
 	return dirlist.build(entries, base), nil
@@ -61,7 +61,7 @@ func (p rProjects) Update(project *schema.Project) error {
 // the method will return ErrInvalid.
 func (p rProjects) Insert(project *schema.Project) (*schema.Project, error) {
 	if project.DataDir != "" {
-		return nil, mc.ErrInvalid
+		return nil, mcerr.ErrInvalid
 	}
 
 	var (

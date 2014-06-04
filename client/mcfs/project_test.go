@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/client/db"
 	"github.com/materials-commons/mcfs/client/db/schema"
@@ -96,8 +96,8 @@ func TestCreateProject(t *testing.T) {
 	model.Delete("projects", projectID, session)
 	model.Delete("datadirs", dataDirID, session)
 
-	if err != mc.ErrExists {
-		t.Errorf("Creating an existing project should have returned mc.ErrExists: %s", err)
+	if err != mcerr.ErrExists {
+		t.Errorf("Creating an existing project should have returned mcerr.ErrExists: %s", err)
 	}
 
 	if proj2 == nil {

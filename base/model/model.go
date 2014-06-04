@@ -5,7 +5,7 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/dancannon/gorethink/encoding"
 	"github.com/materials-commons/mcfs/base/db"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"reflect"
 )
@@ -114,7 +114,7 @@ func (q *Query) Update(id string, what interface{}) error {
 	if v.Kind() == reflect.Struct || v.Kind() == reflect.Struct {
 		dv, err = encoding.Encode(what)
 		if err != nil {
-			return mc.ErrInvalid
+			return mcerr.ErrInvalid
 		}
 	} else {
 		dv = what
@@ -124,7 +124,7 @@ func (q *Query) Update(id string, what interface{}) error {
 	case err != nil:
 		return err
 	case rv.Errors != 0:
-		return mc.ErrNotFound
+		return mcerr.ErrNotFound
 	default:
 		return nil
 	}
@@ -140,7 +140,7 @@ func (q *Query) InsertRaw(table string, what interface{}, dest interface{}) erro
 	if dv.Kind() == reflect.Ptr {
 		returnValue = true
 	} else if dv.Kind() != reflect.Invalid {
-		return mc.ErrInvalid
+		return mcerr.ErrInvalid
 	}
 
 	opts := r.InsertOpts{
@@ -153,9 +153,9 @@ func (q *Query) InsertRaw(table string, what interface{}, dest interface{}) erro
 	case err != nil:
 		return err
 	case rv.Errors != 0:
-		return mc.ErrCreate
+		return mcerr.ErrCreate
 	case rv.Inserted == 0:
-		return mc.ErrCreate
+		return mcerr.ErrCreate
 	default:
 		if returnValue {
 			encoding.Decode(dest, rv.NewValue)
@@ -176,9 +176,9 @@ func (q *Query) Delete(id string) error {
 	case err != nil:
 		return err
 	case rv.Errors != 0:
-		return mc.ErrNotFound
+		return mcerr.ErrNotFound
 	case rv.Deleted == 0:
-		return mc.ErrNotFound
+		return mcerr.ErrNotFound
 	default:
 		return nil
 	}
@@ -232,7 +232,7 @@ func GetItem(id, table string, session *r.Session, obj interface{}) error {
 	case err != nil:
 		return err
 	case result.IsNil():
-		return mc.ErrNotFound
+		return mcerr.ErrNotFound
 	default:
 		err := result.Scan(obj)
 		return err
@@ -246,7 +246,7 @@ func GetRow(query r.RqlTerm, session *r.Session, obj interface{}) error {
 	case err != nil:
 		return err
 	case result.IsNil():
-		return mc.ErrNotFound
+		return mcerr.ErrNotFound
 	default:
 		err := result.Scan(obj)
 		return err
