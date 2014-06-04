@@ -48,7 +48,7 @@ const (
 // may be included.
 type Status struct {
 	Status  mcerr.ErrorCode // Error code (can be translated to an error)
-	Message string       // Additional status message
+	Message string          // Additional status message
 }
 
 // LoginReq is sent to login to the server and prepare to issue commands.
