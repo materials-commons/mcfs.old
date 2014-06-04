@@ -3,6 +3,7 @@ package request
 import (
 	"crypto/md5"
 	"github.com/materials-commons/gohandy/file"
+	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -59,7 +60,7 @@ func createUploadFileHandler(h *ReqHandler, dataFileID string, offset int64) (*u
 // fileOpen opens the actual on disk file that the database file points to.
 // It takes care of creating the directory structure if the file doesn't exist.
 func fileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
-	path := datafilePath(mcdir, dfid)
+	path := mc.FilePathFrom(mcdir, dfid)
 	switch {
 	case file.Exists(path):
 		mode := os.O_RDWR
@@ -78,7 +79,7 @@ func fileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
 
 // createDataFileDir creates the directory where a datafile is stored.
 func createDataFileDir(mcdir, dataFileID string) error {
-	dirpath := datafileDir(mcdir, dataFileID)
+	dirpath := mc.FileDirFrom(mcdir, dataFileID)
 	return os.MkdirAll(dirpath, 0777)
 }
 
@@ -195,7 +196,7 @@ func (u *uploadFileHandler) fileClose() error {
 // fileState determines an uploaded files state. It determines
 // the state by comparing expected checksums and sizes.
 func (u *uploadFileHandler) fileState() fileState {
-	path := datafilePath(u.mcdir, u.file.FileID())
+	path := mc.FilePathFrom(u.mcdir, u.file.FileID())
 	checksum, err := file.HashStr(md5.New(), path)
 	switch {
 	case err != nil:
@@ -256,7 +257,7 @@ func (u *uploadFileHandler) makeFileCurrent(file *schema.File) {
 // truncate will make the size of the current file 0. This routine
 // is used when an upload sends us garbage.
 func (u *uploadFileHandler) truncate() {
-	path := datafilePath(u.mcdir, u.file.ID)
+	path := mc.FilePathFrom(u.mcdir, u.file.ID)
 	os.Truncate(path, 0)
 }
 
