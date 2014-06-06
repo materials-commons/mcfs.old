@@ -2,8 +2,8 @@ package request
 
 import (
 	"github.com/materials-commons/mcfs/base/mcerr"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"github.com/materials-commons/mcfs/server/service"
 	"strings"
@@ -46,7 +46,7 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.Cr
 	}
 
 	resp.ProjectID = proj.ID
-	resp.DataDirID = proj.DataDir
+	resp.DirectoryID = proj.DataDir
 
 	// Lock the project so no one else can upload to it.
 	if !inuse.Mark(resp.ProjectID) {

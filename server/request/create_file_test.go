@@ -4,21 +4,22 @@ import (
 	"fmt"
 	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/base/model"
-	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 	"testing"
+	"github.com/materials-commons/mcfs/base/codex"
 )
 
 var _ = fmt.Println
 
 func TestCreateFile(t *testing.T) {
-	h := NewReqHandler(nil, "")
+	h := NewReqHandler(nil, codex.NewMsgPak(), "")
 	h.user = "test@mc.org"
 
 	// Test create with no size
 	createFileRequest := protocol.CreateFileReq{
 		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
-		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
+		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
 		Name:      "testfile1.txt",
 		Checksum:  "abc123",
 	}
@@ -42,7 +43,7 @@ func TestCreateFile(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Create file failed %s", err)
 	}
-	createdID := resp.ID
+	createdID := resp.FileID
 
 	// Validate the newly created datafile
 	df, err := model.GetFile(createdID, session)
@@ -75,14 +76,14 @@ func TestCreateFile(t *testing.T) {
 	}
 
 	// Test create new file that matches existing file size and checksum
-	createFileRequest.DataDirID = "d0b001c6-fc0a-4e95-97c3-4427de68c0a5"
+	createFileRequest.DirectoryID = "d0b001c6-fc0a-4e95-97c3-4427de68c0a5"
 	resp, err = h.createFile(&createFileRequest)
 	if err != nil {
 		t.Fatalf("Unable to create file with matching size and checksum %s", err)
 	}
-	df, err = model.GetFile(resp.ID, session)
+	df, err = model.GetFile(resp.FileID, session)
 	if err != nil {
-		t.Errorf("Unable to retrieve newly created datafile %s: %s", resp.ID, err)
+		t.Errorf("Unable to retrieve newly created datafile %s: %s", resp.FileID, err)
 	}
 	if df.UsesID == "" {
 		t.Errorf("UsesID is blank %#v", df)
@@ -92,7 +93,7 @@ func TestCreateFile(t *testing.T) {
 		t.Errorf("Wrong id for UsesID %#v", df)
 	}
 
-	createdID2 := resp.ID
+	createdID2 := resp.FileID
 
 	// Test creating an existing file
 	resp, err = h.createFile(&createFileRequest)
@@ -114,14 +115,14 @@ func TestCreateFile(t *testing.T) {
 
 	// Test creating with an invalid datadir id
 	createFileRequest.ProjectID = validProjectID
-	createFileRequest.DataDirID = "abc123-doesnotexist"
+	createFileRequest.DirectoryID = "abc123-doesnotexist"
 	resp, err = h.createFile(&createFileRequest)
 	if err == nil {
 		t.Fatalf("Allowed creation of file with bad projectid")
 	}
 
 	// Test creating with a datadir not in project
-	createFileRequest.DataDirID = "ae0cf23f-2588-4864-bf34-455b0aa23ed6"
+	createFileRequest.DirectoryID = "ae0cf23f-2588-4864-bf34-455b0aa23ed6"
 	resp, err = h.createFile(&createFileRequest)
 	if err == nil {
 		t.Fatalf("Allowed creation of file in a datadir not in project")
@@ -133,7 +134,7 @@ func TestNewFile(t *testing.T) {
 
 	req := &protocol.CreateFileReq{
 		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
-		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
+		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
 		Name:      "newFile.txt",
 		Checksum:  "abc123",
 		Size:      2,
@@ -180,7 +181,7 @@ func TestCreateNewFile(t *testing.T) {
 
 	req := &protocol.CreateFileReq{
 		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
-		DataDirID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
+		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
 		Name:      "newFile.txt",
 		Checksum:  "abc123new",
 		Size:      2,
@@ -188,7 +189,7 @@ func TestCreateNewFile(t *testing.T) {
 
 	// Create a new file and make sure it is setup correctly
 	resp, _ := cfh.createNewFile(req)
-	f, _ := service.File.ByID(resp.ID)
+	f, _ := service.File.ByID(resp.FileID)
 
 	f.Current = true
 	service.File.Update(f)
@@ -203,7 +204,7 @@ func TestCreateNewFile(t *testing.T) {
 	req.Name = "newFile.txt"
 	req.Checksum = "abc123v2new"
 	resp, _ = cfh.createNewFile(req)
-	f2, _ := service.File.ByID(resp.ID)
+	f2, _ := service.File.ByID(resp.FileID)
 
 	if f2.Parent != f.ID {
 		t.Errorf("Expected new version of file to have its parent set to previous version.")

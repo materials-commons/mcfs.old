@@ -2,7 +2,7 @@ package request
 
 import (
 	"github.com/materials-commons/mcfs/base/mcerr"
-	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 )
 
@@ -32,6 +32,6 @@ func validLogin(user, apikey string) bool {
 
 // logout responds to a logout request. It currently doesn't do anything but the
 // state machine will treat this request specially and will terminate.
-func (h *ReqHandler) logout(req *protocol.LogoutReq) (*protocol.LogoutResp, error) {
-	return &protocol.LogoutResp{}, nil
+func (h *ReqHandler) logout(req *protocol.LogoutReq) error {
+	return nil
 }

@@ -2,8 +2,8 @@ package request
 
 import (
 	"github.com/materials-commons/mcfs/base/mcerr"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 	"path/filepath"
 	"strings"
@@ -12,14 +12,14 @@ import (
 // createDirHandler is an internal handler for creating a directory.
 // It holds state information needed to create a new directory entry.
 type createDirHandler struct {
-	req  *protocol.CreateDirReq
+	req  *protocol.CreateDirectoryReq
 	user string
 	proj *schema.Project
 }
 
 // createDir creates a new directory entry if it doesn't exist and the user has permission.
 // Otherwise it returns an error.
-func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, err error) {
+func (h *ReqHandler) createDir(req *protocol.CreateDirectoryReq) (resp *protocol.CreateDirectoryResp, err error) {
 	cdh := newCreateDirHandler(req, h.user)
 
 	// Get the project since a directory is added to a project.
@@ -45,20 +45,20 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 			if err != nil {
 				return nil, mcerr.Errorm(mcerr.ErrInvalid, err)
 			}
-			return &protocol.CreateResp{ID: dataDir.ID}, nil
+			return &protocol.CreateDirectoryResp{DirectoryID: dataDir.ID}, nil
 		case err != nil:
 			// Lookup failed with an error other than not found.
 			return nil, mcerr.Errorm(mcerr.ErrNotFound, err)
 		default:
 			// No error, and the directory already exists, just return it.
-			return &protocol.CreateResp{ID: dataDir.ID}, nil
+			return &protocol.CreateDirectoryResp{DirectoryID: dataDir.ID}, nil
 		}
 	}
 }
 
 // newCreateDirHandler creates a new instance of an createDirHandler. The constructor
 // also sets up the dirs and projects models.
-func newCreateDirHandler(req *protocol.CreateDirReq, user string) *createDirHandler {
+func newCreateDirHandler(req *protocol.CreateDirectoryReq, user string) *createDirHandler {
 	return &createDirHandler{
 		req:  req,
 		user: user,

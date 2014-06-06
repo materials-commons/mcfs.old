@@ -5,8 +5,8 @@ import (
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/base/mcerr"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"github.com/materials-commons/mcfs/server/service"
 	"io"
@@ -23,10 +23,10 @@ type uploadFileHandler struct {
 
 // uploadLoop sets up the loop to upload the files bytes.
 func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
-	uploadHandler, err := createUploadFileHandler(h, resp.DataFileID, resp.Offset)
+	uploadHandler, err := createUploadFileHandler(h, resp.FileID, resp.Offset)
 	if err != nil {
-		inuse.Unmark(resp.DataFileID)
-		h.respError(nil, mcerr.Errorm(mcerr.ErrInternal, err))
+		inuse.Unmark(resp.FileID)
+		h.respError(mcerr.Errorm(mcerr.ErrInternal, err))
 		return h.nextCommand
 	}
 
@@ -69,7 +69,7 @@ func fileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
 		}
 		return os.OpenFile(path, mode, 0660)
 	default:
-		err := createDataFileDir(mcdir, dfid)
+		err := createFileDir(mcdir, dfid)
 		if err != nil {
 			return nil, err
 		}
@@ -77,8 +77,8 @@ func fileOpen(mcdir, dfid string, offset int64) (io.WriteCloser, error) {
 	}
 }
 
-// createDataFileDir creates the directory where a datafile is stored.
-func createDataFileDir(mcdir, dataFileID string) error {
+// createFileDir creates the directory where a datafile is stored.
+func createFileDir(mcdir, dataFileID string) error {
 	dirpath := mc.FileDirFrom(mcdir, dataFileID)
 	return os.MkdirAll(dirpath, 0777)
 }
@@ -90,21 +90,20 @@ func createDataFileDir(mcdir, dataFileID string) error {
 func (u *uploadFileHandler) uploadFile() reqStateFN {
 	request := u.req()
 	switch req := request.(type) {
-	case protocol.SendReq:
+	case protocol.UploadBytesReq:
 		return u.writeRequest(&req)
 	case errorReq:
 		u.fileClose()
 		return nil
 	case protocol.LogoutReq:
 		u.fileClose()
-		u.respOk(&protocol.LogoutResp{})
 		return u.startState
 	case protocol.CloseReq:
 		u.fileClose()
 		return nil
 	case protocol.DoneReq:
 		u.fileClose()
-		u.respOk(&protocol.DoneResp{})
+		u.respOk(&protocol.UploadDoneResp{})
 		return u.nextCommand
 	default:
 		u.fileClose()
@@ -114,39 +113,38 @@ func (u *uploadFileHandler) uploadFile() reqStateFN {
 
 // writeRequest writes the bytes to the file, checking status and validating
 // that the write hasn't exceeded the expected size.
-func (u *uploadFileHandler) writeRequest(req *protocol.SendReq) reqStateFN {
-	n, err := u.sendReqWrite(req)
+func (u *uploadFileHandler) writeRequest(req *protocol.UploadBytesReq) reqStateFN {
+	n, err := u.uploadBytesReqWrite(req)
 	u.nbytes = u.nbytes + int64(n)
 
 	switch {
 	case err != nil:
 		// Problem writing to file.
 		u.fileClose()
-		u.respError(nil, err)
+		u.respError(err)
 		return u.nextCommand
 
 	case u.nbytes+u.file.Uploaded > u.file.Size:
 		// Client is sending us more bytes than expecte file size.
 		u.fileClose()
-		u.respError(nil, mcerr.Errorf(mcerr.ErrInvalid, "Attempt to write more bytes to file than its expected size."))
+		u.respError(mcerr.Errorf(mcerr.ErrInvalid, "Attempt to write more bytes to file than its expected size."))
 		return u.nextCommand
 
 	default:
 		// No errors, continue accepting more bytes
-		u.respOk(&protocol.SendResp{BytesWritten: n})
 		return u.uploadFile
 	}
 }
 
-// sendReqWrite writes bytes to the file.
-func (u *uploadFileHandler) sendReqWrite(req *protocol.SendReq) (int, error) {
-	if req.DataFileID != u.file.ID {
-		return 0, mcerr.Errorf(mcerr.ErrInvalid, "Unexpected DataFileID %s, wanted: %s", req.DataFileID, u.file.ID)
+// uploadBytesReqWrite writes bytes to the file.
+func (u *uploadFileHandler) uploadBytesReqWrite(req *protocol.UploadBytesReq) (int, error) {
+	if req.FileID != u.file.ID {
+		return 0, mcerr.Errorf(mcerr.ErrInvalid, "Unexpected FileID %s, wanted: %s", req.FileID, u.file.ID)
 	}
 
 	n, err := u.fileWrite(req.Bytes)
 	if err != nil {
-		return 0, mcerr.Errorf(mcerr.ErrInternal, "Write unexpectedly failed for %s", req.DataFileID)
+		return 0, mcerr.Errorf(mcerr.ErrInternal, "Write unexpectedly failed for %s", req.FileID)
 	}
 
 	return n, nil

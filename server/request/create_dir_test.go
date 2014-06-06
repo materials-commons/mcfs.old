@@ -4,9 +4,10 @@ import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/mcfs/base/model"
-	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 	"testing"
+	"github.com/materials-commons/mcfs/base/codex"
 )
 
 func init() {
@@ -14,12 +15,12 @@ func init() {
 }
 
 func TestCreateDir(t *testing.T) {
-	h := NewReqHandler(nil, "")
+	h := NewReqHandler(nil, codex.NewMsgPak(), "")
 	h.user = "test@mc.org"
 
 	// Test valid path
 
-	createDirRequest := protocol.CreateDirReq{
+	createDirRequest := protocol.CreateDirectoryReq{
 		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
 		Path:      "Test/tdir1",
 	}
@@ -30,7 +31,7 @@ func TestCreateDir(t *testing.T) {
 		t.Fatalf("Directory create failed with %s", err)
 	}
 
-	createdID := resp.ID
+	createdID := resp.DirectoryID
 	var _ = createdID
 
 	// Test existing directory

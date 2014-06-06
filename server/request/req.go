@@ -2,35 +2,16 @@ package request
 
 import (
 	"fmt"
-	"github.com/materials-commons/gohandy/marshaling"
+	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/mcerr"
-	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"io"
-	"reflect"
 )
 
 const maxBadRequests = 10
 
 type reqStateFN func() reqStateFN
-
-// ReqHandler is an instance of the request state machine for handling client requests.
-type ReqHandler struct {
-	user            string // User who connected
-	projectID       string // The project that is being uploaded
-	mcdir           string // Location of the materials commons data directory
-	badRequestCount int    // Keep track of bad requests. Close connection when too many.
-	marshaling.MarshalUnmarshaler
-}
-
-// NewReqHandler creates a new ReqHandlerInstance. Each ReqHandler is a thread safe state machine for
-// handling client requests.
-func NewReqHandler(m marshaling.MarshalUnmarshaler, mcdir string) *ReqHandler {
-	return &ReqHandler{
-		MarshalUnmarshaler: m,
-		mcdir:              mcdir,
-	}
-}
 
 // Run run the ReqHandler state machine. It also performs any needed cleanup when
 // the state machine finishes. The state machine accepts and processes request
@@ -46,15 +27,44 @@ func (h *ReqHandler) Run() {
 
 type errorReq struct{}
 
-func (h *ReqHandler) req() interface{} {
-	var req protocol.Request
-	if err := h.Unmarshal(&req); err != nil {
-		if err == io.EOF {
-			return protocol.CloseReq{}
-		}
-		return errorReq{}
+type ReqHandler struct {
+	codex           *protocol.Codex
+	badRequestCount int
+	user            string
+	mcdir           string
+	projectID       string
+	buf             []byte
+	io.ReadWriter
+}
+
+const maxBufSize = (1024 * 1024 * 20) + 2048
+
+func NewReqHandler(rw io.ReadWriter, encoderDecoder codex.EncoderDecoder, mcdir string) *ReqHandler {
+	return &ReqHandler{
+		ReadWriter: rw,
+		codex:      protocol.NewCodex(encoderDecoder),
+		mcdir:      mcdir,
+		buf:        make([]byte, maxBufSize),
 	}
-	return req.Req
+}
+
+func (h *ReqHandler) req() interface{} {
+	_, err := h.Read(h.buf)
+	if err != nil {
+		switch {
+		case err == io.EOF:
+			return protocol.CloseReq{}
+		default:
+			return &errorReq{}
+		}
+	}
+
+	request, err := h.codex.Decode(h.buf)
+	if err != nil {
+		return &errorReq{}
+	}
+
+	return request
 }
 
 func (h *ReqHandler) startState() reqStateFN {
@@ -79,9 +89,7 @@ func (h *ReqHandler) startState() reqStateFN {
 func (h *ReqHandler) badRequestRestart(err error) reqStateFN {
 	fmt.Println("badRequestRestart:", err)
 
-	// Need to pass a fake response to respError that is nil.
-	var resp *protocol.LoginResp
-	h.respError(resp, err)
+	h.respError(err)
 	h.badRequestCount = h.badRequestCount + 1
 	if h.badRequestCount > maxBadRequests {
 		return nil
@@ -91,7 +99,7 @@ func (h *ReqHandler) badRequestRestart(err error) reqStateFN {
 
 func (h *ReqHandler) badRequestNext(err error) reqStateFN {
 	fmt.Println("badRequestNext:", err)
-	h.respError(nil, err)
+	h.respError(err)
 	if h.badRequestCount > maxBadRequests {
 		return nil
 	}
@@ -112,26 +120,21 @@ func (h *ReqHandler) nextCommand() reqStateFN {
 		}
 	case protocol.CreateFileReq:
 		resp, err = h.createFile(&req)
-	case protocol.CreateDirReq:
+	case protocol.CreateDirectoryReq:
 		resp, err = h.createDir(&req)
 	case protocol.CreateProjectReq:
 		resp, err = h.createProject(&req)
-	case protocol.DownloadReq:
-	case protocol.MoveReq:
-	case protocol.DeleteReq:
-	case protocol.StatProjectReq:
-		resp, err = h.statProject(&req)
-	case protocol.LookupReq:
-		resp, err = h.lookup(&req)
+		//	case protocol.StatProjectReq:
+		//		resp, err = h.statProject(&req)
+		//	case protocol.LookupReq:
+		//		resp, err = h.lookup(&req)
 	case protocol.LogoutReq:
-		resp, err = h.logout(&req)
-		h.sendResp(resp, err)
+		_ = h.logout(&req)
 		return h.startState
-	case protocol.StatReq:
-		resp, err = h.stat(&req)
+		//	case protocol.StatReq:
+		//		resp, err = h.stat(&req)
 	case protocol.CloseReq:
 		return nil
-	case protocol.IndexReq:
 	default:
 		h.badRequestCount = h.badRequestCount + 1
 		return h.badRequestNext(mcerr.Errorf(mcerr.ErrInvalid, "Bad request %T", req))
@@ -143,39 +146,34 @@ func (h *ReqHandler) nextCommand() reqStateFN {
 
 func (h *ReqHandler) sendResp(resp interface{}, err error) {
 	if err != nil {
-		h.respError(resp, err)
+		h.respError(err)
 	} else {
 		h.respOk(resp)
 	}
 }
 
-func (h *ReqHandler) respOk(respData interface{}) {
-	resp := &protocol.Response{
-		Status: mcerr.ErrorCodeSuccess,
-		Resp:   respData,
-	}
-	err := h.Marshal(resp)
+func (h *ReqHandler) respOk(resp interface{}) {
+	b, err := h.codex.Encode(resp, 0)
 	if err != nil {
 		fmt.Println("respOk: marshal error = ", err)
 	}
+	// How to send on?
+	b.WriteTo(h)
 }
 
-func (h *ReqHandler) respError(respData interface{}, err error) {
-	var resp protocol.Response
+func (h *ReqHandler) respError(err error) {
+	var resp protocol.ErrorResp
 	switch e := err.(type) {
 	case *mcerr.Error:
-		resp.Status = e.ToErrorCode()
-		resp.StatusMessage = e.Error()
+		resp.Err = e.ToErrorCode()
+		resp.Message = e.Error()
 	default:
-		resp.Status = mcerr.ErrorToErrorCode(err)
+		resp.Err = mcerr.ErrorToErrorCode(err)
 	}
 
-	if respData != nil && !reflect.ValueOf(respData).IsNil() {
-		resp.Resp = respData
+	b, encodeErr := h.codex.Encode(resp, 0)
+	if encodeErr != nil {
+		fmt.Println("respError: encode error = ", encodeErr)
 	}
-
-	marshalErr := h.Marshal(resp)
-	if marshalErr != nil {
-		fmt.Println("respError: marshal error = ", marshalErr)
-	}
+	b.WriteTo(h)
 }

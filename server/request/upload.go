@@ -2,7 +2,7 @@ package request
 
 import (
 	"github.com/materials-commons/mcfs/base/mcerr"
-	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"github.com/materials-commons/mcfs/server/service"
 )
@@ -11,7 +11,7 @@ import (
 // file ID to write to, and the offset to start sending from. The uploading of bytes
 // is handled in the uploadLoop() method.
 func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, error) {
-	dataFile, err := service.File.ByID(req.DataFileID)
+	dataFile, err := service.File.ByID(req.FileID)
 	if err != nil {
 		return nil, mcerr.Errorm(mcerr.ErrNotFound, err)
 	}
@@ -26,7 +26,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 	switch {
 	case fsize == -1:
 		// Problem doing a stat on the file path, send back an error
-		return nil, mcerr.Errorf(mcerr.ErrNoAccess, "Access to path for file %s denied", req.DataFileID)
+		return nil, mcerr.Errorf(mcerr.ErrNoAccess, "Access to path for file %s denied", req.FileID)
 
 	case dataFile.Size == req.Size && dataFile.Checksum == req.Checksum:
 		// Request looks ok, determine offset to use.
@@ -49,7 +49,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 			// Attempt to mark file as in use, but file was in use.
 			return nil, mcerr.Errorf(mcerr.ErrInvalid, "File upload already in progress: %s", dataFile.ID)
 		}
-		return &protocol.UploadResp{DataFileID: dfid, Offset: offset}, nil
+		return &protocol.UploadResp{FileID: dfid, Offset: offset}, nil
 
 	case dataFile.Size != req.Size:
 		// Invalid request. The correct size was set at the time createFile was called.

@@ -5,13 +5,14 @@ import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"testing"
+	"github.com/materials-commons/mcfs/base/codex"
 )
 
 func TestCreateProject(t *testing.T) {
-	h := NewReqHandler(nil, "")
+	h := NewReqHandler(nil, codex.NewMsgPak(), "")
 	h.user = "test@mc.org"
 
 	createProjectRequest := protocol.CreateProjectReq{
@@ -22,7 +23,7 @@ func TestCreateProject(t *testing.T) {
 	resp, err := h.createProject(&createProjectRequest)
 
 	projectID := resp.ProjectID
-	datadirID := resp.DataDirID
+	datadirID := resp.DirectoryID
 
 	if err != nil {
 		t.Fatalf("Unable to create project: %s", err)
@@ -86,7 +87,7 @@ func TestCreateProject(t *testing.T) {
 		t.Errorf("Creating an existing project returned the wrong project id")
 	}
 
-	if resp.DataDirID != datadirID {
+	if resp.DirectoryID != datadirID {
 		t.Errorf("Creating an existing project returned the wrong datadir id")
 	}
 	// Test create project with invalid name

@@ -2,8 +2,8 @@ package request
 
 import (
 	"github.com/materials-commons/mcfs/base/mcerr"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 )
 
@@ -16,7 +16,7 @@ type createFileHandler struct {
 // returned if the existing files upload was interrupted. In the case where an
 // existing file is returned, the checksums must match between the request and
 // the existing file.
-func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
+func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateFileResp, err error) {
 	cfh := newCreateFileHandler(h.user)
 
 	if err := cfh.validateRequest(req); err != nil {
@@ -24,7 +24,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	}
 
 	// Check the file status.
-	files, err := service.File.ByPathChecksum(req.Name, req.DataDirID, req.Checksum)
+	files, err := service.File.ByPathChecksum(req.Name, req.DirectoryID, req.Checksum)
 	switch {
 	case len(files) == 0:
 		// This is the easy case. No matching files were found, so we just create a
@@ -37,7 +37,7 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		// Either way it doesn't matter we just let the upload state figure out
 		// what to do.
 		f := files[0]
-		return &protocol.CreateResp{ID: f.ID}, nil
+		return &protocol.CreateFileResp{FileID: f.ID}, nil
 
 	default:
 		// There are multiple matches. That means we could have old versions,
@@ -50,12 +50,12 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 		switch {
 		case partial != nil:
 			// There is an existing partial. Use that so the upload can complete.
-			return &protocol.CreateResp{ID: partial.ID}, nil
+			return &protocol.CreateFileResp{FileID: partial.ID}, nil
 
 		case current != nil:
 			// The checksum matches the current file. Return that and let
 			// the uploader take care of things.
-			return &protocol.CreateResp{ID: current.ID}, nil
+			return &protocol.CreateFileResp{FileID: current.ID}, nil
 
 		default:
 			// No partial, and not match on existing. Create a new
@@ -83,9 +83,9 @@ func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq) error
 		return mcerr.ErrNoAccess
 	}
 
-	ddir, err := service.Dir.ByID(req.DataDirID)
+	ddir, err := service.Dir.ByID(req.DirectoryID)
 	if err != nil {
-		return mcerr.Errorf(mcerr.ErrInvalid, "Unknown directory id: %s", req.DataDirID)
+		return mcerr.Errorf(mcerr.ErrInvalid, "Unknown directory id: %s", req.DirectoryID)
 	}
 
 	if ddir.Project != req.ProjectID {
@@ -107,9 +107,9 @@ func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq) error
 // but doesn't attach it up to dependent objects. This will happen when the upload has
 // completed. If we did it before we could end up with file entries that look valid but
 // their backing physical file doesn't contain all the bytes.
-func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
+func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*protocol.CreateFileResp, error) {
 	var f *schema.File
-	currentFile, err := service.File.ByPath(req.Name, req.DataDirID)
+	currentFile, err := service.File.ByPath(req.Name, req.DirectoryID)
 	switch {
 	case err == mcerr.ErrNotFound:
 		// There is no current entry, create a new one.
@@ -129,7 +129,7 @@ func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*proto
 		return nil, err
 	}
 
-	return &protocol.CreateResp{ID: created.ID}, nil
+	return &protocol.CreateFileResp{FileID: created.ID}, nil
 }
 
 // newFile creates a new file object to insert into the database. It also handles the
@@ -137,7 +137,7 @@ func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*proto
 // uploaded file.
 func (cfh *createFileHandler) newFile(req *protocol.CreateFileReq) *schema.File {
 	file := schema.NewFile(req.Name, cfh.user)
-	file.DataDirs = append(file.DataDirs, req.DataDirID)
+	file.DataDirs = append(file.DataDirs, req.DirectoryID)
 	file.Checksum = req.Checksum
 	file.Size = req.Size
 	file.Current = false

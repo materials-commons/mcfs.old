@@ -1,14 +1,14 @@
 package request
 
 import (
-	"encoding/gob"
 	"fmt"
 	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/mcfs/protocol"
-	"net"
-	"os"
+	"github.com/materials-commons/mcfs/base/protocol"
 	"testing"
+	"github.com/materials-commons/mcfs/base/codex"
 )
+
+var _ = fmt.Println
 
 var session *r.Session
 
@@ -20,41 +20,8 @@ func init() {
 		})
 }
 
-type client struct {
-	*gob.Encoder
-	*gob.Decoder
-}
-
-func newClient() *client {
-	conn, err := net.Dial("tcp", "localhost:35862")
-	if err != nil {
-		fmt.Printf("Couldn't connect %s\n", err.Error())
-		os.Exit(1)
-	}
-	encoder := gob.NewEncoder(conn)
-	decoder := gob.NewDecoder(conn)
-	return &client{
-		Encoder: encoder,
-		Decoder: decoder,
-	}
-}
-
-var gtarceaLoginReq = protocol.LoginReq{
-	User:   "test@mc.org",
-	APIKey: "test",
-}
-
-func loginTestUser() *client {
-	client := newClient()
-	request := protocol.Request{&gtarceaLoginReq}
-	client.Encode(&request)
-	resp := protocol.Response{}
-	client.Decode(&resp)
-	return client
-}
-
 func TestLoginLogout(t *testing.T) {
-	h := NewReqHandler(nil, "")
+	h := NewReqHandler(nil, codex.NewMsgPak(), "")
 	h.user = "test@mc.org"
 
 	// Test valid login
@@ -70,7 +37,7 @@ func TestLoginLogout(t *testing.T) {
 
 	// Test logout
 	logoutRequest := protocol.LogoutReq{}
-	_, err = h.logout(&logoutRequest)
+	err = h.logout(&logoutRequest)
 	if err != nil {
 		t.Fatalf("logout failed %s", err)
 	}

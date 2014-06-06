@@ -9,45 +9,62 @@ const (
 	// LoginRequest LoginReq
 	LoginRequest uint8 = iota
 
-	// LoginResponse LoginResp
-	LoginResponse
-
 	// LogoutRequest LogoutReq
 	LogoutRequest
 
 	// CreateProjectRequest CreateProjectReq
 	CreateProjectRequest
 
-	// CreateProjectResponse CreateProjectResp
-	CreateProjectResponse
-
 	// CreateDirectoryRequest CreateDirectoryReq
 	CreateDirectoryRequest
-
-	// CreateDirectoryResponse CreateDirectoryResp
-	CreateDirectoryResponse
 
 	// CreateFileRequest CreateFileReq
 	CreateFileRequest
 
-	// CreateFileResponse CreateFileResp
-	CreateFileResponse
-
 	// DirectoryStatRequest DirectoryStatReq
 	DirectoryStatRequest
+
+	// UploadRequest UploadReq
+	UploadRequest
+
+	// UploadBytesRequest UploadBytesReq
+	UploadBytesRequest
+
+	// CloseRequest CloseReq
+	CloseRequest
+
+	// DoneRequest DoneReq
+	DoneRequest
+
+	// LoginResponse LoginResp
+	LoginResponse
+
+	// CreateProjectResponse CreateProjectResp
+	CreateProjectResponse
+
+	// CreateDirectoryResponse CreateDirectoryResp
+	CreateDirectoryResponse
+
+	// CreateFileResponse CreateFileResp
+	CreateFileResponse
 
 	// DirectoryStatResponse DirectoryStatResp
 	DirectoryStatResponse
 
-	// SendBytesRequest SendBytesReq
-	SendBytesRequest
+	// UploadResponse UploadResp
+	UploadResponse
+
+	// UploadDoneResponse UploadDoneResp
+	UploadDoneResponse
+
+	// ErrorResponse ErrorResp
+	ErrorResponse
 )
 
-// Status is the status of the request. All response type messages include a request status.
-// This denotes success or failure of the request. On failure a message with additional details
-// may be included.
-type Status struct {
-	Status  mcerr.ErrorCode // Error code (can be translated to an error)
+// ErrorResp is sent back when an error occurs. Otherwise the expected response type is
+// sent back.
+type ErrorResp struct {
+	Err     mcerr.ErrorCode // Error code (can be translated to an error)
 	Message string          // Additional status message
 }
 
@@ -58,9 +75,7 @@ type LoginReq struct {
 }
 
 // LoginResp will inform the client whether the login request was successful.
-type LoginResp struct {
-	Status
-}
+type LoginResp struct{}
 
 // LogoutReq is sent to end a session and disconnect. There client doesn't wait for
 // a response from the server. It terminates the connection after sending this request.
@@ -85,7 +100,6 @@ type CreateProjectReq struct {
 //    ErrorCodeExists  - Project already exists
 // All other error codes are failures.
 type CreateProjectResp struct {
-	Status      Status // Request status
 	ProjectID   string // The internal ProjectID for the created or existing project.
 	DirectoryID string // The internal id for the directory that the project is stored in.
 }
@@ -105,7 +119,6 @@ type CreateDirectoryReq struct {
 //    ErrorCodeExists  - Directory already exists
 // All other error codes are failures.
 type CreateDirectoryResp struct {
-	Status             // Request status
 	DirectoryID string // The internal id of the directory.
 }
 
@@ -133,7 +146,6 @@ type CreateFileReq struct {
 //    ErrorCodeNew     - A new version of the file was created
 // All other error codes are failures.
 type CreateFileResp struct {
-	Status        // Request status
 	FileID string // The internal id of the file.
 }
 
@@ -173,14 +185,31 @@ type StatEntry struct {
 // DirectoryStatResp is the response for a DirectoryStatRequest. It returns
 // a list of all the known entries in the directory.
 type DirectoryStatResp struct {
-	Status                  // Status of the request
 	ProjectID   string      // ProjectID passed in the request
 	DirectoryID string      // DirectoryID passed in the request
 	Entries     []StatEntry // A list of all the entries for this directory.
 }
 
-// SendBytesReq contains the bytes to write.
-type SendBytesReq struct {
+// UploadBytesReq contains the bytes to write.
+type UploadBytesReq struct {
 	FileID string // File ID on the server that these bytes are for
 	Bytes  []byte // The set of bytes to write
 }
+
+// CloseReq is send by the client to tell the server it is closing its session.
+type CloseReq struct{}
+
+type UploadReq struct {
+	FileID   string // FileID on the server we want to upload to
+	Checksum string // Checksum of the local file
+	Size     int64  // Size of the local file
+}
+
+type UploadResp struct {
+	FileID string // FileID that bytes are being sent to. Must be included in UploadBytesReq
+	Offset int64  // Offset in the file to start sending bytes from
+}
+
+type DoneReq struct{}
+
+type UploadDoneResp struct{}

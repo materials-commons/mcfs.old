@@ -1,8 +1,7 @@
-package protocol
+package codex
 
 import (
 	"bytes"
-	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/ugorji/go/codec"
 )
@@ -14,15 +13,15 @@ a message type prepended to it. In our implementation we also prepend a version 
 multiple protocol versions can be supported.
 */
 
-// EncodeCurrentVersion encodes a message using MsgPack. It prepends the message type and
-// the CurrentVersion to the returned buffer.
-func EncodeCurrentVersion(msgType uint8, in interface{}) (*bytes.Buffer, error) {
-	return Encode(msgType, CurrentVersion, in)
+type MsgPakEncoderDecoder struct{}
+
+func NewMsgPak() MsgPakEncoderDecoder {
+	return MsgPakEncoderDecoder{}
 }
 
 // Encode encodes a message using MessagePack. It prepends the message type and the passed in
 // version to the returned buffer.
-func Encode(msgType uint8, version uint8, in interface{}) (*bytes.Buffer, error) {
+func (e MsgPakEncoderDecoder) Encode(msgType uint8, version uint8, in interface{}) (*bytes.Buffer, error) {
 	buf := bytes.NewBuffer(nil)
 	buf.WriteByte(msgType)
 	buf.WriteByte(version)
@@ -34,7 +33,7 @@ func Encode(msgType uint8, version uint8, in interface{}) (*bytes.Buffer, error)
 
 // Decode decodes a buffer using MessagePack. The buffer passed in needs to have removed the
 // message type and version from the buf.
-func Decode(buf []byte, out interface{}) error {
+func (e MsgPakEncoderDecoder) Decode(buf []byte, out interface{}) error {
 	reader := bytes.NewReader(buf)
 	handle := codec.MsgpackHandle{}
 	decoder := codec.NewDecoder(reader, &handle)
@@ -43,12 +42,12 @@ func Decode(buf []byte, out interface{}) error {
 
 // Prepare retrieves the message type, version, and a buffer that is ready to be
 // sent to Decode.
-func Prepare(buf []byte) (pb *codex.PreparedBuffer, err error) {
+func (e MsgPakEncoderDecoder) Prepare(buf []byte) (pb *PreparedBuffer, err error) {
 	if len(buf) < 3 {
 		return nil, mcerr.ErrInvalid
 	}
 
-	pb = &codex.PreparedBuffer{
+	pb = &PreparedBuffer{
 		Type:    uint8(buf[0]),
 		Version: uint8(buf[1]),
 		Bytes:   buf[2:],

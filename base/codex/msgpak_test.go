@@ -1,16 +1,19 @@
-package protocol
+package codex
 
 import (
+	"github.com/materials-commons/mcfs/base/protocol"
 	"testing"
 )
 
 func TestEncode(t *testing.T) {
-	lr := LoginReq{
+	m := NewMsgPak()
+
+	lr := protocol.LoginReq{
 		User:   "test@mc.org",
 		APIKey: "test",
 	}
 
-	b, err := Encode(LoginRequest, 1, &lr)
+	b, err := m.Encode(protocol.LoginRequest, 1, &lr)
 
 	if err != nil {
 		t.Fatalf("Unable to encode %#v: %s", lr, err)
@@ -29,23 +32,25 @@ func TestEncode(t *testing.T) {
 }
 
 func TestDecode(t *testing.T) {
-	lr := LoginReq{
+	m := NewMsgPak()
+
+	lr := protocol.LoginReq{
 		User:   "test@mc.org",
 		APIKey: "test",
 	}
 
-	b, err := Encode(LoginRequest, 1, &lr)
+	b, err := m.Encode(protocol.LoginRequest, 1, &lr)
 	if err != nil {
 		t.Fatalf("Unable to encode %#v: %s", lr, err)
 	}
 	bytesArray := b.Bytes()
 
-	pb, err := Prepare(bytesArray)
+	pb, err := m.Prepare(bytesArray)
 	if err != nil {
 		t.Fatalf("Prepare bytes failed with %s", err)
 	}
 
-	if pb.Type != LoginRequest {
+	if pb.Type != protocol.LoginRequest {
 		t.Fatalf("Prepare contains wrong type expected %d, got %d", LoginRequest, pb.Type)
 	}
 
@@ -53,9 +58,9 @@ func TestDecode(t *testing.T) {
 		t.Fatalf("PreparedBuffer contains wrong version expected %d, got %d", 1, pb.Version)
 	}
 
-	var lr2 LoginReq
+	var lr2 protocol.LoginReq
 
-	err = Decode(pb.Bytes, &lr2)
+	err = m.Decode(pb.Bytes, &lr2)
 	if err != nil {
 		t.Fatalf("Unable to decode bytes to a LoginReq: %s", err)
 	}
