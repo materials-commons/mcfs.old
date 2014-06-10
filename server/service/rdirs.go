@@ -5,7 +5,7 @@ import (
 	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/mcfserr"
+	"github.com/materials-commons/mcfs/server/mcfserr"
 )
 
 // rDirs implements the Dirs interface for RethinkDB
