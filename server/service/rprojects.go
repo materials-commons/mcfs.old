@@ -6,7 +6,7 @@ import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/server"
+	"github.com/materials-commons/mcfs/mcfserr"
 )
 
 type rProjects struct{}
@@ -71,14 +71,14 @@ func (p rProjects) Insert(project *schema.Project) (*schema.Project, error) {
 	)
 
 	if err = model.Projects.Q().Insert(project, &newProject); err != nil {
-		return nil, mcfs.ErrDBInsertFailed
+		return nil, mcfserr.ErrDB
 	}
 
 	dir := schema.NewDirectory(project.Name, project.Owner, newProject.ID, "")
 	rdirs := newRDirs()
 
 	if newDir, err = rdirs.Insert(&dir); err != nil {
-		return nil, mcfs.ErrDBRelatedUpdateFailed
+		return nil, mcfserr.ErrDB
 	}
 
 	newProject.DataDir = newDir.ID
@@ -102,7 +102,7 @@ func (p rProjects) AddDirectories(project *schema.Project, directoryIDs ...strin
 			DataDirID: dirID,
 		}
 		if err := model.Projects.Q().InsertRaw("project2datadir", p2d, nil); err != nil {
-			rverror = mcfs.ErrDBRelatedUpdateFailed
+			rverror = mcfserr.ErrDB
 		}
 	}
 

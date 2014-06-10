@@ -29,8 +29,8 @@ import (
 	"fmt"
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/config"
+	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/mc"
-	"github.com/materials-commons/mcfs/client/util"
 	_ "github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/request"
 	"github.com/materials-commons/mcfs/server/service"
@@ -204,8 +204,7 @@ func acceptConnections(listener *net.TCPListener) {
 			continue
 		}
 
-		m := util.NewGobMarshaler(conn)
-		r := request.NewReqHandler(m, config.GetString("MCDIR"))
+		r := request.NewReqHandler(conn, codex.NewMsgPak(), config.GetString("MCDIR"))
 		go handleConnection(r, conn)
 	}
 }

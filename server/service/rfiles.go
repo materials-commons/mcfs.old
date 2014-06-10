@@ -5,7 +5,7 @@ import (
 	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/server"
+	"github.com/materials-commons/mcfs/mcfserr"
 )
 
 // rFiles implements the Files interface for RethinkDB
@@ -150,12 +150,12 @@ func (f rFiles) removeFromDependents(file *schema.File) error {
 	for _, dirID := range file.DataDirs {
 		ddir, err := rdirs.ByID(dirID)
 		if err != nil {
-			rv = mcfs.ErrDBRelatedUpdateFailed
+			rv = mcfserr.ErrDB
 		}
 
 		err = rdirs.RemoveFiles(ddir, file.ID)
 		if err != nil {
-			rv = mcfs.ErrDBRelatedUpdateFailed
+			rv = mcfserr.ErrDB
 		}
 	}
 
@@ -174,7 +174,7 @@ func (f rFiles) AddDirectories(file *schema.File, dirIDs ...string) error {
 		dir, err := rdirs.ByID(ddirID)
 		rdirs.AddFiles(dir, file.ID)
 		if err != nil {
-			rv = mcfs.ErrDBRelatedUpdateFailed
+			rv = mcfserr.ErrDB
 		}
 	}
 	f.Update(file)

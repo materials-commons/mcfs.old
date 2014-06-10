@@ -3,7 +3,7 @@ package access
 import (
 	"fmt"
 	"github.com/materials-commons/mcfs/base/db"
-	"github.com/materials-commons/mcfs/server"
+	"github.com/materials-commons/mcfs/mcfserr"
 	"testing"
 	"time"
 )
@@ -12,8 +12,8 @@ var _ = fmt.Println
 
 func TestNoServerRunning(t *testing.T) {
 	_, err := GetUserByAPIKey("test")
-	if err != mcfs.ErrServerNotRunning {
-		t.Fatalf("Made request with no server, expected mcfs.ErrServerNotRunning, got %s", err)
+	if err != mcfserr.ErrServerNotRunning {
+		t.Fatalf("Made request with no server, expected mcfserr.ErrServerNotRunning, got %s", err)
 	}
 }
 

@@ -2,13 +2,13 @@ package request
 
 import (
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/model"
-	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/base/protocol"
+	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"testing"
-	"github.com/materials-commons/mcfs/base/codex"
 )
 
 func TestCreateProject(t *testing.T) {

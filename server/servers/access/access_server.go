@@ -4,7 +4,7 @@ import (
 	"github.com/materials-commons/mcfs/base/log"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/server"
+	"github.com/materials-commons/mcfs/mcfserr"
 	"github.com/materials-commons/mcfs/server/service"
 )
 
@@ -57,7 +57,7 @@ func (s *accessServer) Send(request *request) error {
 	// Shortcut check, if we know the server isn't running then we
 	// don't have to wait for the panic.
 	if !s.isRunning {
-		return mcfs.ErrServerNotRunning
+		return mcfserr.ErrServerNotRunning
 	}
 
 	var err error
@@ -65,7 +65,7 @@ func (s *accessServer) Send(request *request) error {
 	defer func() {
 		if e := recover(); e != nil {
 			l.Debug("Attempt to send when server is not running.")
-			err = mcfs.ErrServerNotRunning
+			err = mcfserr.ErrServerNotRunning
 		}
 	}()
 

@@ -3,11 +3,11 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 	"testing"
-	"github.com/materials-commons/mcfs/base/codex"
 )
 
 func init() {

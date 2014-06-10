@@ -4,13 +4,13 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/materials-commons/gohandy/file"
+	"github.com/materials-commons/mcfs/base/codex"
+	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/protocol"
 	"io/ioutil"
 	"os"
 	"testing"
-	"github.com/materials-commons/mcfs/base/codex"
-	"github.com/materials-commons/mcfs/base/mc"
 )
 
 var _ = fmt.Println
@@ -22,9 +22,9 @@ func TestUploadCases(t *testing.T) {
 
 	// Test bad upload with non existant DataFileID
 	uploadReq := protocol.UploadReq{
-		FileID: "does not exist",
-		Size:       6,
-		Checksum:   "abc123",
+		FileID:   "does not exist",
+		Size:     6,
+		Checksum: "abc123",
 	}
 
 	resp, err := h.upload(&uploadReq)
@@ -34,11 +34,11 @@ func TestUploadCases(t *testing.T) {
 
 	// Test create file and then upload
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		ProjectID:   "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
 		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
-		Name:      "testfile1.txt",
-		Size:      6,
-		Checksum:  "abc123",
+		Name:        "testfile1.txt",
+		Size:        6,
+		Checksum:    "abc123",
 	}
 
 	createResp, _ := h.createFile(&createFileRequest)
@@ -139,20 +139,20 @@ func TestUploadNewFile(t *testing.T) {
 	checksum, _ := file.Hash(md5.New(), testfilePath)
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		ProjectID:   "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
 		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
-		Name:      "testfile.txt",
-		Size:      testfileLen,
-		Checksum:  checksumHex,
+		Name:        "testfile.txt",
+		Size:        testfileLen,
+		Checksum:    checksumHex,
 	}
 
 	createResp, _ := h.createFile(&createFileRequest)
 	createdID := createResp.FileID
 	defer cleanup(createdID)
 	uploadReq := protocol.UploadReq{
-		FileID: createdID,
-		Size:       testfileLen,
-		Checksum:   checksumHex,
+		FileID:   createdID,
+		Size:     testfileLen,
+		Checksum: checksumHex,
 	}
 
 	resp, err := h.upload(&uploadReq)
@@ -176,7 +176,7 @@ func TestUploadNewFile(t *testing.T) {
 	var _ = uploadHandler
 	sendReq := protocol.UploadBytesReq{
 		FileID: createdID,
-		Bytes:      []byte(testfileData),
+		Bytes:  []byte(testfileData),
 	}
 
 	n, err := uploadHandler.uploadBytesReqWrite(&sendReq)
@@ -210,11 +210,11 @@ func TestPartialToCompleted(t *testing.T) {
 	checksum, _ := file.Hash(md5.New(), testfilePath)
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		ProjectID:   "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
 		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
-		Name:      "testfile.txt",
-		Size:      testfileLen,
-		Checksum:  checksumHex,
+		Name:        "testfile.txt",
+		Size:        testfileLen,
+		Checksum:    checksumHex,
 	}
 
 	createResp, _ := h.createFile(&createFileRequest)
@@ -222,9 +222,9 @@ func TestPartialToCompleted(t *testing.T) {
 	defer cleanup(createdID)
 
 	uploadReq := protocol.UploadReq{
-		FileID: createdID,
-		Size:       testfileLen,
-		Checksum:   checksumHex,
+		FileID:   createdID,
+		Size:     testfileLen,
+		Checksum: checksumHex,
 	}
 
 	resp, err := h.upload(&uploadReq)
@@ -247,7 +247,7 @@ func TestPartialToCompleted(t *testing.T) {
 
 	sendReq := protocol.UploadBytesReq{
 		FileID: createdID,
-		Bytes:      []byte(testfileData[0:3]),
+		Bytes:  []byte(testfileData[0:3]),
 	}
 
 	n, _ := uploadHandler.uploadBytesReqWrite(&sendReq)
@@ -307,20 +307,20 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 	checksum, _ := file.Hash(md5.New(), testfilePath)
 	checksumHex := fmt.Sprintf("%x", checksum)
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		ProjectID:   "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
 		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
-		Name:      "testfile.txt",
-		Size:      testfileLen,
-		Checksum:  checksumHex,
+		Name:        "testfile.txt",
+		Size:        testfileLen,
+		Checksum:    checksumHex,
 	}
 
 	createResp, _ := h.createFile(&createFileRequest)
 	createdID := createResp.FileID
 	defer cleanup(createdID)
 	uploadReq := protocol.UploadReq{
-		FileID: createdID,
-		Size:       testfileLen,
-		Checksum:   checksumHex,
+		FileID:   createdID,
+		Size:     testfileLen,
+		Checksum: checksumHex,
 	}
 
 	resp, err := h.upload(&uploadReq)
@@ -335,7 +335,7 @@ func TestUploadNewFileExistingFileMatches(t *testing.T) {
 
 	sendReq := protocol.UploadBytesReq{
 		FileID: createdID,
-		Bytes:      []byte(testfileData[:len(testfileData)-1]),
+		Bytes:  []byte(testfileData[:len(testfileData)-1]),
 	}
 
 	n, _ := uploadHandler.uploadBytesReqWrite(&sendReq)

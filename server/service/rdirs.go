@@ -5,7 +5,7 @@ import (
 	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/server"
+	"github.com/materials-commons/mcfs/mcfserr"
 )
 
 // rDirs implements the Dirs interface for RethinkDB
@@ -51,7 +51,7 @@ func (d rDirs) Update(dir *schema.Directory) error {
 func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 	var newDir schema.Directory
 	if err := model.Dirs.Q().Insert(dir, &newDir); err != nil {
-		return nil, mcfs.ErrDBInsertFailed
+		return nil, mcfserr.ErrDB
 	}
 
 	// Insert the directory into the denorm table.
@@ -65,12 +65,12 @@ func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 	if len(newDir.DataFiles) > 0 {
 		var err error
 		if ddirDenorm.DataFiles, err = d.createDataFiles(newDir.DataFiles); err != nil {
-			return &newDir, mcfs.ErrDBRelatedUpdateFailed
+			return &newDir, mcfserr.ErrDB
 		}
 	}
 
 	if err := model.DirsDenorm.Q().Insert(ddirDenorm, nil); err != nil {
-		return &newDir, mcfs.ErrDBRelatedUpdateFailed
+		return &newDir, mcfserr.ErrDB
 	}
 
 	return &newDir, nil
@@ -89,23 +89,23 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 	}
 
 	if err := model.Dirs.Q().Update(dir.ID, dir); err != nil {
-		return mcfs.ErrDBUpdateFailed
+		return mcfserr.ErrDB
 	}
 
 	// Add entries to the denorm table for this dir.
 	var dirDenorm schema.DataDirDenorm
 	fileEntries, err := d.createDataFiles(dir.DataFiles)
 	if err != nil {
-		return mcfs.ErrDBRelatedUpdateFailed
+		return mcfserr.ErrDB
 	}
 
 	if err := model.DirsDenorm.Q().ByID(dir.ID, &dirDenorm); err != nil {
-		return mcfs.ErrDBRelatedUpdateFailed
+		return mcfserr.ErrDB
 	}
 
 	dirDenorm.DataFiles = fileEntries
 	if err := model.DirsDenorm.Q().Update(dirDenorm.ID, dirDenorm); err != nil {
-		return mcfs.ErrDBRelatedUpdateFailed
+		return mcfserr.ErrDB
 	}
 
 	return nil
@@ -118,7 +118,7 @@ func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.F
 	for _, dataFileID := range dataFileIDs {
 		var dataFile schema.File
 		if err := model.Files.Q().ByID(dataFileID, &dataFile); err != nil {
-			errorReturn = mcfs.ErrDBLookupFailed
+			errorReturn = mcfserr.ErrDB
 			continue
 		}
 
@@ -145,11 +145,11 @@ func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
 	}
 	var dirDenorm schema.DataDirDenorm
 	if err := model.DirsDenorm.Q().ByID(dir.ID, &dirDenorm); err != nil {
-		return mcfs.ErrDBRelatedUpdateFailed
+		return mcfserr.ErrDB
 	}
 	dirDenorm.DataFiles = removeMatchingFileIDs(dirDenorm, fileIDs...)
 	if err := model.DirsDenorm.Q().Update(dirDenorm.ID, dirDenorm); err != nil {
-		return mcfs.ErrDBRelatedUpdateFailed
+		return mcfserr.ErrDB
 	}
 	return nil
 }

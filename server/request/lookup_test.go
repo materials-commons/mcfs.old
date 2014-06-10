@@ -79,27 +79,27 @@ func TestLookupInvalidItem(t *testing.T) {
 
 func conductTest(t *testing.T, tests []lookupTest, whichType string) {
 	/*
-	h := NewReqHandler(nil, "")
-	h.user = "test@mc.org"
-	for _, test := range tests {
-		req := &protocol.LookupReq{
-			Field:     test.field,
-			Value:     test.value,
-			LimitToID: test.limitTo,
-			Type:      whichType,
-		}
+		h := NewReqHandler(nil, "")
+		h.user = "test@mc.org"
+		for _, test := range tests {
+			req := &protocol.LookupReq{
+				Field:     test.field,
+				Value:     test.value,
+				LimitToID: test.limitTo,
+				Type:      whichType,
+			}
 
-		v, err := h.lookup(req)
-		var _ = v
-		//fmt.Printf("%s/%#v/%#v\n", err, test, v)
-		switch {
-		case err != nil && test.errorNil:
-			// Expected error to be nil
-			t.Fatalf("Expected error to be nil for test type %s, test %s err %s", whichType, test.comment, err)
-		case err == nil && !test.errorNil:
-			// Expected error not to be nil
-			t.Fatalf("Expected err != nil for test type %s, test %s", whichType, test.comment)
+			v, err := h.lookup(req)
+			var _ = v
+			//fmt.Printf("%s/%#v/%#v\n", err, test, v)
+			switch {
+			case err != nil && test.errorNil:
+				// Expected error to be nil
+				t.Fatalf("Expected error to be nil for test type %s, test %s err %s", whichType, test.comment, err)
+			case err == nil && !test.errorNil:
+				// Expected error not to be nil
+				t.Fatalf("Expected err != nil for test type %s, test %s", whichType, test.comment)
+			}
 		}
-	}
-*/
+	*/
 }

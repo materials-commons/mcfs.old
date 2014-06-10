@@ -3,11 +3,11 @@ package request
 import (
 	"fmt"
 	"github.com/materials-commons/gohandy/collections"
+	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 	"testing"
-	"github.com/materials-commons/mcfs/base/codex"
 )
 
 var _ = fmt.Println
@@ -18,10 +18,10 @@ func TestCreateFile(t *testing.T) {
 
 	// Test create with no size
 	createFileRequest := protocol.CreateFileReq{
-		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		ProjectID:   "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
 		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
-		Name:      "testfile1.txt",
-		Checksum:  "abc123",
+		Name:        "testfile1.txt",
+		Checksum:    "abc123",
 	}
 
 	resp, err := h.createFile(&createFileRequest)
@@ -133,11 +133,11 @@ func TestNewFile(t *testing.T) {
 	cfh := newCreateFileHandler("test@mc.org")
 
 	req := &protocol.CreateFileReq{
-		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		ProjectID:   "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
 		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
-		Name:      "newFile.txt",
-		Checksum:  "abc123",
-		Size:      2,
+		Name:        "newFile.txt",
+		Checksum:    "abc123",
+		Size:        2,
 	}
 
 	// Test that parameters are setup correctly
@@ -180,11 +180,11 @@ func TestCreateNewFile(t *testing.T) {
 	cfh := newCreateFileHandler("test@mc.org")
 
 	req := &protocol.CreateFileReq{
-		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
+		ProjectID:   "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
 		DirectoryID: "f0ebb733-c75d-4983-8d68-242d688fcf73",
-		Name:      "newFile.txt",
-		Checksum:  "abc123new",
-		Size:      2,
+		Name:        "newFile.txt",
+		Checksum:    "abc123new",
+		Size:        2,
 	}
 
 	// Create a new file and make sure it is setup correctly

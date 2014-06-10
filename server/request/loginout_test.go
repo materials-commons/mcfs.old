@@ -3,9 +3,9 @@ package request
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/protocol"
 	"testing"
-	"github.com/materials-commons/mcfs/base/codex"
 )
 
 var _ = fmt.Println
