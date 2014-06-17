@@ -39,6 +39,7 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 )
 
@@ -91,6 +92,12 @@ func main() {
 	}
 
 	setupConfig(opts.Database, opts.Server)
+
+	defer func() {
+		if e := recover(); e != nil {
+			fmt.Printf("%s: %s\n", e, debug.Stack())
+		}
+	}()
 
 	service.Init()
 	go webserver(opts.Server.HTTPPort)
