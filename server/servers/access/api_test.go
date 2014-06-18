@@ -3,7 +3,7 @@ package access
 import (
 	"fmt"
 	"github.com/materials-commons/mcfs/base/db"
-	"github.com/materials-commons/mcfs/mcfserr"
+	"github.com/materials-commons/mcfs/server/mcfserr"
 	"testing"
 	"time"
 )

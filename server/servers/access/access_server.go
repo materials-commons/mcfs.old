@@ -4,7 +4,7 @@ import (
 	"github.com/materials-commons/mcfs/base/log"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/mcfserr"
+	"github.com/materials-commons/mcfs/server/mcfserr"
 	"github.com/materials-commons/mcfs/server/service"
 )
 
