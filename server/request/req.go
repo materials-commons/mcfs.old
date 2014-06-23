@@ -6,6 +6,7 @@ import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
+	"github.com/materials-commons/mcfs/server/service"
 	"io"
 	"reflect"
 )
@@ -21,6 +22,7 @@ type ReqHandler struct {
 	mcdir           string // Location of the materials commons data directory
 	badRequestCount int    // Keep track of bad requests. Close connection when too many.
 	marshaling.MarshalUnmarshaler
+	service *service.Service
 }
 
 // NewReqHandler creates a new ReqHandlerInstance. Each ReqHandler is a thread safe state machine for
@@ -29,6 +31,7 @@ func NewReqHandler(m marshaling.MarshalUnmarshaler, mcdir string) *ReqHandler {
 	return &ReqHandler{
 		MarshalUnmarshaler: m,
 		mcdir:              mcdir,
+		service:            service.New(service.RethinkDB),
 	}
 }
 

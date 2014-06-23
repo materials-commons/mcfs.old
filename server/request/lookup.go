@@ -13,6 +13,7 @@ import (
 type lookupHandler struct {
 	session *r.Session
 	user    string
+	service *service.Service
 }
 
 func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
@@ -98,5 +99,5 @@ func (l *lookupHandler) hasAccess(v interface{}) bool {
 	case *schema.File:
 		owner = t.Owner
 	}
-	return service.Group.HasAccess(owner, l.user)
+	return l.service.Group.HasAccess(owner, l.user)
 }

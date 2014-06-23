@@ -9,17 +9,21 @@ import (
 )
 
 // rFiles implements the Files interface for RethinkDB
-type rFiles struct{}
+type rFiles struct {
+	session *r.Session
+}
 
 // newRFiles creates a new instance of rFiles
-func newRFiles() rFiles {
-	return rFiles{}
+func newRFiles(session *r.Session) rFiles {
+	return rFiles{
+		session: session,
+	}
 }
 
 // ByID looks up a file by its primary key. In RethinkDB this is the id field.
 func (f rFiles) ByID(id string) (*schema.File, error) {
 	var file schema.File
-	if err := model.Files.Q().ByID(id, &file); err != nil {
+	if err := model.Files.Qs(f.session).ByID(id, &file); err != nil {
 		return nil, err
 	}
 	return &file, nil
@@ -31,7 +35,7 @@ func (f rFiles) ByPath(name, dirID string) (*schema.File, error) {
 	rql := model.Files.T().GetAllByIndex("name", name).
 		Filter(r.Row.Field("datadirs").Contains(dirID).And(r.Row.Field("current").Eq(true)))
 	var file schema.File
-	if err := model.Files.Q().Row(rql, &file); err != nil {
+	if err := model.Files.Qs(f.session).Row(rql, &file); err != nil {
 		return nil, err
 	}
 	return &file, nil
@@ -45,7 +49,7 @@ func (f rFiles) ByPathPartials(name, dirID string) ([]schema.File, error) {
 		Filter(r.Row.Field("datadirs").Contains(dirID).
 		And(r.Row.Field("uploaded").Ne(r.Row.Field("size"))))
 	var files []schema.File
-	if err := model.Files.Q().Rows(rql, &files); err != nil {
+	if err := model.Files.Qs(f.session).Rows(rql, &files); err != nil {
 		return nil, err
 	}
 	return files, nil
@@ -58,7 +62,7 @@ func (f rFiles) ByPathChecksum(name, dirID, checksum string) ([]schema.File, err
 	rql := model.Files.T().GetAllByIndex("name", name).
 		Filter(r.Row.Field("datadirs").Contains(dirID).
 		And(r.Row.Field("checksum").Eq(checksum)))
-	if err := model.Files.Q().Rows(rql, &files); err != nil {
+	if err := model.Files.Qs(f.session).Rows(rql, &files); err != nil {
 		return nil, err
 	}
 	return files, nil
@@ -69,7 +73,7 @@ func (f rFiles) ByPathChecksum(name, dirID, checksum string) ([]schema.File, err
 func (f rFiles) ByChecksum(checksum string) (*schema.File, error) {
 	rql := model.Files.T().GetAllByIndex("checksum", checksum).Filter(r.Row.Field("usesid").Eq(""))
 	var file schema.File
-	if err := model.Files.Q().Row(rql, &file); err != nil {
+	if err := model.Files.Qs(f.session).Row(rql, &file); err != nil {
 		return nil, err
 	}
 	return &file, nil
@@ -79,7 +83,7 @@ func (f rFiles) ByChecksum(checksum string) (*schema.File, error) {
 func (f rFiles) MatchOn(key, value string) ([]schema.File, error) {
 	var files []schema.File
 	rql := model.Files.T().GetAllByIndex(key, value)
-	if err := model.Files.Q().Rows(rql, &files); err != nil {
+	if err := model.Files.Qs(f.session).Rows(rql, &files); err != nil {
 		return nil, err
 	}
 	return files, nil
@@ -89,14 +93,14 @@ func (f rFiles) MatchOn(key, value string) ([]schema.File, error) {
 // multiple versions of a file to exist, but only the current version to be used.
 func (f rFiles) Hide(file *schema.File) error {
 	file.Current = false
-	model.Files.Q().Update(file.ID, file)
+	model.Files.Qs(f.session).Update(file.ID, file)
 	return f.removeFromDependents(file)
 }
 
 // Update updates an existing datafile. If you are adding the datafile to a directory
 // you should use the AddDirectories method. This method will not update related items.
 func (f rFiles) Update(file *schema.File) error {
-	if err := model.Files.Q().Update(file.ID, file); err != nil {
+	if err := model.Files.Qs(f.session).Update(file.ID, file); err != nil {
 		return err
 	}
 	return nil
@@ -106,7 +110,7 @@ func (f rFiles) Update(file *schema.File) error {
 // dependent objects in the system.
 func (f rFiles) Insert(file *schema.File) (*schema.File, error) {
 	var newFile schema.File
-	if err := model.Files.Q().Insert(file, &newFile); err != nil {
+	if err := model.Files.Qs(f.session).Insert(file, &newFile); err != nil {
 		return nil, err
 	}
 	if err := f.AddDirectories(&newFile, file.DataDirs...); err != nil {
@@ -121,7 +125,7 @@ func (f rFiles) Insert(file *schema.File) (*schema.File, error) {
 // objects that will be linked into the rest of the system at a late date.
 func (f rFiles) InsertEntry(file *schema.File) (*schema.File, error) {
 	var newFile schema.File
-	if err := model.Files.Q().Insert(file, &newFile); err != nil {
+	if err := model.Files.Qs(f.session).Insert(file, &newFile); err != nil {
 		return nil, err
 	}
 	return &newFile, nil
@@ -134,7 +138,7 @@ func (f rFiles) Delete(id string) error {
 		return err
 	}
 
-	if err := model.Files.Q().Delete(id); err != nil {
+	if err := model.Files.Qs(f.session).Delete(id); err != nil {
 		return err
 	}
 
@@ -145,7 +149,7 @@ func (f rFiles) Delete(id string) error {
 // the database that refer to it.
 func (f rFiles) removeFromDependents(file *schema.File) error {
 	// Need to delete file from dependent objects
-	rdirs := newRDirs()
+	rdirs := newRDirs(f.session)
 	var rv error
 	for _, dirID := range file.DataDirs {
 		ddir, err := rdirs.ByID(dirID)
@@ -165,7 +169,7 @@ func (f rFiles) removeFromDependents(file *schema.File) error {
 // AddDirectories adds new directories to a file. It updates all related items
 // and join tables.
 func (f rFiles) AddDirectories(file *schema.File, dirIDs ...string) error {
-	rdirs := newRDirs()
+	rdirs := newRDirs(f.session)
 	var rv error
 	for _, ddirID := range dirIDs {
 		if index := collections.Strings.Find(file.DataDirs, ddirID); index == -1 {

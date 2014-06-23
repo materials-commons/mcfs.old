@@ -11,6 +11,7 @@ import (
 
 // createProjectHandler handles create project request process.
 type createProjectHandler struct {
+	service *service.Service
 }
 
 // createProject will create a new project or return an existing project. Only owners
@@ -25,13 +26,13 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.Cr
 		resp protocol.CreateProjectResp
 		err  error
 	)
-	cph := newCreateProjectHandler()
+	cph := newCreateProjectHandler(h.service)
 
 	if !cph.validateRequest(req) {
 		return nil, mcerr.Errorf(mcerr.ErrInvalid, "Invalid project name %s", req.Name)
 	}
 
-	proj, err = service.Project.ByName(req.Name, h.user)
+	proj, err = h.service.Project.ByName(req.Name, h.user)
 	switch {
 	case err == nil:
 		// Found project
@@ -59,8 +60,10 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.Cr
 	return &resp, err
 }
 
-func newCreateProjectHandler() *createProjectHandler {
-	return &createProjectHandler{}
+func newCreateProjectHandler(service *service.Service) *createProjectHandler {
+	return &createProjectHandler{
+		service: service,
+	}
 }
 
 // validateRequest will validate the CreateProjectReq. At the moment this is a very
@@ -73,7 +76,7 @@ func (cph *createProjectHandler) validateRequest(req *protocol.CreateProjectReq)
 // createNewProject creates a new project for the given user.
 func (cph *createProjectHandler) createNewProject(name, user string) (*schema.Project, error) {
 	project := schema.NewProject(name, "", user)
-	newProject, err := service.Project.Insert(&project)
+	newProject, err := cph.service.Project.Insert(&project)
 	if err != nil {
 		return nil, err
 	}

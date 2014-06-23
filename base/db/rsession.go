@@ -21,9 +21,9 @@ func SetDatabase(db string) {
 func RSession() (*r.Session, error) {
 	return r.Connect(
 		r.ConnectOpts{
-			Address:   dbAddress,
-			Database:  dbName,
-			MaxIdle:   10,
-			MaxActive: 20,
+			Address:  dbAddress,
+			Database: dbName,
+			//			MaxIdle:   10,
+			//			MaxActive: 20,
 		})
 }

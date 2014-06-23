@@ -9,16 +9,20 @@ import (
 	"github.com/materials-commons/mcfs/server"
 )
 
-type rProjects struct{}
+type rProjects struct {
+	session *r.Session
+}
 
-func newRProjects() rProjects {
-	return rProjects{}
+func newRProjects(session *r.Session) rProjects {
+	return rProjects{
+		session: session,
+	}
 }
 
 // ByID looks up a project by its primary key.
 func (p rProjects) ByID(id string) (*schema.Project, error) {
 	var project schema.Project
-	if err := model.Projects.Q().ByID(id, &project); err != nil {
+	if err := model.Projects.Qs(p.session).ByID(id, &project); err != nil {
 		return nil, mcerr.ErrNotFound
 	}
 	return &project, nil
@@ -28,7 +32,7 @@ func (p rProjects) ByID(id string) (*schema.Project, error) {
 func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
 	var project schema.Project
 	rql := model.Projects.T().GetAllByIndex("name", name).Filter(r.Row.Field("owner").Eq(owner))
-	if err := model.Projects.Q().Row(rql, &project); err != nil {
+	if err := model.Projects.Qs(p.session).Row(rql, &project); err != nil {
 		return nil, mcerr.ErrNotFound
 	}
 	return &project, nil
@@ -40,7 +44,7 @@ func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
 func (p rProjects) Files(projectID, base string) ([]dir.FileInfo, error) {
 	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID).EqJoin("datadir_id", r.Table("datadirs_denorm")).Zip()
 	var entries []schema.DataDirDenorm
-	if err := model.DirsDenorm.Q().Rows(rql, &entries); err != nil {
+	if err := model.DirsDenorm.Qs(p.session).Rows(rql, &entries); err != nil {
 		return nil, err
 	}
 	if len(entries) == 0 {
@@ -53,7 +57,7 @@ func (p rProjects) Files(projectID, base string) ([]dir.FileInfo, error) {
 
 // Update updates an existing project.
 func (p rProjects) Update(project *schema.Project) error {
-	return model.Projects.Q().Update(project.ID, project)
+	return model.Projects.Qs(p.session).Update(project.ID, project)
 }
 
 // Insert inserts a new project. This method creates the directory object
@@ -70,19 +74,19 @@ func (p rProjects) Insert(project *schema.Project) (*schema.Project, error) {
 		err        error
 	)
 
-	if err = model.Projects.Q().Insert(project, &newProject); err != nil {
+	if err = model.Projects.Qs(p.session).Insert(project, &newProject); err != nil {
 		return nil, mcfs.ErrDBInsertFailed
 	}
 
 	dir := schema.NewDirectory(project.Name, project.Owner, newProject.ID, "")
-	rdirs := newRDirs()
+	rdirs := newRDirs(p.session)
 
 	if newDir, err = rdirs.Insert(&dir); err != nil {
 		return nil, mcfs.ErrDBRelatedUpdateFailed
 	}
 
 	newProject.DataDir = newDir.ID
-	if err = model.Projects.Q().Update(newProject.ID, &newProject); err != nil {
+	if err = model.Projects.Qs(p.session).Update(newProject.ID, &newProject); err != nil {
 		return &newProject, err
 	}
 
@@ -101,7 +105,7 @@ func (p rProjects) AddDirectories(project *schema.Project, directoryIDs ...strin
 			ProjectID: project.ID,
 			DataDirID: dirID,
 		}
-		if err := model.Projects.Q().InsertRaw("project2datadir", p2d, nil); err != nil {
+		if err := model.Projects.Qs(p.session).InsertRaw("project2datadir", p2d, nil); err != nil {
 			rverror = mcfs.ErrDBRelatedUpdateFailed
 		}
 	}
