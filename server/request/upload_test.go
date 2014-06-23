@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"fmt"
 	"github.com/materials-commons/gohandy/file"
+	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/protocol"
 	"io/ioutil"
@@ -182,7 +183,7 @@ func TestUploadNewFile(t *testing.T) {
 		t.Fatalf("Incorrect number of bytes written expected %d, wrote %d", testfileLen, n)
 	}
 
-	nchecksum, err := file.Hash(md5.New(), datafilePath(h.mcdir, createdID))
+	nchecksum, err := file.Hash(md5.New(), mc.FilePathFrom(h.mcdir, createdID))
 	if err != nil {
 		t.Fatalf("Unable to checksum datafile %s", createdID)
 	}
@@ -279,7 +280,7 @@ func TestPartialToCompleted(t *testing.T) {
 		t.Fatalf("Incorrect number of bytes written expected %d, wrote %d", testfileLen, n)
 	}
 
-	nchecksum, err := file.Hash(md5.New(), datafilePath(h.mcdir, createdID))
+	nchecksum, err := file.Hash(md5.New(), mc.FilePathFrom(h.mcdir, createdID))
 	if err != nil {
 		t.Fatalf("Unable to checksum datafile %s", createdID)
 	}

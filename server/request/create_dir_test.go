@@ -5,12 +5,12 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server"
 	"testing"
 )
 
 func init() {
-	service.Init()
+	mcfs.InitRethinkDB()
 }
 
 func TestCreateDir(t *testing.T) {

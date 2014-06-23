@@ -6,14 +6,10 @@ import (
 	"testing"
 )
 
-func init() {
-	Init()
-}
-
 var _ = fmt.Println
 
 func TestHasAccess(t *testing.T) {
-	rgroups := newRGroups()
+	rgroups := newRGroups(session)
 	user := "gtarcea@umich.edu"
 	owner := "mcfada@umich.edu"
 	// Test empty table different user
@@ -47,6 +43,6 @@ func TestHasAccess(t *testing.T) {
 
 func deleteItem(id string) {
 	fmt.Printf("Deleting group id %s\n", id)
-	rgroups := newRGroups()
+	rgroups := newRGroups(session)
 	rgroups.Delete(id)
 }

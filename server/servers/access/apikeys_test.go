@@ -5,13 +5,18 @@ import (
 	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
+	"github.com/materials-commons/mcfs/server"
 	"github.com/materials-commons/mcfs/server/service"
 	"testing"
 )
 
 var _ = fmt.Println
 
-var _apikeys = newAPIKeys(service.NewUsers(service.RethinkDB))
+func init() {
+	mcfs.InitRethinkDB()
+}
+
+var _apikeys = newAPIKeys(service.New(service.RethinkDB).User)
 
 func TestLoad(t *testing.T) {
 	db.SetAddress("localhost:30815")

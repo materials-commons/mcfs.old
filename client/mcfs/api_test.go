@@ -6,10 +6,11 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/gohandy/marshaling"
+	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/client/util"
+	"github.com/materials-commons/mcfs/server"
 	"github.com/materials-commons/mcfs/server/request"
-	"github.com/materials-commons/mcfs/server/service"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -32,7 +33,7 @@ func init() {
 		Address:  "localhost:30815",
 		Database: "materialscommons",
 	})
-	service.Init()
+	mcfs.InitRethinkDB()
 	go mcfsServer(m)
 }
 
@@ -69,7 +70,7 @@ func TestUploadNewFile(t *testing.T) {
 	if int64(len(fileData)) != uploaded {
 		t.Fatalf("Upload count (%d) different than size of data (%d)", uploaded, len(fileData))
 	}
-	dataFilePath := request.DataFilePath(MCDir, dataFileID)
+	dataFilePath := mc.FilePathFrom(MCDir, dataFileID)
 	dataFileChecksum, dataFileSize, err := fileInfo(dataFilePath)
 
 	if err != nil {
@@ -133,7 +134,7 @@ func TestRestartFileUpload(t *testing.T) {
 		t.Fatalf("Wrong number of bytes written expected %d, got %d", len(fileData)-10, n)
 	}
 
-	dataFilePath := request.DataFilePath(MCDir, dataFileID)
+	dataFilePath := mc.FilePathFrom(MCDir, dataFileID)
 	dataFileChecksum, dataFileSize, err := fileInfo(dataFilePath)
 
 	if err != nil {

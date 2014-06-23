@@ -2,9 +2,14 @@ package servers
 
 import (
 	"fmt"
+	"github.com/materials-commons/mcfs/server"
 	"testing"
 	"time"
 )
+
+func init() {
+	mcfs.InitRethinkDB()
+}
 
 var _ = fmt.Println
 

@@ -21,6 +21,7 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
 	l := &lookupHandler{
 		session: session,
 		user:    h.user,
+		service: h.service,
 	}
 
 	switch req.Type {
