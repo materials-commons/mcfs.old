@@ -116,6 +116,7 @@ func (h *ReqHandler) nextCommand() reqStateFN {
 		}
 	case protocol.CreateFileReq:
 		resp, err = h.createFile(&req)
+		fmt.Println("left createFile")
 	case protocol.CreateDirReq:
 		resp, err = h.createDir(&req)
 	case protocol.CreateProjectReq:
