@@ -111,9 +111,13 @@ func (h *ReqHandler) nextCommand() reqStateFN {
 	case protocol.UploadReq:
 		fmt.Println("UploadReq")
 		var respUpload *protocol.UploadResp
+		fmt.Println("upload")
 		respUpload, err = h.upload(&req)
+		fmt.Println("past upload")
 		if err == nil {
+			fmt.Println("uploadLoop")
 			return h.uploadLoop(respUpload)
+			fmt.Println("past uploadLoop")
 		}
 	case protocol.CreateFileReq:
 		fmt.Println("CreateFileReq")
