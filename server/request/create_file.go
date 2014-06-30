@@ -1,6 +1,8 @@
 package request
 
 import (
+	"fmt"
+
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
@@ -18,6 +20,7 @@ type createFileHandler struct {
 // existing file is returned, the checksums must match between the request and
 // the existing file.
 func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
+	fmt.Println("createFile")
 	cfh := newCreateFileHandler(h.user, h.service)
 
 	if err := cfh.validateRequest(req); err != nil {

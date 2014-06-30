@@ -2,13 +2,14 @@ package request
 
 import (
 	"fmt"
+	"io"
+	"reflect"
+
 	"github.com/materials-commons/gohandy/marshaling"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"github.com/materials-commons/mcfs/server/service"
-	"io"
-	"reflect"
 )
 
 const maxBadRequests = 10
@@ -172,6 +173,8 @@ func (h *ReqHandler) respError(respData interface{}, err error) {
 	default:
 		resp.Status = mcerr.ErrorToErrorCode(err)
 	}
+
+	fmt.Println("respError: ", resp.Status, resp.StatusMessage)
 
 	if respData != nil && !reflect.ValueOf(respData).IsNil() {
 		resp.Resp = respData
