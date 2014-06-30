@@ -66,28 +66,28 @@
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/collections",
-			"Comment": "v0.1-43-g53e1ac3",
-			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
+			"Comment": "v0.1-45-g494f807",
+			"Rev": "494f807b21e8d95ecb765533efa19177ef9b61d6"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/ezhttp",
-			"Comment": "v0.1-43-g53e1ac3",
-			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
+			"Comment": "v0.1-45-g494f807",
+			"Rev": "494f807b21e8d95ecb765533efa19177ef9b61d6"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/file",
-			"Comment": "v0.1-43-g53e1ac3",
-			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
+			"Comment": "v0.1-45-g494f807",
+			"Rev": "494f807b21e8d95ecb765533efa19177ef9b61d6"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/fs",
-			"Comment": "v0.1-43-g53e1ac3",
-			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
+			"Comment": "v0.1-45-g494f807",
+			"Rev": "494f807b21e8d95ecb765533efa19177ef9b61d6"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/marshaling",
-			"Comment": "v0.1-43-g53e1ac3",
-			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
+			"Comment": "v0.1-45-g494f807",
+			"Rev": "494f807b21e8d95ecb765533efa19177ef9b61d6"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-sqlite3",
