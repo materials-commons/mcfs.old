@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/materials-commons/mcfs",
-	"GoVersion": "go1.2.1",
+	"GoVersion": "go1.2.2",
 	"Packages": [
 		"./..."
 	],
@@ -62,37 +62,32 @@
 		},
 		{
 			"ImportPath": "github.com/materials-commons/config",
-			"Rev": "e1d45906ed38c71831fe61720f3df9d8a7061c98"
+			"Rev": "47fb08a0e8611ce4a5d9fbf4c3c47ab456fb6d8d"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/collections",
-			"Comment": "v0.1-42-gf7b231f",
-			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
-		},
-		{
-			"ImportPath": "github.com/materials-commons/gohandy/env",
-			"Comment": "v0.1-42-gf7b231f",
-			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+			"Comment": "v0.1-43-g53e1ac3",
+			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/ezhttp",
-			"Comment": "v0.1-42-gf7b231f",
-			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+			"Comment": "v0.1-43-g53e1ac3",
+			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/file",
-			"Comment": "v0.1-42-gf7b231f",
-			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+			"Comment": "v0.1-43-g53e1ac3",
+			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/fs",
-			"Comment": "v0.1-42-gf7b231f",
-			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+			"Comment": "v0.1-43-g53e1ac3",
+			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
 		},
 		{
 			"ImportPath": "github.com/materials-commons/gohandy/marshaling",
-			"Comment": "v0.1-42-gf7b231f",
-			"Rev": "f7b231f06af716a5cf75c0d163c6cac6b006e6f6"
+			"Comment": "v0.1-43-g53e1ac3",
+			"Rev": "53e1ac36fc60f3b2c894cec5d6197d19b19f9d4a"
 		},
 		{
 			"ImportPath": "github.com/mattn/go-sqlite3",

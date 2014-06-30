@@ -5,16 +5,16 @@ import (
 )
 
 const (
-	// Use the default handler
+	// Default Use the default handler
 	Default = "Default"
 
-	// Use the Override handler
+	// Override Use the Override handler
 	Override = "Override"
 
-	// Use the environment handler
+	// Environment Use the environment handler
 	Environment = "Environment"
 
-	// Use the ini handler
+	// Ini Use the ini handler
 	Ini = "Ini"
 )
 

@@ -5,6 +5,9 @@ import (
 	"time"
 )
 
+// LoggerFunc is the function to call to log config events.
+type LoggerFunc func(event Event, err error, args ...interface{})
+
 // A Configer is a configuration object that can store and retrieve key/value pairs.
 type Configer interface {
 	cfg.Initer
@@ -14,13 +17,15 @@ type Configer interface {
 	cfg.Setter
 	SetHandler(handler cfg.Handler)
 	SetHandlerInit(handler cfg.Handler) error
+	SetLogger(l LoggerFunc)
 }
 
 // config is a private type for storing configuration information.
 type config struct {
-	handler   cfg.Handler
+	handler   cfg.Handler   // Handler being used
 	lastError error         // Last error see on get
 	efunc     cfg.ErrorFunc // Error function to call see SetErrorHandler
+	lfunc     LoggerFunc    // Logger function to call
 }
 
 // New creates a new Configer instance that uses the specified Handler for
@@ -32,13 +37,16 @@ func New(handler cfg.Handler) Configer {
 // Init initializes the Configer. It should be called before retrieving
 // or setting keys.
 func (c *config) Init() error {
-	return c.handler.Init()
+	err := c.handler.Init()
+	c.log(INIT, err)
+	return err
 }
 
 // Get returns the value for a key. It can return any value type.
 func (c *config) Get(key string, args ...interface{}) (interface{}, error) {
 	value, err := c.handler.Get(key, args...)
 	c.lastError = err
+	c.log(GET, err, toVarArgs(args, key)...)
 	return value, err
 }
 
@@ -49,7 +57,9 @@ func (c *config) GetIntErr(key string, args ...interface{}) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-	return cfg.ToInt(val)
+	ival, err := cfg.ToInt(val)
+	c.log(TOINT, err, toVarArgs(args, val, ival)...)
+	return ival, err
 }
 
 // GetStringErr returns an string value for a key. See TypeGetter interface for
@@ -59,7 +69,9 @@ func (c *config) GetStringErr(key string, args ...interface{}) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return cfg.ToString(val)
+	sval, err := cfg.ToString(val)
+	c.log(TOSTRING, err, toVarArgs(args, val, sval)...)
+	return sval, err
 }
 
 // GetTimeErr returns an time.Time value for a key. See TypeGetter interface for
@@ -69,7 +81,9 @@ func (c *config) GetTimeErr(key string, args ...interface{}) (time.Time, error) 
 	if err != nil {
 		return time.Time{}, err
 	}
-	return cfg.ToTime(val)
+	tval, err := cfg.ToTime(val)
+	c.log(TOTIME, err, toVarArgs(args, val, tval)...)
+	return tval, err
 }
 
 // GetBoolErr returns an bool value for a key. See TypeGetter interface for
@@ -79,7 +93,9 @@ func (c *config) GetBoolErr(key string, args ...interface{}) (bool, error) {
 	if err != nil {
 		return false, err
 	}
-	return cfg.ToBool(val)
+	bval, err := cfg.ToBool(val)
+	c.log(TOBOOL, err, toVarArgs(args, val, bval)...)
+	return bval, err
 }
 
 // GetInt gets an integer key. It returns the default value of 0 if
@@ -168,5 +184,25 @@ func (c *config) SetHandlerInit(handler cfg.Handler) error {
 
 // Set sets key to value. See Setter interface for error codes.
 func (c *config) Set(key string, value interface{}, args ...interface{}) error {
-	return c.handler.Set(key, value, args...)
+	err := c.handler.Set(key, value, args...)
+	c.log(SET, err, toVarArgs(args, key, value)...)
+	return err
+}
+
+// SetLogger sets the logging function to call for configuration events.
+func (c *config) SetLogger(l LoggerFunc) {
+	c.lfunc = l
+}
+
+// log calls the logging function set with SetLogger.
+func (c *config) log(event Event, err error, args ...interface{}) {
+	if c.lfunc != nil {
+		c.lfunc(event, err, args...)
+	}
+}
+
+// toVarArgs prepends additionalArgs to args. Used to create a
+// new set of variable arguments.
+func toVarArgs(args []interface{}, additionalArgs ...interface{}) []interface{} {
+	return append(additionalArgs, args...)
 }

@@ -1,6 +1,7 @@
 package cfg
 
 import (
+	"fmt"
 	"github.com/spf13/cast"
 	"strconv"
 	"time"
@@ -44,6 +45,47 @@ func ToInt(in interface{}) (int, error) {
 		return val, nil
 	}
 	return 0, ErrBadType
+}
+
+// ToInt64 converts in to an int value
+func ToInt64(in interface{}) (int64, error) {
+	if val, err := ToInt64E(in); err == nil {
+		return val, nil
+	}
+	return 0, ErrBadType
+}
+
+// ToInt64E is the same as cast.ToIntE, except it returns a 64 bit int.
+func ToInt64E(in interface{}) (int64, error) {
+	switch s := in.(type) {
+	case int:
+		return int64(s), nil
+	case int64:
+		return s, nil
+	case int32:
+		return int64(s), nil
+	case int16:
+		return int64(s), nil
+	case int8:
+		return int64(s), nil
+	case string:
+		v, err := strconv.ParseInt(s, 0, 64)
+		if err != nil {
+			return 0, fmt.Errorf("unable to Cast %#v to int", in)
+		}
+		return v, nil
+	case float64:
+		return int64(s), nil
+	case bool:
+		if bool(s) {
+			return 1, nil
+		}
+		return 0, nil
+	case nil:
+		return 0, nil
+	default:
+		return 0, fmt.Errorf("unable to Cast %#v to int", in)
+	}
 }
 
 // ToString converts in to a string value.
