@@ -109,17 +109,21 @@ func (h *ReqHandler) nextCommand() reqStateFN {
 	request := h.req()
 	switch req := request.(type) {
 	case protocol.UploadReq:
+		fmt.Println("UploadReq")
 		var respUpload *protocol.UploadResp
 		respUpload, err = h.upload(&req)
 		if err == nil {
 			return h.uploadLoop(respUpload)
 		}
 	case protocol.CreateFileReq:
+		fmt.Println("CreateFileReq")
 		resp, err = h.createFile(&req)
 		fmt.Println("left createFile")
 	case protocol.CreateDirReq:
+		fmt.Println("CreateDirReq")
 		resp, err = h.createDir(&req)
 	case protocol.CreateProjectReq:
+		fmt.Println("CreateProjectReq")
 		resp, err = h.createProject(&req)
 	case protocol.DownloadReq:
 	case protocol.MoveReq:
@@ -138,6 +142,7 @@ func (h *ReqHandler) nextCommand() reqStateFN {
 		return nil
 	case protocol.IndexReq:
 	default:
+		fmt.Println("bad request")
 		h.badRequestCount = h.badRequestCount + 1
 		return h.badRequestNext(mcerr.Errorf(mcerr.ErrInvalid, "Bad request %T", req))
 	}
