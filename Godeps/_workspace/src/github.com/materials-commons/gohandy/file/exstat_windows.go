@@ -18,12 +18,16 @@ type winExFileInfo struct {
 
 // CTime returns the CreationTime from Win32FileAttributeData.
 func (fi *winExFileInfo) CTime() time.Time {
-	return time.Unix(0, fi.Sys().(syscall.Win32FileAttributeData).CreationTime.Nanoseconds())
+	creationTime := fi.Sys().(syscall.Win32FileAttributeData).CreationTime
+	n := creationTime.Nanoseconds()
+	return time.Unix(0, n)
 }
 
 // ATime returns the LastAccessTime from Win32FileAttributeData.
 func (fi *winExFileInfo) ATime() time.Time {
-	return time.Unix(0, fi.Sys().(syscall.Win32FileAttributeData).LastAccessTime.Nanoseconds())
+	lastAccessTime := fi.Sys().(syscall.Win32FileAttributeData).LastAccessTime
+	n := lastAccessTime.Nanoseconds()
+	return time.Unix(0, n)
 }
 
 // FID returns the windows version of a file id. The FID for Windows
