@@ -9,17 +9,21 @@ import (
 )
 
 // rDirs implements the Dirs interface for RethinkDB
-type rDirs struct{}
+type rDirs struct {
+	session *r.Session
+}
 
 // newRDirs creates a new instance of rDirs
-func newRDirs() rDirs {
-	return rDirs{}
+func newRDirs(session *r.Session) rDirs {
+	return rDirs{
+		session: session,
+	}
 }
 
 // ByID looks up a dir by its primary key. In RethinkDB this is the id field.
 func (d rDirs) ByID(id string) (*schema.Directory, error) {
 	var dir schema.Directory
-	if err := model.Dirs.Q().ByID(id, &dir); err != nil {
+	if err := model.Dirs.Qs(d.session).ByID(id, &dir); err != nil {
 		return nil, err
 	}
 	return &dir, nil
@@ -29,7 +33,7 @@ func (d rDirs) ByID(id string) (*schema.Directory, error) {
 func (d rDirs) ByPath(path, projectID string) (*schema.Directory, error) {
 	rql := model.Dirs.T().GetAllByIndex("name", path).Filter(r.Row.Field("project").Eq(projectID))
 	var dir schema.Directory
-	if err := model.Dirs.Q().Row(rql, &dir); err != nil {
+	if err := model.Dirs.Qs(d.session).Row(rql, &dir); err != nil {
 		return nil, err
 	}
 	return &dir, nil
@@ -39,7 +43,7 @@ func (d rDirs) ByPath(path, projectID string) (*schema.Directory, error) {
 // AddFiles method. This method will not update related items. AddFiles takes care
 // of updating other related tables.
 func (d rDirs) Update(dir *schema.Directory) error {
-	if err := model.Dirs.Q().Update(dir.ID, dir); err != nil {
+	if err := model.Dirs.Qs(d.session).Update(dir.ID, dir); err != nil {
 		return err
 	}
 	return nil
@@ -50,7 +54,8 @@ func (d rDirs) Update(dir *schema.Directory) error {
 // steps failed. The call needs to handle this case.
 func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 	var newDir schema.Directory
-	if err := model.Dirs.Q().Insert(dir, &newDir); err != nil {
+
+	if err := model.Dirs.Qs(d.session).Insert(dir, &newDir); err != nil {
 		return nil, mcfserr.ErrDB
 	}
 
@@ -69,7 +74,7 @@ func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 		}
 	}
 
-	if err := model.DirsDenorm.Q().Insert(ddirDenorm, nil); err != nil {
+	if err := model.DirsDenorm.Qs(d.session).Insert(ddirDenorm, nil); err != nil {
 		return &newDir, mcfserr.ErrDB
 	}
 
@@ -88,7 +93,7 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 		}
 	}
 
-	if err := model.Dirs.Q().Update(dir.ID, dir); err != nil {
+	if err := model.Dirs.Qs(d.session).Update(dir.ID, dir); err != nil {
 		return mcfserr.ErrDB
 	}
 
@@ -99,12 +104,12 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 		return mcfserr.ErrDB
 	}
 
-	if err := model.DirsDenorm.Q().ByID(dir.ID, &dirDenorm); err != nil {
+	if err := model.DirsDenorm.Qs(d.session).ByID(dir.ID, &dirDenorm); err != nil {
 		return mcfserr.ErrDB
 	}
 
 	dirDenorm.DataFiles = fileEntries
-	if err := model.DirsDenorm.Q().Update(dirDenorm.ID, dirDenorm); err != nil {
+	if err := model.DirsDenorm.Qs(d.session).Update(dirDenorm.ID, dirDenorm); err != nil {
 		return mcfserr.ErrDB
 	}
 
@@ -117,7 +122,8 @@ func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.F
 	var errorReturn error
 	for _, dataFileID := range dataFileIDs {
 		var dataFile schema.File
-		if err := model.Files.Q().ByID(dataFileID, &dataFile); err != nil {
+
+		if err := model.Files.Qs(d.session).ByID(dataFileID, &dataFile); err != nil {
 			errorReturn = mcfserr.ErrDB
 			continue
 		}
@@ -144,11 +150,12 @@ func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
 		return err
 	}
 	var dirDenorm schema.DataDirDenorm
-	if err := model.DirsDenorm.Q().ByID(dir.ID, &dirDenorm); err != nil {
+
+	if err := model.DirsDenorm.Qs(d.session).ByID(dir.ID, &dirDenorm); err != nil {
 		return mcfserr.ErrDB
 	}
 	dirDenorm.DataFiles = removeMatchingFileIDs(dirDenorm, fileIDs...)
-	if err := model.DirsDenorm.Q().Update(dirDenorm.ID, dirDenorm); err != nil {
+	if err := model.DirsDenorm.Qs(d.session).Update(dirDenorm.ID, dirDenorm); err != nil {
 		return mcfserr.ErrDB
 	}
 	return nil

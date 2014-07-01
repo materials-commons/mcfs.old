@@ -5,6 +5,13 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
+	"os"
+	"os/user"
+	"path/filepath"
+	"strings"
+	"time"
+
 	"github.com/dustin/go-humanize"
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/gohandy/file"
@@ -16,12 +23,6 @@ import (
 	"github.com/materials-commons/mcfs/client/mcfs"
 	u "github.com/materials-commons/mcfs/client/user"
 	"github.com/materials-commons/mcfs/client/ws"
-	"io/ioutil"
-	"os"
-	"os/user"
-	"path/filepath"
-	"strings"
-	"time"
 )
 
 var mcuser, _ = u.NewCurrentUser()

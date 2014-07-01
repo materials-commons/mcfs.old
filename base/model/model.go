@@ -34,7 +34,7 @@ func (q *Query) ByID(id string, obj interface{}) error {
 func (m *Model) Q() *Query {
 	session, err := db.RSession()
 	if err != nil {
-		panic("Unable to connect to database")
+		panic(fmt.Sprintf("Unable to connect to database:", err))
 	}
 	return m.Qs(session)
 }

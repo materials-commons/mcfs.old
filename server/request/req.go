@@ -2,28 +2,18 @@ package request
 
 import (
 	"fmt"
+	"io"
+
 	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/inuse"
-	"io"
+	"github.com/materials-commons/mcfs/server/service"
 )
 
 const maxBadRequests = 10
 
 type reqStateFN func() reqStateFN
-
-// Run run the ReqHandler state machine. It also performs any needed cleanup when
-// the state machine finishes. The state machine accepts and processes request
-// according to the mcfs.protocol package.
-func (h *ReqHandler) Run() {
-	for reqStateFN := h.startState; reqStateFN != nil; {
-		reqStateFN = reqStateFN()
-	}
-
-	// Release project lock.
-	inuse.Unmark(h.projectID)
-}
 
 type errorReq struct{}
 
@@ -34,6 +24,7 @@ type ReqHandler struct {
 	mcdir           string
 	projectID       string
 	buf             []byte
+	service         *service.Service
 	io.ReadWriter
 }
 
@@ -45,7 +36,20 @@ func NewReqHandler(rw io.ReadWriter, encoderDecoder codex.EncoderDecoder, mcdir 
 		codex:      protocol.NewCodex(encoderDecoder),
 		mcdir:      mcdir,
 		buf:        make([]byte, maxBufSize),
+		service:    service.New(service.RethinkDB),
 	}
+}
+
+// Run run the ReqHandler state machine. It also performs any needed cleanup when
+// the state machine finishes. The state machine accepts and processes request
+// according to the mcfs.protocol package.
+func (h *ReqHandler) Run() {
+	for reqStateFN := h.startState; reqStateFN != nil; {
+		reqStateFN = reqStateFN()
+	}
+
+	// Release project lock.
+	inuse.Unmark(h.projectID)
 }
 
 func (h *ReqHandler) req() interface{} {

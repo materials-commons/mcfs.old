@@ -3,14 +3,17 @@ package request
 import (
 	"crypto/md5"
 	"fmt"
+
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/base/codex"
-	"github.com/materials-commons/mcfs/base/mc"
-	"github.com/materials-commons/mcfs/base/model"
-	"github.com/materials-commons/mcfs/base/protocol"
+
 	"io/ioutil"
 	"os"
 	"testing"
+
+	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/materials-commons/mcfs/base/model"
+	"github.com/materials-commons/mcfs/base/protocol"
 )
 
 var _ = fmt.Println

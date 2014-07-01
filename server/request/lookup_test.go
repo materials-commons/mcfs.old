@@ -2,8 +2,9 @@ package request
 
 import (
 	"fmt"
-	//"github.com/materials-commons/mcfs/base/protocol"
 	"testing"
+
+	"github.com/materials-commons/mcfs/server"
 )
 
 var _ = fmt.Println
@@ -14,6 +15,10 @@ type lookupTest struct {
 	limitTo  string
 	errorNil bool
 	comment  string
+}
+
+func init() {
+	mcfs.InitRethinkDB()
 }
 
 /*

@@ -27,13 +27,6 @@ package main
 
 import (
 	"fmt"
-	"github.com/jessevdk/go-flags"
-	"github.com/materials-commons/config"
-	"github.com/materials-commons/mcfs/base/codex"
-	"github.com/materials-commons/mcfs/base/mc"
-	_ "github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/request"
-	"github.com/materials-commons/mcfs/server/service"
 	"mime"
 	"net"
 	"net/http"
@@ -41,6 +34,15 @@ import (
 	"path/filepath"
 	"runtime/debug"
 	"strings"
+
+	"github.com/jessevdk/go-flags"
+	"github.com/materials-commons/config"
+	"github.com/materials-commons/mcfs/base/codex"
+	"github.com/materials-commons/mcfs/base/db"
+	"github.com/materials-commons/mcfs/base/mc"
+	_ "github.com/materials-commons/mcfs/protocol"
+	"github.com/materials-commons/mcfs/server/request"
+	"github.com/materials-commons/mcfs/server/service"
 )
 
 // Options for server startup
@@ -69,9 +71,20 @@ func configErrorHandler(key string, err error, args ...interface{}) {
 
 }
 
+var s *service.Service
+
+func setupRethinkDB() {
+	dbConn := config.GetString("MCDB_CONNECTION")
+	dbName := config.GetString("MCDB_NAME")
+	db.SetAddress(dbConn)
+	db.SetDatabase(dbName)
+}
+
 func init() {
 	config.Init(config.TwelveFactorWithOverride)
 	config.SetErrorHandler(configErrorHandler)
+	setupRethinkDB()
+	s = service.New(service.RethinkDB)
 }
 
 func main() {
@@ -99,7 +112,6 @@ func main() {
 		}
 	}()
 
-	service.Init()
 	go webserver(opts.Server.HTTPPort)
 
 	acceptConnections(listener)
@@ -140,7 +152,7 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	download := req.FormValue("download")
 
 	// Verify key
-	u, err := service.User.ByAPIKey(apikey)
+	u, err := s.User.ByAPIKey(apikey)
 	if err != nil {
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -148,11 +160,11 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 
 	// Get datafile from db and check access
 	dataFileID := filepath.Base(req.URL.Path)
-	df, err := service.File.ByID(dataFileID)
+	df, err := s.File.ByID(dataFileID)
 	switch {
 	case err != nil:
 		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	case !service.Group.HasAccess(df.Owner, u.Email):
+	case !s.Group.HasAccess(df.Owner, u.Email):
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	default:
 		var path string

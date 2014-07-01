@@ -2,16 +2,17 @@ package request
 
 import (
 	"fmt"
+	"testing"
+
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/protocol"
-	"github.com/materials-commons/mcfs/server/service"
-	"testing"
+	"github.com/materials-commons/mcfs/server"
 )
 
 func init() {
-	service.Init()
+	mcfs.InitRethinkDB()
 }
 
 func TestCreateDir(t *testing.T) {

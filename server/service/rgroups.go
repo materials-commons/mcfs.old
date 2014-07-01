@@ -1,22 +1,27 @@
 package service
 
 import (
+	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
 )
 
 // rGroups implements the Groups interface for RethinkDB
-type rGroups struct{}
+type rGroups struct {
+	session *r.Session
+}
 
 // newRGroups creates a new instance of rGroups
-func newRGroups() rGroups {
-	return rGroups{}
+func newRGroups(session *r.Session) rGroups {
+	return rGroups{
+		session: session,
+	}
 }
 
 // ByID looks up a group by its primary key.
 func (g rGroups) ByID(id string) (*schema.Group, error) {
 	var group schema.Group
-	if err := model.Groups.Q().ByID(id, &group); err != nil {
+	if err := model.Groups.Qs(g.session).ByID(id, &group); err != nil {
 		return nil, err
 	}
 	return &group, nil
@@ -25,7 +30,7 @@ func (g rGroups) ByID(id string) (*schema.Group, error) {
 // Insert creates a new group.
 func (g rGroups) Insert(group *schema.Group) (*schema.Group, error) {
 	var newGroup schema.Group
-	if err := model.Groups.Q().Insert(group, &newGroup); err != nil {
+	if err := model.Groups.Qs(g.session).Insert(group, &newGroup); err != nil {
 		return nil, err
 	}
 	return &newGroup, nil
@@ -33,7 +38,7 @@ func (g rGroups) Insert(group *schema.Group) (*schema.Group, error) {
 
 // Delete deletes a group. It updates all dependent objects.
 func (g rGroups) Delete(id string) error {
-	return model.Groups.Q().Delete(id)
+	return model.Groups.Qs(g.session).Delete(id)
 }
 
 // HasAccess checks to see if the user making the request has access to the
@@ -58,7 +63,7 @@ func (g rGroups) ownerGaveAccessTo(owner, user string) bool {
 	// Get the owners groups
 	rql := model.Groups.T().GetAllByIndex("owner", owner)
 	var groups []schema.Group
-	if err := model.Groups.Q().Rows(rql, &groups); err != nil {
+	if err := model.Groups.Qs(g.session).Rows(rql, &groups); err != nil {
 		// Some sort of error occurred, assume no access
 		return false
 	}

@@ -13,7 +13,7 @@ func EnvUpper() cfg.Handler {
 
 type envHandler struct{}
 
-// EnvHandler returns a Handler that access keys that are environment variables.
+// Env returns a Handler that access keys that are environment variables.
 func Env() cfg.Handler {
 	return &envHandler{}
 }

@@ -4,9 +4,14 @@ import (
 	"github.com/materials-commons/mcfs/base/log"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
+	"github.com/materials-commons/mcfs/server"
 	"github.com/materials-commons/mcfs/server/mcfserr"
 	"github.com/materials-commons/mcfs/server/service"
 )
+
+func init() {
+	mcfs.InitRethinkDB()
+}
 
 // Create our own context log that always includes our server name.
 var l = log.New("server", "AccessServer")
@@ -44,7 +49,7 @@ type accessServer struct {
 
 // We only expose a single access server. The public routines work against this instance.
 var server = &accessServer{
-	apikeys: newAPIKeys(service.NewUsers(service.RethinkDB)),
+	apikeys: newAPIKeys(service.New(service.RethinkDB).User),
 }
 
 // Server returns the singleton accessServer.

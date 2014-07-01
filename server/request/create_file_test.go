@@ -2,12 +2,13 @@ package request
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/base/codex"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/protocol"
 	"github.com/materials-commons/mcfs/server/service"
-	"testing"
 )
 
 var _ = fmt.Println
@@ -130,7 +131,7 @@ func TestCreateFile(t *testing.T) {
 }
 
 func TestNewFile(t *testing.T) {
-	cfh := newCreateFileHandler("test@mc.org")
+	cfh := newCreateFileHandler("test@mc.org", service.New(service.RethinkDB))
 
 	req := &protocol.CreateFileReq{
 		ProjectID:   "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
@@ -165,7 +166,7 @@ func TestNewFile(t *testing.T) {
 	}
 
 	// Insert file and then test to make sure we can find a duplicate when creating a new file.
-	newf, _ := service.File.InsertEntry(f)
+	newf, _ := cfh.service.File.InsertEntry(f)
 
 	req.Name = "newFilev2.txt"
 	f = cfh.newFile(req)
@@ -173,11 +174,11 @@ func TestNewFile(t *testing.T) {
 		t.Errorf("Should have found a dup and set UsesID to it.")
 	}
 
-	service.File.Delete(newf.ID)
+	cfh.service.File.Delete(newf.ID)
 }
 
 func TestCreateNewFile(t *testing.T) {
-	cfh := newCreateFileHandler("test@mc.org")
+	cfh := newCreateFileHandler("test@mc.org", service.New(service.RethinkDB))
 
 	req := &protocol.CreateFileReq{
 		ProjectID:   "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
@@ -189,10 +190,10 @@ func TestCreateNewFile(t *testing.T) {
 
 	// Create a new file and make sure it is setup correctly
 	resp, _ := cfh.createNewFile(req)
-	f, _ := service.File.ByID(resp.FileID)
+	f, _ := cfh.service.File.ByID(resp.FileID)
 
 	f.Current = true
-	service.File.Update(f)
+	cfh.service.File.Update(f)
 
 	// The only thing to test at this point is Parent
 	if f.Parent != "" {
@@ -204,12 +205,12 @@ func TestCreateNewFile(t *testing.T) {
 	req.Name = "newFile.txt"
 	req.Checksum = "abc123v2new"
 	resp, _ = cfh.createNewFile(req)
-	f2, _ := service.File.ByID(resp.FileID)
+	f2, _ := cfh.service.File.ByID(resp.FileID)
 
 	if f2.Parent != f.ID {
 		t.Errorf("Expected new version of file to have its parent set to previous version.")
 	}
 
-	service.File.Delete(f.ID)
-	service.File.Delete(f2.ID)
+	cfh.service.File.Delete(f.ID)
+	cfh.service.File.Delete(f2.ID)
 }

@@ -8,7 +8,7 @@ import (
 
 // login validates a login request.
 func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, error) {
-	if validLogin(req.User, req.APIKey) {
+	if validLogin(req.User, req.APIKey, h.service) {
 		h.user = req.User
 		return &protocol.LoginResp{}, nil
 	}
@@ -18,8 +18,8 @@ func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, error) 
 
 // validLogin looks the user up in the database and compares the APIKey passed in with
 // the APIKey in the database.
-func validLogin(user, apikey string) bool {
-	u, err := service.User.ByID(user)
+func validLogin(user, apikey string, s *service.Service) bool {
+	u, err := s.User.ByID(user)
 	switch {
 	case err != nil:
 		return false

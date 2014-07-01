@@ -11,7 +11,7 @@ var _ = fmt.Println
 func TestRUsersByID(t *testing.T) {
 	db.SetAddress("localhost:30815")
 	db.SetDatabase("materialscommons")
-	rusers := newRUsers()
+	rusers := newRUsers(session)
 
 	// Test existing
 	u, err := rusers.ByID("test@mc.org")
@@ -31,7 +31,7 @@ func TestRUsersByID(t *testing.T) {
 }
 
 func TestRUsersByAPIKey(t *testing.T) {
-	rusers := newRUsers()
+	rusers := newRUsers(session)
 
 	// Test existing
 	u, err := rusers.ByAPIKey("test")
@@ -51,7 +51,7 @@ func TestRUsersByAPIKey(t *testing.T) {
 }
 
 func TestRUsersAll(t *testing.T) {
-	rusers := newRUsers()
+	rusers := newRUsers(session)
 
 	users, err := rusers.All()
 	if err != nil {
