@@ -28,18 +28,22 @@ type uploadResource struct {
 	assembleRequest chan finishRequest
 }
 
+// A FlowRequest encapsulates the flowjs protocol for uploading a file. The
+// protocol supports extensions to the protocol. We extend the protocol to
+// include Materials Commons specific information. It is also expected that
+// the data sent by flow or another client will be placed in chunkData.
 type FlowRequest struct {
-	FlowChunkNumber  int64  `json:"flowChunkNumber"`
-	FlowTotalChunks  int64  `json:"flowTotalChunks"`
-	FlowChunkSize    int32  `json:"flowChunkSize"`
-	FlowTotalSize    int64  `json:"flowTotalSize"`
-	FlowIdentifier   string `json: "flowIdentifier"`
-	FlowFileName     string `json: "flowFilename"`
-	FlowRelativePath string `json: "flowRelativePath"`
-	ProjectID        string `json:"projectID"`
-	DirectoryID      string `json:"directoryID"`
-	FileID           string `json: "fileID"`
-	ChunkData        []byte `json: "chunkData" `
+	FlowChunkNumber  int64  `json:"flowChunkNumber"`   // The chunk being sent.
+	FlowTotalChunks  int64  `json:"flowTotalChunks"`   // The total number of chunks to send.
+	FlowChunkSize    int32  `json:"flowChunkSize"`     // The size of the chunk.
+	FlowTotalSize    int64  `json:"flowTotalSize"`     // The size of the file being uploaded.
+	FlowIdentifier   string `json: "flowIdentifier"`   // A unique identifier used by Flow. Not guaranteed to be a GUID.
+	FlowFileName     string `json: "flowFilename"`     // The file name being uploaded.
+	FlowRelativePath string `json: "flowRelativePath"` // When available the relative file path.
+	ProjectID        string `json:"projectID"`         // Materials Commons Project ID.
+	DirectoryID      string `json:"directoryID"`       // Materials Commons Directory ID.
+	FileID           string `json: "fileID"`           // Materials Commons File ID.
+	ChunkData        []byte `json: "chunkData" `       // The file chunk.
 }
 
 func newUploadResource(container *restful.Container) error {
