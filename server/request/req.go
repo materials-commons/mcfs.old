@@ -44,12 +44,13 @@ func NewReqHandler(rw io.ReadWriter, encoderDecoder codex.EncoderDecoder, mcdir 
 // the state machine finishes. The state machine accepts and processes request
 // according to the mcfs.protocol package.
 func (h *ReqHandler) Run() {
+	// Release project lock.
+	defer inuse.Unmark(h.projectID)
+
 	for reqStateFN := h.startState; reqStateFN != nil; {
 		reqStateFN = reqStateFN()
 	}
 
-	// Release project lock.
-	inuse.Unmark(h.projectID)
 }
 
 func (h *ReqHandler) req() interface{} {
