@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
+	"mime/multipart"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -33,17 +34,17 @@ type uploadResource struct {
 // include Materials Commons specific information. It is also expected that
 // the data sent by flow or another client will be placed in chunkData.
 type FlowRequest struct {
-	FlowChunkNumber  int64  `json:"flowChunkNumber"`  // The chunk being sent.
-	FlowTotalChunks  int64  `json:"flowTotalChunks"`  // The total number of chunks to send.
-	FlowChunkSize    int32  `json:"flowChunkSize"`    // The size of the chunk.
-	FlowTotalSize    int64  `json:"flowTotalSize"`    // The size of the file being uploaded.
-	FlowIdentifier   string `json:"flowIdentifier"`   // A unique identifier used by Flow. Not guaranteed to be a GUID.
-	FlowFileName     string `json:"flowFilename"`     // The file name being uploaded.
-	FlowRelativePath string `json:"flowRelativePath"` // When available the relative file path.
-	ProjectID        string `json:"projectID"`        // Materials Commons Project ID.
-	DirectoryID      string `json:"directoryID"`      // Materials Commons Directory ID.
-	FileID           string `json:"fileID"`           // Materials Commons File ID.
-	ChunkData        []byte `json:"chunkData" `       // The file chunk.
+	FlowChunkNumber  int32           `json:"flowChunkNumber"`  // The chunk being sent.
+	FlowTotalChunks  int32           `json:"flowTotalChunks"`  // The total number of chunks to send.
+	FlowChunkSize    int32           `json:"flowChunkSize"`    // The size of the chunk.
+	FlowTotalSize    int64           `json:"flowTotalSize"`    // The size of the file being uploaded.
+	FlowIdentifier   string          `json:"flowIdentifier"`   // A unique identifier used by Flow. Not guaranteed to be a GUID.
+	FlowFileName     string          `json:"flowFilename"`     // The file name being uploaded.
+	FlowRelativePath string          `json:"flowRelativePath"` // When available the relative file path.
+	ProjectID        string          `json:"projectID"`        // Materials Commons Project ID.
+	DirectoryID      string          `json:"directoryID"`      // Materials Commons Directory ID.
+	FileID           string          `json:"fileID"`           // Materials Commons File ID.
+	Chunk            *multipart.Part `json:"-"`                // The file data.
 }
 
 func newUploadResource(container *restful.Container) error {
@@ -104,18 +105,28 @@ func (r uploadResource) assembleFile(request finishRequest) {
 
 func (r uploadResource) register(container *restful.Container) {
 	ws := new(restful.WebService)
+
 	ws.Path("/upload").
-		Consumes(restful.MIME_JSON).
 		Produces(restful.MIME_JSON)
-	ws.Route(ws.POST("file").To(r.uploadFileChunk).
-		Doc("Upload file").
+	ws.Route(ws.POST("/file").To(r.uploadFileChunk).
+		Consumes("multipart/form-data").
+		Doc("Upload file"))
+	ws.Route(ws.GET("/file").To(r.restartFileChunk).
+		Doc("Restart upload").
 		Reads(FlowRequest{}))
+
+	container.Add(ws)
+}
+
+func (r uploadResource) restartFileChunk(request *restful.Request, response *restful.Response) {
+	response.WriteErrorString(http.StatusInternalServerError, "no such file")
+	//response.WriteErrorString(http.StatusOK, "")
 }
 
 func (r uploadResource) uploadFileChunk(request *restful.Request, response *restful.Response) {
-	flowRequest := new(FlowRequest)
+	flowRequest, err := form2FlowRequest(request)
 
-	if err := request.ReadEntity(&flowRequest); err != nil {
+	if err != nil {
 		response.WriteErrorString(http.StatusNotAcceptable, fmt.Sprintf("Bad Request: %s", err))
 		return
 	}
@@ -126,15 +137,17 @@ func (r uploadResource) uploadFileChunk(request *restful.Request, response *rest
 		return
 	}
 
-	cpath := chunkPath(uploadPath, flowRequest.FlowIdentifier)
-	if err := ioutil.WriteFile(cpath, flowRequest.ChunkData, chunkPerms); err != nil {
-		response.WriteErrorString(http.StatusInternalServerError, fmt.Sprintf("Unable to write chunk for file: %s", err))
-		return
-	}
+	// cpath := chunkPath(uploadPath, flowRequest.FlowIdentifier)
+	// if err := ioutil.WriteFile(cpath, flowRequest.ChunkData, chunkPerms); err != nil {
+	// 	response.WriteErrorString(http.StatusInternalServerError, fmt.Sprintf("Unable to write chunk for file: %s", err))
+	// 	return
+	// }
 
 	if flowRequest.FlowChunkNumber == flowRequest.FlowTotalChunks {
 		r.finishUpload(uploadPath)
 	}
+
+	response.WriteErrorString(http.StatusOK, "")
 }
 
 func (r uploadResource) finishUpload(uploadPath string) {
