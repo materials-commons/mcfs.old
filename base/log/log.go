@@ -2,8 +2,9 @@ package log
 
 import (
 	"fmt"
-	"github.com/inconshreveable/log15"
 	"os"
+
+	"github.com/inconshreveable/log15"
 )
 
 var (
@@ -17,7 +18,6 @@ var (
 func init() {
 	stdoutHandler := log15.StreamHandler(os.Stdout, log15.LogfmtFormat())
 	SetDefaultHandler(log15.LvlFilterHandler(log15.LvlInfo, stdoutHandler))
-	L.SetHandler(defaultHandler)
 }
 
 // New creates a new instance of the logger using the current default handler
