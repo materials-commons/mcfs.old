@@ -43,6 +43,7 @@ import (
 	_ "github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/request"
 	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/ws"
 )
 
 // Options for server startup
@@ -137,7 +138,11 @@ func setupConfig(dbOpts databaseOptions, serverOpts serverOptions) {
 
 // webserver starts an http server that serves out datafile.
 func webserver(port uint) {
+	container := ws.NewRegisteredServicesContainer()
+	http.Handle("/", container)
 	http.HandleFunc("/datafiles/static/", datafileHandler)
+	dir := http.Dir("/tmp/flow")
+	http.Handle("/uploader/", http.StripPrefix("/uploader/", http.FileServer(dir)))
 	fmt.Println(http.ListenAndServe(fmt.Sprintf(":%d", port), nil))
 }
 

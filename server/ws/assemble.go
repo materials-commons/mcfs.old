@@ -49,7 +49,7 @@ func (r uploadResource) assembleFile(request finishRequest) {
 
 	sort.Sort(byChunk(finfos))
 	for _, finfo := range finfos {
-		fsrc, err := os.Open(chunkPath(request.uploadPath, finfo.Name()))
+		fsrc, err := os.Open(chunkPath(request.uploadPath, finfo.Name(), 1))
 		if err != nil {
 			return
 		}

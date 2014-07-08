@@ -3,7 +3,9 @@ package ws
 import (
 	"bytes"
 	"errors"
+	"fmt"
 	"io"
+	"io/ioutil"
 	"mime/multipart"
 	"strconv"
 
@@ -79,8 +81,11 @@ func form2FlowRequest(request *restful.Request) (*FlowRequest, error) {
 		if err != nil {
 			break
 		}
-		io.Copy(buf, part)
+
 		name := part.FormName()
+		if name != "chunkData" {
+			io.Copy(buf, part)
+		}
 		switch name {
 		case "flowChunkNumber":
 			r.FlowChunkNumber = atoi32(buf.String())
@@ -103,7 +108,9 @@ func form2FlowRequest(request *restful.Request) (*FlowRequest, error) {
 		case "fileID":
 			r.FileID = buf.String()
 		case "chunkData":
-			r.Chunk = part
+			if r.Chunk, err = ioutil.ReadAll(part); err != nil {
+				fmt.Print("ReadAll error =", err)
+			}
 		}
 		buf.Reset()
 	}
