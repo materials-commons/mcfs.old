@@ -1,4 +1,4 @@
-package ws
+package upload
 
 import (
 	"io"
@@ -9,6 +9,7 @@ import (
 	"strconv"
 
 	"github.com/inconshreveable/log15"
+	"github.com/materials-commons/mcfs/base/flow"
 	"github.com/materials-commons/mcfs/base/log"
 	"github.com/materials-commons/mcfs/base/mc"
 )
@@ -29,7 +30,7 @@ func newAssembler(projectID, directoryID, fileID string) assembler {
 	}
 }
 
-func newAssemberFromFlowRequest(flowReq *FlowRequest) assembler {
+func newAssemberFromFlowRequest(flowReq *flow.Request) assembler {
 	return newAssembler(flowReq.ProjectID, flowReq.DirectoryID, flowReq.FileID)
 }
 

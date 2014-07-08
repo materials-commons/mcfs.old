@@ -1,4 +1,4 @@
-package ws
+package upload
 
 import (
 	"bytes"
@@ -10,14 +10,15 @@ import (
 	"strconv"
 
 	"github.com/emicklei/go-restful"
+	"github.com/materials-commons/mcfs/base/flow"
 	"github.com/materials-commons/mcfs/base/log"
 	"github.com/materials-commons/mcfs/base/mc"
 )
 
-// form2FlowRequest reads a multipart upload form and converts it to a FlowRequest.
-func form2FlowRequest(request *restful.Request) (*FlowRequest, error) {
+// form2FlowRequest reads a multipart upload form and converts it to a flow.Request.
+func form2FlowRequest(request *restful.Request) (*flow.Request, error) {
 	var (
-		r      FlowRequest
+		r      flow.Request
 		err    error
 		reader *multipart.Reader
 		part   *multipart.Part
@@ -31,7 +32,7 @@ func form2FlowRequest(request *restful.Request) (*FlowRequest, error) {
 	}
 
 	// For each part identify its name to decide which field
-	// to fill in the FlowRequest.
+	// to fill in the flow.Request.
 	for {
 		part, err = reader.NextPart()
 		if err != nil {
