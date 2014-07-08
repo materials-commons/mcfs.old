@@ -72,7 +72,6 @@ func (r uploadResource) restartFileChunk(request *restful.Request, response *res
 
 func (r uploadResource) uploadFileChunk(request *restful.Request, response *restful.Response) {
 	flowRequest, err := form2FlowRequest(request)
-
 	if err != nil {
 		response.WriteErrorString(http.StatusNotAcceptable, fmt.Sprintf("Bad Request: %s", err))
 		return

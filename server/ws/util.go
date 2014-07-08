@@ -128,3 +128,12 @@ func atoi32(str string) int32 {
 	i := atoi64(str)
 	return int32(i)
 }
+
+func flowRequest2FinishRequest(flowRequest *FlowRequest) finishRequest {
+	return finishRequest{
+		projectID:   flowRequest.ProjectID,
+		directoryID: flowRequest.DirectoryID,
+		fileID:      flowRequest.FileID,
+		uploadPath:  fileUploadPath(flowRequest.ProjectID, flowRequest.DirectoryID, flowRequest.FileID),
+	}
+}
