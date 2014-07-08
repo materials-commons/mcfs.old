@@ -5,24 +5,18 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
-	"path/filepath"
 
 	"github.com/emicklei/go-restful"
-	"github.com/materials-commons/mcfs/base/mc"
+	"github.com/inconshreveable/log15"
+	"github.com/materials-commons/mcfs/base/log"
 )
 
-const chunkPerms = 0700
-const maxAssemblers = 32
+const chunkPerms = 0700 // Permissions to set uploads to
 
-type finishRequest struct {
-	projectID   string
-	directoryID string
-	fileID      string
-	uploadPath  string
-}
-
+// An uploadResource handles all upload requests.
 type uploadResource struct {
-	assembleRequest chan finishRequest
+	ctracker *chunkTracker
+	log      log15.Logger // Resource specific logging.
 }
 
 // A FlowRequest encapsulates the flowjs protocol for uploading a file. The
@@ -43,76 +37,113 @@ type FlowRequest struct {
 	Chunk            []byte `json:"-"`                // The file data.
 }
 
+// newUploadResource creates a new instance of the upload resource, including
+// registering its paths.
 func newUploadResource(container *restful.Container) error {
-	uploadResource := uploadResource{assembleRequest: make(chan finishRequest, 50)}
-	uploadResource.startAssemblers()
+	uploadResource := uploadResource{
+		ctracker: newChunkTracker(),
+		log:      log.New("resource", "upload"),
+	}
 	uploadResource.register(container)
 	return nil
 }
 
+// register registers the resource and its paths.
 func (r uploadResource) register(container *restful.Container) {
 	ws := new(restful.WebService)
 
 	ws.Path("/upload").
 		Produces(restful.MIME_JSON)
-	ws.Route(ws.POST("/file").To(r.uploadFileChunk).
+	ws.Route(ws.POST("/chunk").To(r.uploadFileChunk).
 		Consumes("multipart/form-data").
-		Doc("Upload file"))
-	ws.Route(ws.GET("/file").To(r.restartFileChunk).
-		Doc("Restart upload").
-		Reads(FlowRequest{}))
+		Doc("Upload a file chunk"))
+	ws.Route(ws.GET("/chunk").To(r.testFileChunk).
+		Reads(FlowRequest{}).
+		Doc("Test if chunk already uploaded."))
 
 	container.Add(ws)
 }
 
-func (r uploadResource) restartFileChunk(request *restful.Request, response *restful.Response) {
+// testFileChunk checks if a chunk has already been uploaded. At the moment we don't
+// support this functionality, so always return an error.
+func (r uploadResource) testFileChunk(request *restful.Request, response *restful.Response) {
 	response.WriteErrorString(http.StatusInternalServerError, "no such file")
-	//response.WriteErrorString(http.StatusOK, "")
 }
 
+// uploadFileChunk uploads a new file chunk.
 func (r uploadResource) uploadFileChunk(request *restful.Request, response *restful.Response) {
+	// Create request
 	flowRequest, err := form2FlowRequest(request)
 	if err != nil {
+		r.log.Error(log.Msg("Error converting form to FlowRequest: %s", err))
 		response.WriteErrorString(http.StatusNotAcceptable, fmt.Sprintf("Bad Request: %s", err))
 		return
 	}
 
-	uploadPath := fileUploadPath(flowRequest.ProjectID, flowRequest.DirectoryID, flowRequest.FileID)
-	if err := os.MkdirAll(uploadPath, chunkPerms); err != nil {
-		response.WriteErrorString(http.StatusInternalServerError, fmt.Sprintf("Unable to create temporary chunk space: %s", err))
+	// Ensure directory path exists
+	uploadPath, err := r.createUploadDir(flowRequest)
+	if err != nil {
+		msg := fmt.Sprintf("Unable to create temporary chunk space: %s", err)
+		r.log.Error(msg)
+		response.WriteErrorString(http.StatusInternalServerError, msg)
 		return
 	}
 
-	cpath := chunkPath(uploadPath, flowRequest.FlowIdentifier, flowRequest.FlowChunkNumber)
-	if err := r.writeChunk(cpath, flowRequest.Chunk); err != nil {
-		response.WriteErrorString(http.StatusInternalServerError, fmt.Sprintf("Unable to write chunk for file: %s", err))
+	// Write chunk and determine if done.
+	if err := r.processChunk(uploadPath, flowRequest); err != nil {
+		msg := fmt.Sprintf("Unable to write chunk for file: %s", err)
+		r.log.Error(msg)
+		response.WriteErrorString(http.StatusInternalServerError, msg)
 		return
-	}
-
-	if flowRequest.FlowChunkNumber == flowRequest.FlowTotalChunks {
-		r.finishUpload(uploadPath)
 	}
 
 	response.WriteErrorString(http.StatusOK, "")
 }
 
-func (r uploadResource) writeChunk(chunkpath string, chunk []byte) error {
-	err := ioutil.WriteFile(chunkpath, chunk, chunkPerms)
-	if err != nil {
-		fmt.Println("WriteFile:", err)
+// createUploadDir creates the directory for the chunk.
+func (r uploadResource) createUploadDir(flowRequest *FlowRequest) (string, error) {
+	uploadPath := fileUploadPath(flowRequest.ProjectID, flowRequest.DirectoryID, flowRequest.FileID)
+
+	// os.MkdirAll returns nil if the path already exists.
+	return uploadPath, os.MkdirAll(uploadPath, chunkPerms)
+}
+
+// processChunk writes the chunk and determines if this is the last chunk to write.
+// If the last chunk has been uploaded it kicks off a reassembly of the file.
+func (r uploadResource) processChunk(uploadPath string, flowRequest *FlowRequest) error {
+	cpath := chunkPath(uploadPath, flowRequest.FlowChunkNumber)
+	if err := r.writeChunk(cpath, flowRequest.Chunk); err != nil {
+		return err
 	}
-	return err
+
+	if r.uploadDone(flowRequest) {
+		r.finishUpload(flowRequest)
+	}
+
+	return nil
 }
 
-func (r uploadResource) finishUpload(uploadPath string) {
-
+// uploadDone checks to see if the upload has finished.
+func (r uploadResource) uploadDone(flowRequest *FlowRequest) bool {
+	id := r.uploadID(flowRequest)
+	count := r.ctracker.addChunk(id)
+	return count == flowRequest.FlowTotalChunks
 }
 
-func fileUploadPath(projectID, directoryID, fileID string) string {
-	return filepath.Join(mc.Dir(), "upload", projectID, directoryID, fileID)
+// uploadID creates the unique id for this files upload request
+func (r uploadResource) uploadID(flowRequest *FlowRequest) string {
+	return fmt.Sprintf("%s-%s-%s", flowRequest.ProjectID, flowRequest.DirectoryID, flowRequest.FileID)
 }
 
-func chunkPath(uploadPath, chunkID string, chunkNumber int32) string {
-	name := fmt.Sprintf("%s-%d", chunkID, chunkNumber)
-	return filepath.Join(uploadPath, name)
+// writeChunk writes a file chunk.
+func (r uploadResource) writeChunk(chunkpath string, chunk []byte) error {
+	return ioutil.WriteFile(chunkpath, chunk, chunkPerms)
+}
+
+// finishUpload marks the upload as finished and kicks off an assembler to assemble the file.
+func (r uploadResource) finishUpload(flowRequest *FlowRequest) {
+	id := r.uploadID(flowRequest)
+	r.ctracker.clear(id)
+	assembler := newAssemberFromFlowRequest(flowRequest)
+	go assembler.assembleFile()
 }
