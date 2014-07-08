@@ -2,67 +2,19 @@ package ws
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"io"
 	"io/ioutil"
 	"mime/multipart"
+	"path/filepath"
 	"strconv"
 
 	"github.com/emicklei/go-restful"
+	"github.com/materials-commons/mcfs/base/log"
+	"github.com/materials-commons/mcfs/base/mc"
 )
 
-var (
-	ErrNoParam  = errors.New("no param")
-	ErrBadParam = errors.New("bad param")
-)
-
-func getParam(name string, request *restful.Request) (param string) {
-	param = request.PathParameter(name)
-	if param != "" {
-		return param
-	}
-
-	attr := request.Attribute(name)
-	if attr != nil {
-		param, _ = attr.(string)
-	}
-	return param
-}
-
-func getParamInt32(name string, request *restful.Request) (int32, error) {
-	param := getParam(name, request)
-	switch {
-	case param == "":
-		return 0, ErrNoParam
-	default:
-		i, err := strconv.ParseInt(param, 0, 32)
-		if err != nil {
-			return 0, ErrBadParam
-		}
-		return int32(i), nil
-	}
-}
-
-func getParamInt64(name string, request *restful.Request) (int64, error) {
-	param := getParam(name, request)
-	switch {
-	case param == "":
-		return 0, ErrNoParam
-	default:
-		i, err := strconv.ParseInt(param, 0, 64)
-		if err != nil {
-			return 0, ErrBadParam
-		}
-		return int64(i), nil
-	}
-}
-
-func getFlowRequest(request *restful.Request) (flowRequest FlowRequest, err error) {
-
-	return
-}
-
+// form2FlowRequest reads a multipart upload form and converts it to a FlowRequest.
 func form2FlowRequest(request *restful.Request) (*FlowRequest, error) {
 	var (
 		r      FlowRequest
@@ -70,12 +22,16 @@ func form2FlowRequest(request *restful.Request) (*FlowRequest, error) {
 		reader *multipart.Reader
 		part   *multipart.Part
 	)
+
+	// Open multipart reading
 	buf := new(bytes.Buffer)
 	reader, err = request.Request.MultipartReader()
 	if err != nil {
 		return nil, err
 	}
 
+	// For each part identify its name to decide which field
+	// to fill in the FlowRequest.
 	for {
 		part, err = reader.NextPart()
 		if err != nil {
@@ -83,6 +39,8 @@ func form2FlowRequest(request *restful.Request) (*FlowRequest, error) {
 		}
 
 		name := part.FormName()
+
+		// Don't copy chunkData, it will be handled differently.
 		if name != "chunkData" {
 			io.Copy(buf, part)
 		}
@@ -108,10 +66,12 @@ func form2FlowRequest(request *restful.Request) (*FlowRequest, error) {
 		case "fileID":
 			r.FileID = buf.String()
 		case "chunkData":
+			// Get the chunk bytes.
 			if r.Chunk, err = ioutil.ReadAll(part); err != nil {
 				fmt.Print("ReadAll error =", err)
 			}
 		}
+		// Reset the buffer after each use.
 		buf.Reset()
 	}
 
@@ -122,25 +82,30 @@ func form2FlowRequest(request *restful.Request) (*FlowRequest, error) {
 	return &r, nil
 }
 
+// atoi64 converts a string to an int64
 func atoi64(str string) int64 {
 	i, err := strconv.ParseInt(str, 0, 64)
 	if err != nil {
+		log.L.Error(log.Msg("Error converting %s to an int", str))
 		return -1
 	}
 
 	return i
 }
 
+// atoi32 converts a string to an int32
 func atoi32(str string) int32 {
 	i := atoi64(str)
 	return int32(i)
 }
 
-func flowRequest2FinishRequest(flowRequest *FlowRequest) finishRequest {
-	return finishRequest{
-		projectID:   flowRequest.ProjectID,
-		directoryID: flowRequest.DirectoryID,
-		fileID:      flowRequest.FileID,
-		uploadPath:  fileUploadPath(flowRequest.ProjectID, flowRequest.DirectoryID, flowRequest.FileID),
-	}
+// fileUploadPath creates the path to upload file chunks to.
+func fileUploadPath(projectID, directoryID, fileID string) string {
+	return filepath.Join(mc.Dir(), "upload", projectID, directoryID, fileID)
+}
+
+// chunkPath creates the full path name for a chunk.
+func chunkPath(uploadPath string, chunkNumber int32) string {
+	n := fmt.Sprintf("%d", chunkNumber)
+	return filepath.Join(uploadPath, n)
 }
