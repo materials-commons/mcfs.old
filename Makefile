@@ -5,10 +5,10 @@ all: fmt test bin
 bin: bin-client bin-server
 
 bin-client:
-	(cd ./client/main; godep go build materials.go)
+	(cd ./cmd/materials; godep go build materials.go)
 
 bin-server:
-	(cd ./server/main; godep go build mcfs.go)
+	(cd ./cmd/mcfs; godep go build mcfs.go)
 
 test: test-client test-server test-base
 

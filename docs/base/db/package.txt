@@ -1,7 +1,7 @@
 PACKAGE DOCUMENTATION
 
 package db
-    import "github.com/materials-commons/mcfs/base/db"
+    import "github.com/materials-commons/mcfs/db"
 
 
 

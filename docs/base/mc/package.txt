@@ -1,7 +1,7 @@
 PACKAGE DOCUMENTATION
 
 package mc
-    import "github.com/materials-commons/mcfs/base/mc"
+    import "github.com/materials-commons/mcfs/mc"
 
 
 
