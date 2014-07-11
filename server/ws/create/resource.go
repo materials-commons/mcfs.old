@@ -2,7 +2,7 @@ package create
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/materials-commons/base/protocol"
+	"github.com/materials-commons/mcfs/base/protocol"
 )
 
 type createResource struct {
@@ -39,9 +39,5 @@ func (r createResource) createFile(request *restful.Request, response *restful.R
 }
 
 func (r createResource) createDirectory(request *restful.Request, response *restful.Response) {
-
-}
-
-func (r createResource) createProject(request *restful.Request, response *restful.Response) {
 
 }
