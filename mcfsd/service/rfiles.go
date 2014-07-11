@@ -5,7 +5,7 @@ import (
 	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/model"
 	"github.com/materials-commons/mcfs/schema"
-	"github.com/materials-commons/mcfs/server/mcfserr"
+	"github.com/materials-commons/mcfs/mcfsd/mcfserr"
 )
 
 // rFiles implements the Files interface for RethinkDB

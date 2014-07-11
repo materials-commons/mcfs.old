@@ -6,7 +6,7 @@ import (
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/model"
 	"github.com/materials-commons/mcfs/schema"
-	"github.com/materials-commons/mcfs/server/mcfserr"
+	"github.com/materials-commons/mcfs/mcfsd/mcfserr"
 )
 
 type rProjects struct {

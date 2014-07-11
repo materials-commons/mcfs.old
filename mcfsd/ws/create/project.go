@@ -7,10 +7,10 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/materials-commons/mcfs/mcerr"
+	"github.com/materials-commons/mcfs/mcfsd/service"
+	"github.com/materials-commons/mcfs/mcfsd/ws"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/schema"
-	"github.com/materials-commons/mcfs/mcfsd/inuse"
-	"github.com/materials-commons/mcfs/mcfsd/service"
 )
 
 // createProjectHandler handles create project request process.
@@ -27,10 +27,7 @@ type createProjectHandler struct {
 func (r createResource) createProject(request *restful.Request, response *restful.Response) {
 	var (
 		req  protocol.CreateProjectReq
-		proj *schema.Project
-		err  error
 		resp protocol.CreateProjectResp
-		user string
 	)
 	if err := request.ReadEntity(&req); err != nil {
 		response.WriteErrorString(http.StatusNotAcceptable, err.Error())
@@ -45,9 +42,9 @@ func (r createResource) createProject(request *restful.Request, response *restfu
 		return
 	}
 
-	user = ""
+	user := request.Attribute("user").(ws.User)
 
-	proj, err = s.Project.ByName(req.Name, user)
+	proj, err := s.Project.ByName(req.Name, user.Name)
 	switch {
 	case err == nil:
 		// Found project
@@ -55,27 +52,16 @@ func (r createResource) createProject(request *restful.Request, response *restfu
 
 	default:
 		// Project doesn't exist: Attempt to create a new one.
-		proj, err = cph.createNewProject(req.Name, user)
+		proj, err = cph.createNewProject(req.Name, user.Name)
 		if err != nil {
-			// write an error here
+			response.WriteErrorString(http.StatusInternalServerError, fmt.Sprintf("Unable to create project: %s", err))
 			return
-			//return nil, err
 		}
 	}
 
 	resp.ProjectID = proj.ID
 	resp.DirectoryID = proj.DataDir
-
-	// Lock the project so no one else can upload to it.
-	if !inuse.Mark(resp.ProjectID) {
-		// Project already in use
-		// write an error here
-		return
-		//return nil, mcerr.Errorf(mcerr.ErrInUse, "Project %s is currently in use by someone else.", resp.ProjectID)
-	}
-
-	// Save project id so state machine can unlock it at termination.
-	//h.projectID = resp.ProjectID
+	response.WriteEntity(resp)
 }
 
 func newCreateProjectHandler(service *service.Service) *createProjectHandler {
