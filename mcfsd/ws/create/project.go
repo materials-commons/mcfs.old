@@ -9,8 +9,8 @@ import (
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/schema"
-	"github.com/materials-commons/mcfs/server/inuse"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/mcfsd/inuse"
+	"github.com/materials-commons/mcfs/mcfsd/service"
 )
 
 // createProjectHandler handles create project request process.
