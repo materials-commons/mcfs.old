@@ -1,4 +1,4 @@
-package doi
+package rethinkdb
 
 import (
 	r "github.com/dancannon/gorethink"
@@ -11,8 +11,8 @@ type rUsers struct {
 	session *r.Session
 }
 
-// newRUsers creates a new instance of the rUsers for RethinkDB
-func newRUsers(session *r.Session) rUsers {
+// NewRUsers creates a new instance of the rUsers for RethinkDB
+func NewRUsers(session *r.Session) rUsers {
 	return rUsers{
 		session: session,
 	}

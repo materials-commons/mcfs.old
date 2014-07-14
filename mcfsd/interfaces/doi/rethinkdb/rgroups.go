@@ -1,4 +1,4 @@
-package doi
+package rethinkdb
 
 import (
 	r "github.com/dancannon/gorethink"
@@ -11,8 +11,8 @@ type rGroups struct {
 	session *r.Session
 }
 
-// newRGroups creates a new instance of rGroups
-func newRGroups(session *r.Session) rGroups {
+// NewRGroups creates a new instance of rGroups
+func NewRGroups(session *r.Session) rGroups {
 	return rGroups{
 		session: session,
 	}

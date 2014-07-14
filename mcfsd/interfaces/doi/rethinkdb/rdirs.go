@@ -1,4 +1,4 @@
-package doi
+package rethinkdb
 
 import (
 	r "github.com/dancannon/gorethink"
@@ -13,8 +13,8 @@ type rDirs struct {
 	session *r.Session
 }
 
-// newRDirs creates a new instance of rDirs
-func newRDirs(session *r.Session) rDirs {
+// NewRDirs creates a new instance of rDirs
+func NewRDirs(session *r.Session) rDirs {
 	return rDirs{
 		session: session,
 	}

@@ -1,4 +1,4 @@
-package doi
+package rethinkdb
 
 import (
 	r "github.com/dancannon/gorethink"
@@ -13,8 +13,8 @@ type rFiles struct {
 	session *r.Session
 }
 
-// newRFiles creates a new instance of rFiles
-func newRFiles(session *r.Session) rFiles {
+// NewRFiles creates a new instance of rFiles
+func NewRFiles(session *r.Session) rFiles {
 	return rFiles{
 		session: session,
 	}
@@ -149,7 +149,7 @@ func (f rFiles) Delete(id string) error {
 // the database that refer to it.
 func (f rFiles) removeFromDependents(file *schema.File) error {
 	// Need to delete file from dependent objects
-	rdirs := newRDirs(f.session)
+	rdirs := NewRDirs(f.session)
 	var rv error
 	for _, dirID := range file.DataDirs {
 		ddir, err := rdirs.ByID(dirID)
@@ -169,7 +169,7 @@ func (f rFiles) removeFromDependents(file *schema.File) error {
 // AddDirectories adds new directories to a file. It updates all related items
 // and join tables.
 func (f rFiles) AddDirectories(file *schema.File, dirIDs ...string) error {
-	rdirs := newRDirs(f.session)
+	rdirs := NewRDirs(f.session)
 	var rv error
 	for _, ddirID := range dirIDs {
 		if index := collections.Strings.Find(file.DataDirs, ddirID); index == -1 {

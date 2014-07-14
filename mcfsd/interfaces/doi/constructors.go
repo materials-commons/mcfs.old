@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/materials-commons/mcfs/interfaces/db"
+	"github.com/materials-commons/mcfs/mcfsd/interfaces/doi/rethinkdb"
 )
 
 type Service struct {
@@ -22,11 +23,11 @@ func New(serviceDatabase ServiceDatabase) *Service {
 			panic(fmt.Sprintf("Unable to connect to database: %s", err))
 		}
 		return &Service{
-			File:    newRFiles(session),
-			Dir:     newRDirs(session),
-			Project: newRProjects(session),
-			Group:   newRGroups(session),
-			User:    newRUsers(session),
+			File:    rethinkdb.NewRFiles(session),
+			Dir:     rethinkdb.NewRDirs(session),
+			Project: rethinkdb.NewRProjects(session),
+			Group:   rethinkdb.NewRGroups(session),
+			User:    rethinkdb.NewRUsers(session),
 		}
 	case SQL:
 		panic("SQL ServiceDatabase not supported")

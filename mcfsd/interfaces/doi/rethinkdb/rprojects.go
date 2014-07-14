@@ -1,4 +1,4 @@
-package doi
+package rethinkdb
 
 import (
 	r "github.com/dancannon/gorethink"
@@ -13,7 +13,7 @@ type rProjects struct {
 	session *r.Session
 }
 
-func newRProjects(session *r.Session) rProjects {
+func NewRProjects(session *r.Session) rProjects {
 	return rProjects{
 		session: session,
 	}
@@ -79,7 +79,7 @@ func (p rProjects) Insert(project *schema.Project) (*schema.Project, error) {
 	}
 
 	dir := schema.NewDirectory(project.Name, project.Owner, newProject.ID, "")
-	rdirs := newRDirs(p.session)
+	rdirs := NewRDirs(p.session)
 
 	if newDir, err = rdirs.Insert(&dir); err != nil {
 		return nil, mcfserr.ErrDB

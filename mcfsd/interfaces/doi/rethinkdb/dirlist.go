@@ -1,4 +1,4 @@
-package doi
+package rethinkdb
 
 import (
 	"github.com/materials-commons/mcfs/dir"

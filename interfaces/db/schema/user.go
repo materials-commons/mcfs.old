@@ -34,3 +34,20 @@ func NewUser(name, email, password, apikey string) User {
 		MTime:     now,
 	}
 }
+
+func (u *User) Clone() *User {
+	return &User{
+		ID:          u.ID,
+		Name:        u.Name,
+		Email:       u.Email,
+		Fullname:    u.Fullname,
+		Password:    u.Password,
+		APIKey:      u.APIKey,
+		Birthtime:   u.Birthtime,
+		MTime:       u.MTime,
+		Avatar:      u.Avatar,
+		Description: u.Description,
+		Affiliation: u.Affiliation,
+		HomePage:    u.HomePage,
+	}
+}
