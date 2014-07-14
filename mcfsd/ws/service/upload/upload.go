@@ -8,8 +8,8 @@ import (
 
 	"github.com/emicklei/go-restful"
 	"github.com/inconshreveable/log15"
-	"github.com/materials-commons/mcfs/protocol/flow"
 	"github.com/materials-commons/mcfs/log"
+	"github.com/materials-commons/mcfs/protocol/flow"
 )
 
 const chunkPerms = 0700 // Permissions to set uploads to
@@ -20,19 +20,13 @@ type uploadResource struct {
 	log      log15.Logger // Resource specific logging.
 }
 
-// NewResource creates a new instance of the upload resource, including
-// registering its paths.
-func NewResource(container *restful.Container) error {
-	uploadResource := uploadResource{
+// WebService creates an instance of the upload web service.
+func WebService() *restful.WebService {
+	r := uploadResource{
 		ctracker: newChunkTracker(),
 		log:      log.New("resource", "upload"),
 	}
-	uploadResource.register(container)
-	return nil
-}
 
-// register registers the resource and its paths.
-func (r uploadResource) register(container *restful.Container) {
 	ws := new(restful.WebService)
 
 	ws.Path("/upload").
@@ -44,7 +38,7 @@ func (r uploadResource) register(container *restful.Container) {
 		Reads(flow.Request{}).
 		Doc("Test if chunk already uploaded."))
 
-	container.Add(ws)
+	return ws
 }
 
 // testFileChunk checks if a chunk has already been uploaded. At the moment we don't

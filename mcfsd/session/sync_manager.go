@@ -11,14 +11,14 @@ import (
 
 // ProjectSyncState tracks the current sync state for a project.
 type ProjectSyncState struct {
-	ProjectID   string        // Project being synced
-	User        string        // User doing sync
-	Started     time.Time     // Time sync started
-	Uploaded    int64         // Bytes uploaded
-	LastItem    string        // Last item synced
-	TokenID     string        // Sync Token
-	SawActivity bool          // Was there any activity on the sync?
-	Expires     time.Duration // When does the sync token expire
+	mutex       sync.Mutex // Mutex to coordinate access to project state.
+	ProjectID   string     // Project being synced
+	User        string     // User doing sync
+	Started     time.Time  // Time sync started
+	Uploaded    int64      // Bytes uploaded
+	LastItem    string     // Last item synced
+	TokenID     string     // Sync Token
+	SawActivity bool       // Was there any activity on the sync?
 }
 
 type syncSessionManager struct {
@@ -26,13 +26,16 @@ type syncSessionManager struct {
 	projects map[string]*ProjectSyncState // Projects currently being sync
 }
 
-var syncSession = newSyncSessionManager()
+var syncSession = NewSyncSessionManager()
 
-func newSyncSessionManager() *syncSessionManager {
+func NewSyncSessionManager() *syncSessionManager {
 	return &syncSessionManager{projects: make(map[string]*ProjectSyncState)}
 }
 
-func (s *syncSessionManager) acquireSyncToken(user, project string) (string, error) {
+// AcquireSyncToken creates a new sync token for a project if that project doesn't
+// currently have a sync token associated with it. It also launches a go routine
+// for timeout on the token.
+func (s *syncSessionManager) AcquireSyncToken(user, project string) (string, error) {
 	defer s.mutex.Unlock()
 	s.mutex.Lock()
 
@@ -45,8 +48,9 @@ func (s *syncSessionManager) acquireSyncToken(user, project string) (string, err
 		ProjectID: project,
 		User:      user,
 		TokenID:   uuid.NewRandom().String(),
-		//Expires:
 	}
+
+	go s.expireSyncSession(projState)
 
 	return "", nil
 }
@@ -65,7 +69,9 @@ func (s *syncSessionManager) expireSyncSession(project *ProjectSyncState) {
 		s.mutex.Unlock()
 
 	}
+
 	// Perform cleanup and then release the lock.
+	delete(s.projects, project.ProjectID)
 	s.mutex.Unlock()
 
 }
@@ -73,12 +79,18 @@ func (s *syncSessionManager) expireSyncSession(project *ProjectSyncState) {
 func (p *ProjectSyncState) expireSync() {
 LOOP:
 	for {
+		// Start flag false. It will get set to true if there is activity in the specified
+		// time period.
+		p.mutex.Lock()
+		p.SawActivity = false
+		p.mutex.Unlock()
 		select {
 		case <-time.After(15 * time.Second):
 			if !p.SawActivity {
+				// No activity so break out of loop
 				break LOOP
 			}
-			p.SawActivity = false
+
 		}
 	}
 }

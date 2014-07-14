@@ -8,16 +8,12 @@ import (
 type syncResource struct {
 }
 
-func NewResource(container *restful.Container) error {
+// WebService creates an instance of the sync webservice.
+func WebService() *restful.WebService {
 	r := syncResource{}
-	r.register(container)
-	return nil
-}
-
-func (r syncResource) register(container *restful.Container) {
 	ws := new(restful.WebService)
-	ws.Path("/sync").Produces(restful.MIME_JSON)
 
+	ws.Path("/sync").Produces(restful.MIME_JSON)
 	ws.Route(ws.PUT("/start/{project-id}").To(r.syncStart).
 		Doc("Attempts to acquire a sync token").
 		Param(ws.PathParameter("project-id", "id of project to sync").DataType("string")).
@@ -25,13 +21,12 @@ func (r syncResource) register(container *restful.Container) {
 	ws.Route(ws.PUT("/done/{sync-token-id}").To(r.syncDone).
 		Doc("Finishes a sync request and releases the sync token").
 		Param(ws.PathParameter("sync-token-id", "sync token recieved from the sync/start call")))
-
 	ws.Route(ws.GET("/status/{project-id}").To(r.syncProjectStatus).
 		Doc("Get the sync status of a project").
 		Param(ws.PathParameter("project-id", "id of project to check")).
 		Writes(protocol.SyncStatusResp{}))
 
-	container.Add(ws)
+	return ws
 }
 
 func (r syncResource) syncStart(request *restful.Request, response *restful.Response) {

@@ -2,19 +2,19 @@ package create
 
 import (
 	"github.com/emicklei/go-restful"
+	"github.com/materials-commons/mcfs/mcfsd/ws/service"
 	"github.com/materials-commons/mcfs/protocol"
 )
 
 type createResource struct {
 }
 
-func NewResource(container *restful.Container) error {
-	createResource := createResource{}
-	createResource.register(container)
-	return nil
+func NewResource() service.REST {
+	return &createResource{}
 }
 
-func (r createResource) register(container *restful.Container) {
+// WebService creates an instance of the create webservice.
+func (r *createResource) WebService() *restful.WebService {
 	ws := new(restful.WebService)
 
 	ws.Path("/create").Produces(restful.MIME_JSON)
@@ -31,13 +31,13 @@ func (r createResource) register(container *restful.Container) {
 		Reads(protocol.CreateProjectReq{}).
 		Writes(protocol.CreateProjectResp{}))
 
-	container.Add(ws)
+	return ws
 }
 
-func (r createResource) createFile(request *restful.Request, response *restful.Response) {
+func (r *createResource) createFile(request *restful.Request, response *restful.Response) {
 
 }
 
-func (r createResource) createDirectory(request *restful.Request, response *restful.Response) {
+func (r *createResource) createDirectory(request *restful.Request, response *restful.Response) {
 
 }

@@ -24,11 +24,12 @@ type createProjectHandler struct {
 // TODO: This method needs to be updated to work with collaboration. Right now a
 // user cannot upload files to a project they have access to. Only the owner can
 // upload files.
-func (r createResource) createProject(request *restful.Request, response *restful.Response) {
+func (r *createResource) createProject(request *restful.Request, response *restful.Response) {
 	var (
 		req  protocol.CreateProjectReq
 		resp protocol.CreateProjectResp
 	)
+
 	if err := request.ReadEntity(&req); err != nil {
 		response.WriteErrorString(http.StatusNotAcceptable, err.Error())
 		return
