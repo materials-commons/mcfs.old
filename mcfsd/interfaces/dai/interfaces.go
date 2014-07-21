@@ -1,7 +1,7 @@
-package doi
+package dai
 
 import (
-	"github.com/materials-commons/mcfs/interfaces/db/schema"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/dir"
 )
 

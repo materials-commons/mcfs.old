@@ -3,8 +3,8 @@ package cache
 import (
 	"sync"
 
-	"github.com/materials-commons/mcfs/interfaces/db/schema"
-	"github.com/materials-commons/mcfs/mcfsd/interfaces/doi"
+	"github.com/materials-commons/mcfs/common/schema"
+	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai"
 )
 
 // userLookupFunc specifies the function to use to look up a user
@@ -16,12 +16,12 @@ type cUsers struct {
 	mutex         sync.RWMutex            // Mutex to provide safe access.
 	usersByAPIKey map[string]*schema.User // Lookup users by their API Key.
 	usersByID     map[string]*schema.User // Lookup users by their id
-	dbusers       doi.Users               // Interface to retrieve users from the database.
+	dbusers       dai.Users               // Interface to retrieve users from the database.
 }
 
 // NewCUsers creates a new cached user. The dbusers parameter is the interface
 // to use to lookup users in the database.
-func NewCUsers(dbusers doi.Users) *cUsers {
+func NewCUsers(dbusers dai.Users) *cUsers {
 	return &cUsers{
 		dbusers: dbusers,
 	}

@@ -25,6 +25,9 @@ var (
 
 	// ErrInUse object is locked and in use by someone else
 	ErrInUse = errors.New("in use")
+
+	// ErrNotAuthorized user account is unknown or not authorized
+	ErrNotAuthorized = errors.New("not authorized")
 )
 
 // ErrorCode is an integer representation of a error that we can encode and send

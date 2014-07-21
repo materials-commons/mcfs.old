@@ -2,64 +2,44 @@ package filter
 
 import (
 	"net/http"
-	"sync"
 
 	"github.com/emicklei/go-restful"
-	"github.com/materials-commons/mcfs/interfaces/db/schema"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/mcerr"
-	"github.com/materials-commons/mcfs/mcfsd/interfaces/doi"
-	"github.com/materials-commons/mcfs/mcfsd/interfaces/ws/rest"
+	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai"
 )
 
-type filterFunc func(request *restful.Request, response *restful.Response, chain *restful.FilterChain)
-
-type apikeyCache struct {
-	mutex         sync.RWMutex
-	usersByAPIKey map[string]*schema.User
-	apiKeyByUser  map[string]string
-	users         doi.Users
+// apikeyFilter holds the attributes of the apikey filter.
+type apikeyFilter struct {
+	users dai.Users
 }
 
-func (c *apikeyCache) apikeyFilter(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
-	u, err := c.getUser(request.Request)
+// Filter implements the restful filter for apikeyFilter
+func (f *apikeyFilter) Filter(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
+	user, err := f.getValidUser(request)
 	switch {
 	case err != nil:
 		response.WriteErrorString(http.StatusUnauthorized, "Not authorized")
-	case !c.validUser(u):
-		response.WriteErrorString(http.StatusUnauthorized, "Not authorized")
 	default:
-		request.SetAttribute("user", *u)
+		request.SetAttribute("user", *user)
 		chain.ProcessFilter(request, response)
 	}
 }
 
-func (c *apikeyCache) getUser(req *http.Request) (*rest.User, error) {
-	u := rest.User{
-		Name:  getUsername(req),
-		Token: getAPIKey(req),
+func (f *apikeyFilter) getValidUser(req *restful.Request) (*schema.User, error) {
+	u, err := getUser(req.Request)
+	if err != nil {
+		return nil, err
 	}
 
-	switch {
-	case u.Name == "":
-		return nil, mcerr.ErrInvalid
-	case u.Token == "":
-		return nil, mcerr.ErrInvalid
-	default:
-		return &u, nil
+	user, err := f.users.ByAPIKey(u.apikey)
+	if err != nil {
+		return nil, err
 	}
-}
 
-func (c *apikeyCache) validUser(user *rest.User) bool {
-	defer c.mutex.Unlock()
-	c.mutex.Lock()
-	u := c.usersByAPIKey[user.Token]
-	if u == nil {
-		dbuser, err := c.users.ByAPIKey(user.Token)
-		if err != nil || dbuser.Name != user.Name {
-			return false
-		}
-		c.usersByAPIKey[user.Token] = dbuser
-		c.apiKeyByUser[user.Name] = user.Token
+	if !user.IsValid(u.id, u.apikey) {
+		return nil, mcerr.ErrNotAuthorized
 	}
-	return true
+
+	return user, nil
 }

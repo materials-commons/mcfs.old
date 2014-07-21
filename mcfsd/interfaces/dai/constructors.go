@@ -1,10 +1,10 @@
-package doi
+package dai
 
 import (
 	"fmt"
 
 	"github.com/materials-commons/mcfs/interfaces/db"
-	"github.com/materials-commons/mcfs/mcfsd/interfaces/doi/rethinkdb"
+	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai/rethinkdb"
 )
 
 type Service struct {

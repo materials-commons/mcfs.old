@@ -1,4 +1,4 @@
-package doi
+package dai
 
 import (
 	r "github.com/dancannon/gorethink"
