@@ -2,8 +2,8 @@ package rethinkdb
 
 import (
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/interfaces/db/model"
-	"github.com/materials-commons/mcfs/interfaces/db/schema"
 )
 
 // rUsers implements the Users interface for RethinkDB

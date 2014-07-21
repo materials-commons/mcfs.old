@@ -3,8 +3,9 @@ package rethinkdb
 import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/gohandy/collections"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/interfaces/db/model"
-	"github.com/materials-commons/mcfs/interfaces/db/schema"
+	dbschema "github.com/materials-commons/mcfs/interfaces/db/schema"
 	"github.com/materials-commons/mcfs/mcfsd/mcfserr"
 )
 
@@ -60,7 +61,7 @@ func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 	}
 
 	// Insert the directory into the denorm table.
-	var ddirDenorm = schema.DataDirDenorm{
+	var ddirDenorm = dbschema.DataDirDenorm{
 		ID:        newDir.ID,
 		Name:      newDir.Name,
 		Owner:     newDir.Owner,
@@ -98,7 +99,7 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 	}
 
 	// Add entries to the denorm table for this dir.
-	var dirDenorm schema.DataDirDenorm
+	var dirDenorm dbschema.DataDirDenorm
 	fileEntries, err := d.createDataFiles(dir.DataFiles)
 	if err != nil {
 		return mcfserr.ErrDB
@@ -118,7 +119,7 @@ func (d rDirs) AddFiles(dir *schema.Directory, fileIDs ...string) error {
 
 // createDataFiles creates the datafiles entries for the datadirs_denorm table from
 // the ids contained in a DataDir
-func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.FileEntry, err error) {
+func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []dbschema.FileEntry, err error) {
 	var errorReturn error
 	for _, dataFileID := range dataFileIDs {
 		var dataFile schema.File
@@ -128,7 +129,7 @@ func (d rDirs) createDataFiles(dataFileIDs []string) (dataFileEntries []schema.F
 			continue
 		}
 
-		dataFileEntry := schema.FileEntry{
+		dataFileEntry := dbschema.FileEntry{
 			ID:        dataFile.ID,
 			Name:      dataFile.Name,
 			Owner:     dataFile.Owner,
@@ -149,7 +150,7 @@ func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
 	if err := d.Update(dir); err != nil {
 		return err
 	}
-	var dirDenorm schema.DataDirDenorm
+	var dirDenorm dbschema.DataDirDenorm
 
 	if err := model.DirsDenorm.Qs(d.session).ByID(dir.ID, &dirDenorm); err != nil {
 		return mcfserr.ErrDB
@@ -162,8 +163,8 @@ func (d rDirs) RemoveFiles(dir *schema.Directory, fileIDs ...string) error {
 }
 
 // removeMatchingFileIDs removes FileEntries from the list of entries that match that id.
-func removeMatchingFileIDs(denorm schema.DataDirDenorm, fileIDs ...string) []schema.FileEntry {
-	return denorm.Filter(func(f schema.FileEntry) bool {
+func removeMatchingFileIDs(denorm dbschema.DataDirDenorm, fileIDs ...string) []dbschema.FileEntry {
+	return denorm.Filter(func(f dbschema.FileEntry) bool {
 		for _, fileID := range fileIDs {
 			if fileID == f.ID {
 				return false

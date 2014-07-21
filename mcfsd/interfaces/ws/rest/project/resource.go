@@ -8,16 +8,16 @@ import (
 	"github.com/emicklei/go-restful"
 	"github.com/materials-commons/mcfs/interfaces/db/schema"
 	"github.com/materials-commons/mcfs/mcerr"
-	"github.com/materials-commons/mcfs/mcfsd/interfaces/doi"
+	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai"
 	"github.com/materials-commons/mcfs/mcfsd/interfaces/ws/rest"
 	"github.com/materials-commons/mcfs/protocol"
 )
 
 type projectResource struct {
-	projects doi.Projects
+	projects dai.Projects
 }
 
-func NewResource(projects doi.Projects) rest.Service {
+func NewResource(projects dai.Projects) rest.Service {
 	return &projectResource{projects: projects}
 }
 

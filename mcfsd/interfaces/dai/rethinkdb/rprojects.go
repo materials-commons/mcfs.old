@@ -2,10 +2,11 @@ package rethinkdb
 
 import (
 	r "github.com/dancannon/gorethink"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/dir"
-	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/interfaces/db/model"
-	"github.com/materials-commons/mcfs/interfaces/db/schema"
+	dbschema "github.com/materials-commons/mcfs/interfaces/db/schema"
+	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/mcfsd/mcfserr"
 )
 
@@ -43,7 +44,7 @@ func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
 // in sorted (ascending) order.
 func (p rProjects) Files(projectID, base string) ([]dir.FileInfo, error) {
 	rql := r.Table("project2datadir").GetAllByIndex("project_id", projectID).EqJoin("datadir_id", r.Table("datadirs_denorm")).Zip()
-	var entries []schema.DataDirDenorm
+	var entries []dbschema.DataDirDenorm
 	if err := model.DirsDenorm.Qs(p.session).Rows(rql, &entries); err != nil {
 		return nil, err
 	}
@@ -101,7 +102,7 @@ func (p rProjects) AddDirectories(project *schema.Project, directoryIDs ...strin
 	// Add each directory to the project2datadir table. If there are any errors,
 	// remember that we saw an error, but continue on.
 	for _, dirID := range directoryIDs {
-		p2d := schema.Project2DataDir{
+		p2d := dbschema.Project2DataDir{
 			ProjectID: project.ID,
 			DataDirID: dirID,
 		}

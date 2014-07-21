@@ -1,7 +1,8 @@
 package model
 
 import (
-	"github.com/materials-commons/mcfs/interfaces/db/schema"
+	"github.com/materials-commons/mcfs/common/schema"
+	dbschema "github.com/materials-commons/mcfs/interfaces/db/schema"
 )
 
 // Groups is a default model for the usergroups table.
@@ -24,7 +25,7 @@ var Dirs = &Model{
 
 // DirsDenorm is a default model for the denormalized datadirs_denorm table
 var DirsDenorm = &Model{
-	schema: schema.DataDirDenorm{},
+	schema: dbschema.DataDirDenorm{},
 	table:  "datadirs_denorm",
 }
 
