@@ -22,18 +22,15 @@ type apikeyCache struct {
 
 func (c *apikeyCache) apikeyFilter(request *restful.Request, response *restful.Response, chain *restful.FilterChain) {
 	u, err := c.getUser(request.Request)
-	if err != nil {
+	switch {
+	case err != nil:
 		response.WriteErrorString(http.StatusUnauthorized, "Not authorized")
-		return
-	}
-
-	if !c.validUser(u) {
+	case !c.validUser(u):
 		response.WriteErrorString(http.StatusUnauthorized, "Not authorized")
-		return
+	default:
+		request.SetAttribute("user", *u)
+		chain.ProcessFilter(request, response)
 	}
-
-	request.SetAttribute("user", *u)
-	chain.ProcessFilter(request, response)
 }
 
 func (c *apikeyCache) getUser(req *http.Request) (*rest.User, error) {
