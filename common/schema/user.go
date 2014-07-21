@@ -51,3 +51,8 @@ func (u *User) Clone() *User {
 		HomePage:    u.HomePage,
 	}
 }
+
+// IsValid validates
+func (u *User) IsValid(id, apikey string) bool {
+	return u.ID == id && u.APIKey == apikey
+}
