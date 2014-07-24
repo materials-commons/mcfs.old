@@ -26,6 +26,8 @@ func (r *filesResource) createFile(request *restful.Request, response *restful.R
 		Owner:       user.Name,
 	}
 
+	// TODO: Document the return codes so we can map the error to
+	// a http status code.
 	file, err := r.files.Create(f)
 	if err != nil {
 		return rest.HTTPErrore(http.StatusInternalServerError, err)
