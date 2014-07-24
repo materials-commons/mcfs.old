@@ -2,25 +2,19 @@ package files
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai"
+	"github.com/materials-commons/mcfs/mcfsd/app"
 	"github.com/materials-commons/mcfs/mcfsd/interfaces/ws/rest"
 	"github.com/materials-commons/mcfs/protocol"
 )
 
 type filesResource struct {
-	files    dai.Files
-	dirs     dai.Dirs
-	projects dai.Projects
-	groups   dai.Groups
+	files app.FilesService
 }
 
 // NewResource returns a new Resource.
-func NewResource(files dai.Files, dirs dai.Dirs, projects dai.Projects, groups dai.Groups) *filesResource {
+func NewResource(files app.FilesService) *filesResource {
 	return &filesResource{
-		files:    files,
-		dirs:     dirs,
-		projects: projects,
-		groups:   groups,
+		files: files,
 	}
 }
 

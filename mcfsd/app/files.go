@@ -1,20 +1,17 @@
 package app
 
 import (
-	"net/http"
-
 	"github.com/materials-commons/mcfs/common/schema"
-	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai"
-	"github.com/materials-commons/mcfs/mcfsd/interfaces/ws/rest"
-	"github.com/materials-commons/mcfs/protocol"
 )
 
 type File struct {
 	Name        string
+	ProjectID   string
 	DirectoryID string
 	Checksum    string
 	Owner       string
+	Size        int64
 }
 
 type FilesService interface {
@@ -38,6 +35,7 @@ func NewFilesService(files dai.Files, dirs dai.Dirs, projects dai.Projects, grou
 	}
 }
 
+/*
 //
 func (s *filesService) Create(file File) (*schema.File, error) {
 	var (
@@ -179,3 +177,4 @@ func (r *filesResource) newFile(req *protocol.CreateFileReq, user string) *schem
 
 	return &file
 }
+*/
