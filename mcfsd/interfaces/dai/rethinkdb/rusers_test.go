@@ -2,16 +2,15 @@ package rethinkdb
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/interfaces/db"
 	"testing"
+
+	"github.com/materials-commons/mcfs/testutils/tdb"
 )
 
 var _ = fmt.Println
 
 func TestRUsersByID(t *testing.T) {
-	db.SetAddress("localhost:30815")
-	db.SetDatabase("materialscommons")
-	rusers := newRUsers(session)
+	rusers := NewRUsers(tdb.NewSession())
 
 	// Test existing
 	u, err := rusers.ByID("test@mc.org")
@@ -31,7 +30,7 @@ func TestRUsersByID(t *testing.T) {
 }
 
 func TestRUsersByAPIKey(t *testing.T) {
-	rusers := newRUsers(session)
+	rusers := NewRUsers(tdb.NewSession())
 
 	// Test existing
 	u, err := rusers.ByAPIKey("test")
@@ -51,7 +50,7 @@ func TestRUsersByAPIKey(t *testing.T) {
 }
 
 func TestRUsersAll(t *testing.T) {
-	rusers := newRUsers(session)
+	rusers := NewRUsers(tdb.NewSession())
 
 	users, err := rusers.All()
 	if err != nil {

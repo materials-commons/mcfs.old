@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
+	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/mcfsd/app"
 	"github.com/materials-commons/mcfs/mcfsd/interfaces/ws/rest"
 	"github.com/materials-commons/mcfs/protocol"
@@ -29,10 +30,12 @@ func (r *filesResource) createFile(request *restful.Request, response *restful.R
 	// TODO: Document the return codes so we can map the error to
 	// a http status code.
 	file, err := r.files.Create(f)
-	if err != nil {
+	if err != nil && err != mcerr.ErrExists {
 		return rest.HTTPErrore(http.StatusInternalServerError, err)
 	}
 
+	//TODO: return error and have the route handler func figure out if it is an
+	// HTTPError type.
 	response.WriteEntity(file)
 	return nil
 }

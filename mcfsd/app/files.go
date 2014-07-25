@@ -2,9 +2,11 @@ package app
 
 import (
 	"github.com/materials-commons/mcfs/common/schema"
+	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai"
 )
 
+// File represents a file in the system.
 type File struct {
 	Name        string
 	ProjectID   string
@@ -14,10 +16,33 @@ type File struct {
 	Size        int64
 }
 
+// isValid sanity checks the entries in the file object. The filesService
+// will check the existence of key entries such as the directory.
+func (f File) isValid() error {
+	switch {
+	case f.Size < 1:
+		return mcerr.Errorf(mcerr.ErrInvalid, "Invalid size (%d)", f.Size)
+	case f.Checksum == "":
+		return mcerr.Errorf(mcerr.ErrInvalid, "No checksum")
+	case f.Owner == "":
+		return mcerr.Errorf(mcerr.ErrInvalid, "No owner")
+	case f.Name == "":
+		return mcerr.Errorf(mcerr.ErrInvalid, "No name")
+	case f.ProjectID == "":
+		return mcerr.Errorf(mcerr.ErrInvalid, "No project")
+	case f.DirectoryID == "":
+		return mcerr.Errorf(mcerr.ErrInvalid, "No directory")
+	default:
+		return nil
+	}
+}
+
+// FilesService represents the application operations on a file.
 type FilesService interface {
 	Create(file File) (*schema.File, error)
 }
 
+// filesService is the concrete representation of the FilesService interface.
 type filesService struct {
 	files    dai.Files
 	dirs     dai.Dirs
@@ -35,34 +60,67 @@ func NewFilesService(files dai.Files, dirs dai.Dirs, projects dai.Projects, grou
 	}
 }
 
-/*
-//
+// Create will create a new file in the repo or return an existing file. If a
+// new file is created is returns the file entry and sets error to nil. If
+// an existing file is returned, then error is set to mcerr.ErrExists. Any other
+// error means that no entry was found or created.
 func (s *filesService) Create(file File) (*schema.File, error) {
-	var (
-		req  protocol.CreateFileReq
-		resp *protocol.CreateFileResp
-		cerr error
-	)
 
-	if err := s.validateRequest(f); err != nil {
+	if err := s.validate(file); err != nil {
 		return nil, err
 	}
 
-	// Check the file status.
-	files, err := r.files.ByPathChecksum(req.Name, req.DirectoryID, req.Checksum)
+	return s.createFile(file)
+}
+
+// validate will validate the entries for the file. It checks that values look reasonable
+// and the project and directory exist.
+func (s *filesService) validate(file File) error {
+	if err := file.isValid(); err != nil {
+		return err
+	}
+
+	proj, err := s.projects.ByID(file.ProjectID)
+	if err != nil {
+		return mcerr.Errorf(mcerr.ErrInvalid, "Bad project id %s", file.ProjectID)
+	}
+
+	if !s.groups.HasAccess(proj.Owner, file.Owner) {
+		return mcerr.ErrNoAccess
+	}
+
+	ddir, err := s.dirs.ByID(file.DirectoryID)
+	if err != nil {
+		return mcerr.Errorf(mcerr.ErrInvalid, "Unknown directory id: %s", file.DirectoryID)
+	}
+
+	if ddir.Project != file.ProjectID {
+		return mcerr.Errorf(mcerr.ErrInvalid, "Directory %s not in project %s", ddir.Name, file.ProjectID)
+	}
+
+	return nil
+}
+
+func (s *filesService) createFile(file File) (*schema.File, error) {
+	// Check if the file exists, and if so how many versions. Do this within
+	// the context of a particular directory, name and checksum. You can end
+	// up with multiple matches on a checksum if a file keeps going back
+	// and forth between two different versions of a file.
+	files, err := s.files.ByPathChecksum(file.Name, file.DirectoryID, file.Checksum)
 	switch {
+	case err != nil:
+		return nil, err
 	case len(files) == 0:
 		// This is the easy case. No matching files were found, so we just create a
 		// new file. There may be an existing current file with a different checksum
 		// so we need to handle that case as well.
-		resp, cerr = r.createNewFile(&req, user.Name)
+		return s.createNewFile(file)
 
 	case len(files) == 1:
 		// Only one match. We have either a partial, or a fully uploaded file.
-		// Either way it doesn't matter we just let the upload state figure out
-		// what to do.
-		f := files[0]
-		resp = &protocol.CreateFileResp{FileID: f.ID}
+		// In either case return the existing entry and let the call know its
+		// an existing file.
+		return &files[0], mcerr.ErrExists
 
 	default:
 		// There are multiple matches. That means we could have old versions,
@@ -74,107 +132,64 @@ func (s *filesService) Create(file File) (*schema.File, error) {
 		partial := schema.Files.Find(files, func(f schema.File) bool { return f.Size != f.Uploaded && !f.Current })
 		switch {
 		case partial != nil:
-			// There is an existing partial. Use that so the upload can complete.
-			resp = &protocol.CreateFileResp{FileID: partial.ID}
+			// There is an existing partial no need to create a new file.
+			return partial, mcerr.ErrExists
 
 		case current != nil:
-			// The checksum matches the current file. Return that and let
-			// the uploader take care of things.
-			resp = &protocol.CreateFileResp{FileID: current.ID}
+			// The checksum matches the current file.
+			return current, mcerr.ErrExists
 
 		default:
-			// No partial, and not match on existing. Create a new
-			// file entry to write to.
-			resp, cerr = r.createNewFile(&req, user.Name)
+			// No partial, and no match on existing. Create a new file.
+			return s.createNewFile(file)
 		}
 	}
-
-	if cerr != nil {
-		return rest.HTTPErrore(http.StatusBadRequest, err)
-	}
-
-	response.WriteEntity(resp)
-	return nil
-}
-
-// validateRequest will validate the CreateFileReq. It does sanity checking on the file
-// size and checksum. We rely on the client to send us a good checksum.
-func (r *filesResource) validateRequest(req *protocol.CreateFileReq, user string) error {
-	proj, err := r.projects.ByID(req.ProjectID)
-	if err != nil {
-		return mcerr.Errorf(mcerr.ErrInvalid, "Bad projectID %s", req.ProjectID)
-	}
-
-	if !r.groups.HasAccess(proj.Owner, user) {
-		return mcerr.ErrNoAccess
-	}
-
-	ddir, err := r.dirs.ByID(req.DirectoryID)
-	if err != nil {
-		return mcerr.Errorf(mcerr.ErrInvalid, "Unknown directory id: %s", req.DirectoryID)
-	}
-
-	if ddir.Project != req.ProjectID {
-		return mcerr.Errorf(mcerr.ErrInvalid, "Directory %s not in project %s", ddir.Name, req.ProjectID)
-	}
-
-	if req.Size < 1 {
-		return mcerr.Errorf(mcerr.ErrInvalid, "Invalid size (%d) for file %s", req.Size, req.Name)
-	}
-
-	if req.Checksum == "" {
-		return mcerr.Errorf(mcerr.ErrInvalid, "Bad checksum (%s) for file %s", req.Checksum, req.Name)
-	}
-
-	return nil
 }
 
 // createNewFile will create the file object in the database. It inserts a new file entry
-// but doesn't attach it up to dependent objects. This will happen when the upload has
-// completed. If we did it before we could end up with file entries that look valid but
-// their backing physical file doesn't contain all the bytes.
-func (r *filesResource) createNewFile(req *protocol.CreateFileReq, user string) (*protocol.CreateFileResp, error) {
+// but doesn't attach it up to dependent objects. We assume that the file still needs
+// book keeping, such as being uploaded.
+func (s *filesService) createNewFile(file File) (*schema.File, error) {
 	var f *schema.File
 
-	currentFile, err := r.files.ByPath(req.Name, req.DirectoryID)
+	currentFile, err := s.files.ByPath(file.Name, file.DirectoryID)
 	switch {
 	case err == mcerr.ErrNotFound:
 		// There is no current entry, create a new one.
-		f = r.newFile(req, user)
+		f = s.newFile(file)
 	case err != nil:
 		// Database error occurred.
 		return nil, err
 	default:
 		// There is a current entry, so create the new one with the parent pointing
 		// to the current entry.
-		f = r.newFile(req, user)
+		f = s.newFile(file)
 		f.Parent = currentFile.ID
 	}
 
-	created, err := r.files.InsertEntry(f)
+	created, err := s.files.InsertEntry(f)
 	if err != nil {
 		return nil, err
 	}
 
-	return &protocol.CreateFileResp{FileID: created.ID}, nil
+	return created, nil
 }
 
 // newFile creates a new file object to insert into the database. It also handles the
-// bookkeeping task of setting the usesid field if the upload is for a previously
-// uploaded file.
-func (r *filesResource) newFile(req *protocol.CreateFileReq, user string) *schema.File {
-	file := schema.NewFile(req.Name, user)
-	file.DataDirs = append(file.DataDirs, req.DirectoryID)
-	file.Checksum = req.Checksum
-	file.Size = req.Size
-	file.Current = false
+// bookkeeping task of setting the usesid field if their is a file matching this
+// checksum that has already been uploaded.
+func (s *filesService) newFile(file File) *schema.File {
+	f := schema.NewFile(file.Name, file.Owner)
+	f.DataDirs = append(f.DataDirs, file.DirectoryID)
+	f.Checksum = file.Checksum
+	f.Size = file.Size
+	f.Current = false
 
-	dup, err := r.files.ByChecksum(file.Checksum)
+	dup, err := s.files.ByChecksum(file.Checksum)
 	if err == nil && dup != nil {
 		// Found a matching entry, set usesid to it
-		file.UsesID = dup.ID
+		f.UsesID = dup.ID
 	}
 
-	return &file
+	return &f
 }
-*/

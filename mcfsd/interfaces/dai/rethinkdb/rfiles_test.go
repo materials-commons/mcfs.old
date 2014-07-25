@@ -2,15 +2,17 @@ package rethinkdb
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/mcerr"
-	"github.com/materials-commons/mcfs/interfaces/db/schema"
 	"testing"
+
+	"github.com/materials-commons/mcfs/common/schema"
+	"github.com/materials-commons/mcfs/mcerr"
+	"github.com/materials-commons/mcfs/testutils/tdb"
 )
 
 var _ = fmt.Println
 
 func TestRFilesByID(t *testing.T) {
-	rfiles := newRFiles(session)
+	rfiles := NewRFiles(tdb.NewSession())
 
 	// Test existing
 	_, err := rfiles.ByID("650ccb87-f423-499e-b644-2bb093eca86a")
@@ -26,7 +28,7 @@ func TestRFilesByID(t *testing.T) {
 }
 
 func TestRFilesByPath(t *testing.T) {
-	rfiles := newRFiles(session)
+	rfiles := NewRFiles(tdb.NewSession())
 
 	// Lookup an existing file that exists in the given directory
 	f, err := rfiles.ByPath("2H-10X2.JPG", "d0b001c6-fc0a-4e95-97c3-4427de68c0a5")
@@ -79,7 +81,7 @@ func TestRFilesByPath(t *testing.T) {
 }
 
 func TestRFilesByChecksum(t *testing.T) {
-	rfiles := newRFiles(session)
+	rfiles := NewRFiles(tdb.NewSession())
 
 	// Lookup an existing checksum
 	f, err := rfiles.ByChecksum("72d47a675e81cf4a283aaf67587ddd28")
@@ -106,7 +108,7 @@ func TestRFilesInsert(t *testing.T) {
 	// Insert a new item
 	dataFile := schema.NewFile("testfile.txt", "test@mc.org")
 	dataFile.DataDirs = append(dataFile.DataDirs, "d0b001c6-fc0a-4e95-97c3-4427de68c0a5")
-	rfiles := newRFiles(session)
+	rfiles := NewRFiles(tdb.NewSession())
 	newDF, err := rfiles.Insert(&dataFile)
 	if err != nil {
 		t.Fatalf("Unable to insert new datafile: %s", err)
@@ -121,6 +123,6 @@ func TestRFilesInsert(t *testing.T) {
 
 func rfilesCleanup(f *schema.File) {
 	fmt.Println("Deleting file: ", f.ID, f.Name)
-	rf := newRFiles(session)
+	rf := NewRFiles(tdb.NewSession())
 	rf.Delete(f.ID)
 }

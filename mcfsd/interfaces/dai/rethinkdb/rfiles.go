@@ -56,7 +56,7 @@ func (f rFiles) ByPathPartials(name, dirID string) ([]schema.File, error) {
 }
 
 // ByPathChecksum looks up a file by its name, checksum and directory. This method
-// can return files that are only partially uploaded. It can return
+// can return files that are only partially uploaded.
 func (f rFiles) ByPathChecksum(name, dirID, checksum string) ([]schema.File, error) {
 	var files []schema.File
 	rql := model.Files.T().GetAllByIndex("name", name).

@@ -2,14 +2,16 @@ package rethinkdb
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/interfaces/db/schema"
 	"testing"
+
+	"github.com/materials-commons/mcfs/common/schema"
+	"github.com/materials-commons/mcfs/testutils/tdb"
 )
 
 var _ = fmt.Println
 
 func TestHasAccess(t *testing.T) {
-	rgroups := newRGroups(session)
+	rgroups := NewRGroups(tdb.NewSession())
 	user := "gtarcea@umich.edu"
 	owner := "mcfada@umich.edu"
 	// Test empty table different user
@@ -43,6 +45,6 @@ func TestHasAccess(t *testing.T) {
 
 func deleteItem(id string) {
 	fmt.Printf("Deleting group id %s\n", id)
-	rgroups := newRGroups(session)
+	rgroups := NewRGroups(tdb.NewSession())
 	rgroups.Delete(id)
 }
