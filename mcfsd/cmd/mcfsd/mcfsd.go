@@ -163,8 +163,14 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	}
 
 	// Get datafile from db and check access
-	dataFileID := filepath.Base(req.URL.Path)
-	df, err := s.File.ByID(dataFileID)
+	fileID := req.FormValue("id")
+	if fileID == "" {
+		// Support both methods, where the id is either passed in as a parameter
+		// or a part of the url path.
+		fileID = filepath.Base(req.URL.Path)
+	}
+
+	df, err := s.File.ByID(fileID)
 	switch {
 	case err != nil:
 		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
