@@ -1,23 +1,21 @@
 package files
 
 import (
-	"net/http"
-
 	"github.com/emicklei/go-restful"
+	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/mcfsd/app"
-	"github.com/materials-commons/mcfs/mcfsd/interfaces/ws/rest"
 	"github.com/materials-commons/mcfs/protocol"
 )
 
-func (r *filesResource) createFile(request *restful.Request, response *restful.Response) *rest.HTTPError {
+// createFile creates a new file, or returns an existing file.
+func (r *filesResource) createFile(request *restful.Request, response *restful.Response, user schema.User) *error {
 	var req protocol.CreateFileReq
 
 	if err := request.ReadEntity(&req); err != nil {
-		return rest.HTTPErrore(http.StatusNotAcceptable, err)
+		return err
 	}
 
-	user := request.Attribute("user").(rest.User)
 	f := app.File{
 		Name:        req.Name,
 		ProjectID:   req.ProjectID,
@@ -27,15 +25,11 @@ func (r *filesResource) createFile(request *restful.Request, response *restful.R
 		Owner:       user.Name,
 	}
 
-	// TODO: Document the return codes so we can map the error to
-	// a http status code.
 	file, err := r.files.Create(f)
 	if err != nil && err != mcerr.ErrExists {
-		return rest.HTTPErrore(http.StatusInternalServerError, err)
+		return err
 	}
 
-	//TODO: return error and have the route handler func figure out if it is an
-	// HTTPError type.
 	response.WriteEntity(file)
 	return nil
 }

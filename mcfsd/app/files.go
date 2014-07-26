@@ -61,7 +61,7 @@ func NewFilesService(files dai.Files, dirs dai.Dirs, projects dai.Projects, grou
 }
 
 // Create will create a new file in the repo or return an existing file. If a
-// new file is created is returns the file entry and sets error to nil. If
+// new file is created it returns the file entry and sets error to nil. If
 // an existing file is returned, then error is set to mcerr.ErrExists. Any other
 // error means that no entry was found or created.
 func (s *filesService) Create(file File) (*schema.File, error) {
