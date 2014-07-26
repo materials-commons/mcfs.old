@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/emicklei/go-restful"
+	"github.com/materials-commons/mcfs/mcerr"
 )
 
 // HTTPError represents an error returned by a REST Service
@@ -52,4 +53,21 @@ func RouteHandler(f RouteFunc) restful.RouteFunction {
 			err.Write(response)
 		}
 	}
+}
+
+func errorToHTTPError(err error) *HTTPError {
+	switch e := err.(type) {
+	case *mcerr.Error:
+		return mcerrToHTTPError(e)
+	default:
+		return normalErrorToHTTPError(e)
+	}
+}
+
+func mcerrToHTTPError(err *mcerr.Error) *HTTPError {
+	return nil
+}
+
+func normalErrorToHTTPError(err error) *HTTPError {
+	return nil
 }
