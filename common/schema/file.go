@@ -14,7 +14,7 @@ type File struct {
 	MTime       time.Time `gorethink:"mtime"`        // Modification time.
 	ATime       time.Time `gorethink:"atime"`        // Last access time.
 	Description string    `gorethink:"description"`
-	Notes       []string  `gorethink:"notes"`
+	Notes       []Note    `gorethink:"notes"`
 	Owner       string    `gorethink:"owner"`     // Who owns the file.
 	Checksum    string    `gorethink:"checksum"`  // MD5 Hash.
 	Size        int64     `gorethink:"size"`      // Size of file.
