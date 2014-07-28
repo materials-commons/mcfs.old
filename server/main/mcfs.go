@@ -27,6 +27,14 @@ package main
 
 import (
 	"fmt"
+	"mime"
+	"net"
+	"net/http"
+	"os"
+	"path/filepath"
+	"runtime/debug"
+	"strings"
+
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/config"
 	"github.com/materials-commons/mcfs/base/db"
@@ -35,13 +43,6 @@ import (
 	_ "github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/request"
 	"github.com/materials-commons/mcfs/server/service"
-	"mime"
-	"net"
-	"net/http"
-	"os"
-	"path/filepath"
-	"runtime/debug"
-	"strings"
 )
 
 // Options for server startup
@@ -162,6 +163,7 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 	df, err := s.File.ByID(dataFileID)
 	switch {
 	case err != nil:
+		fmt.Printf("Failed looking up fileID %s: %s\n", dataFileID, err)
 		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	case !s.Group.HasAccess(df.Owner, u.Email):
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
