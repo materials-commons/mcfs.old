@@ -3,7 +3,7 @@ package app
 import (
 	"strings"
 
-	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai"
 )
