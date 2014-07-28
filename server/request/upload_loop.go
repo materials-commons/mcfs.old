@@ -2,14 +2,14 @@ package request
 
 import (
 	"crypto/md5"
+	"io"
+	"os"
+
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/inuse"
-	"io"
-	"os"
 )
 
 // uploadFileHandler holds internal state and methods used by the upload loop.
@@ -24,7 +24,6 @@ type uploadFileHandler struct {
 func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
 	uploadHandler, err := createUploadFileHandler(h, resp.DataFileID, resp.Offset)
 	if err != nil {
-		inuse.Unmark(resp.DataFileID)
 		h.respError(nil, mcerr.Errorm(mcerr.ErrInternal, err))
 		return h.nextCommand
 	}
@@ -188,7 +187,6 @@ func (u *uploadFileHandler) fileClose() error {
 		// File hasn't completed uploading.
 		u.updateUploaded()
 	}
-	inuse.Unmark(u.file.ID)
 	return nil
 }
 

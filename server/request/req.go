@@ -8,7 +8,6 @@ import (
 	"github.com/materials-commons/gohandy/marshaling"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/inuse"
 	"github.com/materials-commons/mcfs/server/service"
 )
 
@@ -43,9 +42,6 @@ func (h *ReqHandler) Run() {
 	for reqStateFN := h.startState; reqStateFN != nil; {
 		reqStateFN = reqStateFN()
 	}
-
-	// Release project lock.
-	inuse.Unmark(h.projectID)
 }
 
 type errorReq struct{}
