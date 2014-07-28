@@ -9,7 +9,7 @@ import (
 	"github.com/materials-commons/mcfs/mcerr"
 )
 
-// httpError represents an error returned by a REST Service
+// httpError is the error and message to respond back with.
 type httpError struct {
 	statusCode int
 	message    string
