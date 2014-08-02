@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/emicklei/go-restful"
-	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/mcerr"
 )
 
@@ -21,7 +21,7 @@ func (e *httpError) Write(response *restful.Response) {
 }
 
 // RouteFunc represents the routes function
-type RouteFunc func(request *restful.Request, response *restful.Response, user schema.User) error
+type RouteFunc func(request *restful.Request, response *restful.Response, user schema.User) (error, interface{})
 
 // Handler represents the way a route function should actually be written.
 type Handler func(request *restful.Request, response *restful.Response)
@@ -31,9 +31,18 @@ type Handler func(request *restful.Request, response *restful.Response)
 func RouteHandler(f RouteFunc) restful.RouteFunction {
 	return func(request *restful.Request, response *restful.Response) {
 		user := request.Attribute("user").(schema.User)
-		if err := f(request, response, user); err != nil {
+		err, val := f(request, response, user)
+		switch {
+		case err != nil:
 			httpErr := errorToHTTPError(err)
 			httpErr.Write(response)
+		case val != nil:
+			err = response.WriteEntity(val)
+			if err != nil {
+				// log the error here
+			}
+		default:
+			// Nothing to do
 		}
 	}
 }
