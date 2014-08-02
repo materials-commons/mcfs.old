@@ -17,7 +17,7 @@ func NewResource(projects app.ProjectsService) rest.Service {
 
 func (r *projectResource) WebService() *restful.WebService {
 	ws := new(restful.WebService)
-	ws.Path("/project").Produces(restful.MIME_JSON)
+	ws.Path("/projects").Produces(restful.MIME_JSON)
 	ws.Route(ws.POST("/create").To(rest.RouteHandler(r.createProject)).
 		Doc("Creates a new project or retrieves an existing one").
 		Reads(protocol.CreateProjectReq{}).
