@@ -9,11 +9,11 @@ import (
 )
 
 // createFile creates a new file, or returns an existing file.
-func (r *filesResource) createFile(request *restful.Request, response *restful.Response, user schema.User) *error {
+func (r *filesResource) createFile(request *restful.Request, response *restful.Response, user schema.User) (error, interface{}) {
 	var req protocol.CreateFileReq
 
 	if err := request.ReadEntity(&req); err != nil {
-		return err
+		return err, nil
 	}
 
 	f := app.File{
@@ -27,9 +27,8 @@ func (r *filesResource) createFile(request *restful.Request, response *restful.R
 
 	file, err := r.files.Create(f)
 	if err != nil && err != mcerr.ErrExists {
-		return err
+		return err, nil
 	}
 
-	response.WriteEntity(file)
-	return nil
+	return nil, file
 }

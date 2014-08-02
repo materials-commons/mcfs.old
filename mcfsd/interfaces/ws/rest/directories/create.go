@@ -2,17 +2,17 @@ package directories
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/mcfsd/app"
 	"github.com/materials-commons/mcfs/protocol"
 )
 
-func (r *directoriesResource) createDirectory(request *restful.Request, response *restful.Response, user schema.User) error {
+func (r *directoriesResource) createDirectory(request *restful.Request, response *restful.Response, user schema.User) (error, interface{}) {
 	var req protocol.CreateDirectoryReq
 
 	if err := request.ReadEntity(&req); err != nil {
-		return err
+		return err, nil
 	}
 
 	p := app.Directory{
@@ -23,9 +23,8 @@ func (r *directoriesResource) createDirectory(request *restful.Request, response
 
 	dir, err := r.dirs.Create(p)
 	if err != nil && err != mcerr.ErrExists {
-		return err
+		return err, nil
 	}
 
-	response.WriteEntity(dir)
-	return nil
+	return nil, dir
 }
