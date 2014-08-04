@@ -72,7 +72,7 @@ func (s *directoriesService) validate(dir Directory) (*schema.Project, error) {
 		return nil, err
 	case proj.Owner != dir.Owner:
 		return nil, mcerr.ErrNoAccess
-	case !dir.validPath(proj.Name):
+	case dir.validPath(proj.Name) != nil:
 		return nil, mcerr.ErrInvalid
 	default:
 		return proj, nil
@@ -81,7 +81,7 @@ func (s *directoriesService) validate(dir Directory) (*schema.Project, error) {
 
 // createDir creates a new directory entry if it doesn't exist and the user has permission.
 // Otherwise it returns an error.
-func (s *directoriesService) createDir(dir Directory) (*schema.Directory, error) {
+func (s *directoriesService) createDir(dir Directory, proj *schema.Project) (*schema.Directory, error) {
 	// The project exists and the user has permission.
 	dataDir, err := s.dirs.ByPath(dir.Name, dir.ProjectID)
 	switch {

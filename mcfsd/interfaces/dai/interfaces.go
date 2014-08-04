@@ -53,6 +53,9 @@ type Dirs interface {
 type Projects interface {
 	ByID(id string) (*schema.Project, error)
 	ByName(name, owner string) (*schema.Project, error)
+	ByOwner(owner string) ([]schema.Project, error)
+	GetSamples(projectID string) ([]schema.Sample, error)
+	GetReviews(projectID string) ([]schema.Review, error)
 	Files(id, base string) ([]dir.FileInfo, error)
 	Update(*schema.Project) error
 	Insert(*schema.Project) (*schema.Project, error)

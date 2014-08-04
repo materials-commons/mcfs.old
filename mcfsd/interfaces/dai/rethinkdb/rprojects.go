@@ -39,6 +39,35 @@ func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
 	return &project, nil
 }
 
+func (p rProjects) ByOwner(owner string) ([]schema.Project, error) {
+	var projects []schema.Project
+	rql := model.Projects.T().GetAllByIndex("owner", owner)
+	if err := model.Projects.Qs(p.session).Rows(rql, &projects); err != nil {
+		return nil, mcerr.ErrNotFound
+	}
+	return projects, nil
+}
+
+// GetSamples retrieves the samples for a project.
+func (p rProjects) GetSamples(projectID string) ([]schema.Sample, error) {
+	rql := r.Table("samples").GetAllByIndex("project_id", projectID)
+	var samples []schema.Sample
+	if err := model.Projects.Qs(p.session).Row(rql, &samples); err != nil {
+		return nil, err
+	}
+	return samples, nil
+}
+
+// GetReviews retrieves the reviews for a project.
+func (p rProjects) GetReviews(projectID string) ([]schema.Review, error) {
+	rql := r.Table("reviews").GetAllByIndex("project_id", projectID)
+	var reviews []schema.Review
+	if err := model.Projects.Qs(p.session).Rows(rql, &reviews); err != nil {
+		return nil, err
+	}
+	return reviews, nil
+}
+
 // Files returns a flattened list of all the files and directories in a project.
 // Each entry has its full path starting from the project. The returned list is
 // in sorted (ascending) order.
