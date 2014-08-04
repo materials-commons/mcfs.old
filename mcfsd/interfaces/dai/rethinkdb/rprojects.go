@@ -39,9 +39,9 @@ func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
 	return &project, nil
 }
 
-func (p rProjects) ByOwner(owner string) ([]schema.Project, error) {
+func (p rProjects) ForUser(user string) ([]schema.Project, error) {
 	var projects []schema.Project
-	rql := model.Projects.T().GetAllByIndex("owner", owner)
+	rql := model.Projects.T().GetAllByIndex("owner", user)
 	if err := model.Projects.Qs(p.session).Rows(rql, &projects); err != nil {
 		return nil, mcerr.ErrNotFound
 	}

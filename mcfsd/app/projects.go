@@ -32,7 +32,7 @@ type Project struct {
 type ProjectsService interface {
 	Create(name, owner string) (*schema.Project, error)
 	Get(id string) (*Project, error)
-	All(owner string) ([]Project, error)
+	ForUser(user string) ([]Project, error)
 }
 
 // projectsService is an implementation of ProjectsService
@@ -120,7 +120,7 @@ func (p *projectsService) Get(id string) (*Project, error) {
 	return project, nil
 }
 
-func (p *projectsService) All(owner string) ([]Project, error) {
+func (p *projectsService) ForUser(user string) ([]Project, error) {
 	return nil, nil
 }
 
