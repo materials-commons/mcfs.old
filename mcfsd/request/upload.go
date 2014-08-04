@@ -3,7 +3,6 @@ package request
 import (
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/inuse"
 )
 
 // upload handles the upload request. It validates the request and sends back the
@@ -45,11 +44,7 @@ func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, erro
 			dfid = dataFile.ID
 		}
 
-		if !inuse.Mark(dfid) {
-			// Attempt to mark file as in use, but file was in use.
-			return nil, mcerr.Errorf(mcerr.ErrInvalid, "File upload already in progress: %s", dataFile.ID)
-		}
-		return &protocol.UploadResp{FileID: dfid, Offset: offset}, nil
+		return &protocol.UploadResp{DataFileID: dfid, Offset: offset}, nil
 
 	case dataFile.Size != req.Size:
 		// Invalid request. The correct size was set at the time createFile was called.

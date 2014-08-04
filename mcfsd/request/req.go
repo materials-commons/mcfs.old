@@ -6,8 +6,8 @@ import (
 
 	"github.com/materials-commons/mcfs/codex"
 	"github.com/materials-commons/mcfs/mcerr"
+	"github.com/materials-commons/mcfs/mcfsd/inuse"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/inuse"
 	"github.com/materials-commons/mcfs/server/service"
 )
 
@@ -50,7 +50,6 @@ func (h *ReqHandler) Run() {
 	for reqStateFN := h.startState; reqStateFN != nil; {
 		reqStateFN = reqStateFN()
 	}
-
 }
 
 func (h *ReqHandler) req() interface{} {
