@@ -1,12 +1,12 @@
 package services
 
 import (
-	"github.com/materials-commons/base/schema"
-	"github.com/materials-commons/mcfs/mcfsd/interfaces/doi"
+	"github.com/materials-commons/mcfs/common/schema"
+	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai"
 )
 
 type usersService struct {
-	users doi.Users
+	users dai.Users
 }
 
 func NewUsersService(users doi.Users) usersService {

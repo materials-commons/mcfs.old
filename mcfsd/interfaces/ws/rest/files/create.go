@@ -2,7 +2,7 @@ package files
 
 import (
 	"github.com/emicklei/go-restful"
-	"github.com/materials-commons/base/schema"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/mcfsd/app"
 	"github.com/materials-commons/mcfs/protocol"
