@@ -9,30 +9,74 @@ import (
 	"github.com/materials-commons/mcfs/mcfsd/interfaces/dai"
 )
 
+// Note is a user note entry.
+type Note struct {
+	Date    int    `json:"date"`
+	Message string `json:"message"`
+	Who     string `json:"who"`
+}
+
+// Tag is a user tag.
+type Tag struct {
+	Name string `json:"name"`
+}
+
+// Draft is a draft provenance entry.
+type Draft struct {
+	ID string `json:"id"`
+}
+
+// Review is a request to review an item.
+type Review struct {
+	ID          string    `json:"id"`
+	Birthtime   time.Time `json:"birthtime"`
+	ItemID      string    `json:"item_id"`
+	ItemName    string    `json:"item_name"`
+	ItemType    string    `json:"item_type"`
+	ProjectID   string    `json:"project_id"`
+	RequestedBy string    `json:"requested_by"`
+	RequestTo   string    `json:"request_to"`
+	Status      string    `json:"status"`
+	Notes       []Note    `json:"notes"`
+}
+
+// ACL controls access to a dataset.
+type ACL struct {
+	Dataset     string `json:"dataset"`
+	Permissions string `json:"permissions"`
+}
+
+// Access contains the access permissions for a user.
+type Access struct {
+	User string `json:"user"`
+	ACLs []ACL  `json:"acls"`
+}
+
 // Project is a user project in the system. A project holds
 // the files, directories and meta data. A project controls
 // access and visibility.
 type Project struct {
-	ID          string          `json:"id,omitempty"`
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Owner       string          `json:"owner"`
-	Birthtime   time.Time       `json:"birthtime"`
-	MTime       time.Time       `json:"mtime"`
-	Notes       []schema.Note   `json:"notes"`
-	Tags        []schema.Tag    `json:"tags"`
-	Reviews     []schema.Review `json:"reviews"`
-	MyTags      []schema.Tag    `json:"mytags"`
-	Drafts      []schema.Draft  `json:"drafts"`
-	Samples     []schema.Sample `json:"samples"`
-	Groups      []schema.Group  `json:"groups"`
+	ID          string    `json:"id,omitempty"`
+	Name        string    `json:"name"`
+	Description string    `json:"description"`
+	Owner       string    `json:"owner"`
+	Birthtime   time.Time `json:"birthtime"`
+	MTime       time.Time `json:"mtime"`
+	Notes       []Note    `json:"notes"`
+	Tags        []Tag     `json:"tags"`
+	Reviews     []Review  `json:"reviews"`
+	MyTags      []Tag     `json:"mytags"`
+	Drafts      []Draft   `json:"drafts"`
+	Samples     []Sample  `json:"samples"`
+	Access      []Access  `json:"access"`
 }
 
 // ProjectsService represents the application operations on a project.
 type ProjectsService interface {
 	Create(name, owner string) (*schema.Project, error)
-	Get(id string) (*Project, error)
+	Get(id string) (Project, error)
 	ForUser(user string) ([]Project, error)
+	Update(project Project) (Project, error)
 }
 
 // projectsService is an implementation of ProjectsService
@@ -47,7 +91,7 @@ func NewProjectsService(projects dai.Projects) *projectsService {
 	}
 }
 
-// isValid sanity checks a project object.
+// validArgs sanity checks the project name and owner arguments.
 func (p projectsService) validArgs(name, owner string) error {
 	switch {
 	case name == "":
@@ -100,31 +144,47 @@ func (p *projectsService) createNewProject(name, owner string) (*schema.Project,
 	return newProject, nil
 }
 
-func (p *projectsService) Get(id string) (*Project, error) {
+// Get retrieves a single project.
+func (p *projectsService) Get(id string) (Project, error) {
 	proj, err := p.projects.ByID(id)
+	if err != nil {
+		return Project{}, err
+	}
+	return p.makeProject(*proj), nil
+}
+
+// ForUser retrieves all the projects that a user has access to.
+func (p *projectsService) ForUser(user string) ([]Project, error) {
+	var projects []Project
+	projects, err := p.projects.ForUser(user)
 	if err != nil {
 		return nil, err
 	}
 
-	project := &Project{
+	for _, proj := range projects {
+		projects := append(projects, p.makeProject(proj))
+	}
+
+	return projects, nil
+}
+
+// makeProject takes a schema.Project and turns into a Project.
+func (p *projectsService) makeProject(proj schema.Project) Project {
+	project := Project{
 		ID:          proj.ID,
 		Name:        proj.Name,
 		Description: proj.Description,
 		Owner:       proj.Owner,
 		Birthtime:   proj.Birthtime,
 		MTime:       proj.MTime,
-		Samples:     p.getSamples(id),
-		Reviews:     p.getReviews(id),
+		Samples:     p.getSamples(proj.ID),
+		Reviews:     p.getReviews(proj.ID),
 	}
-
-	return project, nil
+	return proj
 }
 
-func (p *projectsService) ForUser(user string) ([]Project, error) {
-	return nil, nil
-}
-
-func (p *projectsService) getSamples(id string) []schema.Sample {
+// getSamples retrieves all the samples for a project.
+func (p *projectsService) getSamples(id string) []Sample {
 	samples, err := p.projects.GetSamples(id)
 	if err != nil {
 		return []schema.Sample{}
@@ -132,7 +192,8 @@ func (p *projectsService) getSamples(id string) []schema.Sample {
 	return samples
 }
 
-func (p *projectsService) getReviews(id string) []schema.Review {
+// getReviews retrieves all the reviews for a project.
+func (p *projectsService) getReviews(id string) []Review {
 	reviews, err := p.projects.GetReviews(id)
 	if err != nil {
 		return []schema.Review{}

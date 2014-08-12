@@ -9,8 +9,8 @@ import (
 type Property struct {
 	Name  string      `gorethink:"name"`
 	Type  string      `gorethink:"type"`
-	Unit  interface{} `gorethink:"unit"`
-	Value string      `gorethink:"value"`
+	Unit  string      `gorethink:"unit"`
+	Value interface{} `gorethink:"value"`
 }
 
 type Sample struct {

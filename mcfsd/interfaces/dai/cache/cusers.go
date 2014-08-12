@@ -23,7 +23,9 @@ type cUsers struct {
 // to use to lookup users in the database.
 func NewCUsers(dbusers dai.Users) *cUsers {
 	return &cUsers{
-		dbusers: dbusers,
+		dbusers:       dbusers,
+		usersByAPIKey: make(map[string]*schema.User),
+		usersByID:     make(map[string]*schema.User),
 	}
 }
 
@@ -76,6 +78,15 @@ func (u *cUsers) lookupByAPIKey(apikey string) *schema.User {
 	defer u.mutex.RUnlock()
 	u.mutex.RLock()
 	return u.usersByAPIKey[apikey]
+}
+
+// Clear clears all map entries. This is useful for reloading the map
+// if there have been a series of changes.
+func (u *cUsers) Clear() {
+	defer u.mutex.RUnlock()
+	u.mutex.RLock()
+	u.usersByAPIKey = make(map[string]*schema.User)
+	u.usersByID = make(map[string]*schema.User)
 }
 
 // All returns all users in the cache.

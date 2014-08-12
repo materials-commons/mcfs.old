@@ -1,0 +1,27 @@
+* Overview
+  This document describes the current schema for Materials
+  Commons. There are two schemas described here. The "External Schema"
+  is the schema exposed to client side (REST) services. The "Internal
+  Schema" is the mapping of this schema into our database. Materials
+  Commons uses a JSON document store for its backend database service.
+
+  All communication with Materials Commons services uses JSON as its
+  interchange format. Because it can be difficult to see entities in
+  the raw JSON the schema below is represented using GO
+  structs. Internally these are translated from/to JSON.
+
+*** External Schema
+#+BEGIN_SRC go
+// File represents a file in the system.
+type File struct {
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	ProjectID   string `json:"project_id"`
+	DirectoryID string `json:"directory_id"`
+	Checksum    string `json:"checksum"`
+	Owner       string `json:"owner"`
+	Size        int64 `json:"size"`
+	Projects    []OID `json:"projects"`
+}
+#+END_SRC
+*** Internal Schema

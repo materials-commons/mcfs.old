@@ -8,12 +8,14 @@ import (
 
 // File represents a file in the system.
 type File struct {
-	Name        string
-	ProjectID   string
-	DirectoryID string
-	Checksum    string
-	Owner       string
-	Size        int64
+	ID          string `json:"id"`
+	Name        string `json:"name"`
+	ProjectID   string `json:"project_id"`
+	DirectoryID string `json:"directory_id"`
+	Checksum    string `json:"checksum"`
+	Owner       string `json:"owner"`
+	Size        int64  `json:"size"`
+	Projects    []OID  `json:"projects"`
 }
 
 // isValid sanity checks the entries in the file object. The filesService

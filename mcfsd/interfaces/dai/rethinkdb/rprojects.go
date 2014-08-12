@@ -41,7 +41,8 @@ func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
 
 func (p rProjects) ForUser(user string) ([]schema.Project, error) {
 	var projects []schema.Project
-	rql := model.Projects.T().GetAllByIndex("owner", user)
+	rql := r.Table("access").GetAllByIndex("user_id", user).Pluck("project_id").
+		EqJoin("project_id", r.Table("projects")).Zip()
 	if err := model.Projects.Qs(p.session).Rows(rql, &projects); err != nil {
 		return nil, mcerr.ErrNotFound
 	}
