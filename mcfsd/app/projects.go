@@ -11,9 +11,12 @@ import (
 
 // Note is a user note entry.
 type Note struct {
-	Date    int    `json:"date"`
-	Message string `json:"message"`
-	Who     string `json:"who"`
+	ID        string    `json:"id"`
+	Birthtime time.Time `json:"birthtime"`
+	MTime     time.Time `json:"mtime"`
+	Date      int       `json:"date"`
+	Message   string    `json:"message"`
+	Who       string    `json:"who"`
 }
 
 // Tag is a user tag.
@@ -76,7 +79,24 @@ type ProjectsService interface {
 	Create(name, owner string) (*schema.Project, error)
 	Get(id string) (Project, error)
 	ForUser(user string) ([]Project, error)
-	Update(project Project) (Project, error)
+	Update(project Project) error
+
+	AddNote(projectID string, note Note) (Note, error)
+
+	AddTag(projectID string, tag Tag) (Tag, error)
+	RemoveTag(projectID string, tag Tag) (Tag, error)
+
+	AddDraft(projectID string, draft Draft) (Draft, error)
+	UpdateDraft(projectID string, draft Draft) (Draft, error)
+	RemoveDraft(projectID string, draftID string) (Draft, error)
+
+	AddSample(projectID string, sample Sample) (Sample, error)
+	UpdateSample(projectID string, sample Sample) (Sample, error)
+	RemoveSample(projectID string, sampleID string) (Sample, error)
+
+	AddAccess(projectID string, access Access) (Access, error)
+	UpdateAccess(projectID string, access Access) (Access, error)
+	RemoveAccess(projectID string, access Access) (Access, error)
 }
 
 // projectsService is an implementation of ProjectsService
@@ -199,4 +219,55 @@ func (p *projectsService) getReviews(id string) []Review {
 		return []schema.Review{}
 	}
 	return reviews
+}
+
+func (p *projectsService) Update(project Project) error {
+	return p.projects.Update()
+}
+
+func (p *projectsService) AddNote(projectID string, note Note) (Note, error) {
+
+}
+
+func (p *projectsService) AddTag(projectID string, tag Tag) (Tag, error) {
+
+}
+
+func (p *projectsService) RemoveTag(projectID string, tag Tag) (Tag, error) {
+
+}
+
+func (p *projectsService) AddDraft(projectID string, draft Draft) (Draft, error) {
+
+}
+
+func (p *projectsService) UpdateDraft(projectID string, draft Draft) (Draft, error) {
+
+}
+func (p *projectsService) RemoveDraft(projectID string, draftID string) (Draft, error) {
+
+}
+
+func (p *projectsService) AddSample(projectID string, sample Sample) (Sample, error) {
+
+}
+
+func (p *projectsService) UpdateSample(projectID string, sample Sample) (Sample, error) {
+
+}
+
+func (p *projectsService) RemoveSample(projectID string, sampleID string) (Sample, error) {
+
+}
+
+func (p *projectsService) AddAccess(projectID string, access Access) (Access, error) {
+
+}
+
+func (p *projectsService) UpdateAccess(projectID string, access Access) (Access, error) {
+
+}
+
+func (p *projectsService) RemoveAccess(projectID string, access Access) (Access, error) {
+
 }

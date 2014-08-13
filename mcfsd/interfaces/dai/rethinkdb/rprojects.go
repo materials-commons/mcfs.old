@@ -86,6 +86,16 @@ func (p rProjects) Files(projectID, base string) ([]dir.FileInfo, error) {
 	return dirlist.build(entries, base), nil
 }
 
+func (p rProjects) UpdateFieldAppend(projectID string, field String, value interface{}) error {
+	return model.Projects.Qs(p.session).Update(projectID, map[string]interface{}{
+		field: r.Row(field).Append(value),
+	})
+}
+
+func (p rProjects) UpdateFields(projectID string, what map[string]interface{}) error {
+	return model.Projects.Qs(p.session).Update(projectID, what)
+}
+
 // Update updates an existing project.
 func (p rProjects) Update(project *schema.Project) error {
 	return model.Projects.Qs(p.session).Update(project.ID, project)

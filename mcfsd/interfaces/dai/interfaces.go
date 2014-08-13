@@ -1,6 +1,7 @@
 package dai
 
 import (
+	"github.com/materials-commons/mcfs/common"
 	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/dir"
 )
@@ -49,6 +50,12 @@ type Dirs interface {
 	RemoveFiles(dir *schema.Directory, fileIDs ...string) error
 }
 
+type Notes interface {
+	Insert(t common.Type, id string, note schema.Note) (*schema.Note, error)
+	Update(t common.Type, id string, note schema.Note) (*schema.Note, error)
+	Remove(t common.Type, id string, noteID string) (*schema.Note, error)
+}
+
 // Projects is the common API to projects.
 type Projects interface {
 	ByID(id string) (*schema.Project, error)
@@ -60,6 +67,8 @@ type Projects interface {
 	Update(*schema.Project) error
 	Insert(*schema.Project) (*schema.Project, error)
 	AddDirectories(project *schema.Project, directoryIDs ...string) error
+	UpdateFieldAppend(projectID string, field String, value interface{}) error
+	UpdateFields(projectID string, what map[string]interface{}) error
 }
 
 // Groups is the common API to groups.

@@ -40,3 +40,21 @@ var Projects = &Model{
 	schema: schema.Project{},
 	table:  "projects",
 }
+
+// Samples is a default model for the samples table
+var Samples = &Model{
+	schema: schema.Sample{},
+	table:  "samples",
+}
+
+// Reviews is a default model for the reviews table
+var Reviews = &Model{
+	schema: schema.Review{},
+	table:  "reviews",
+}
+
+// Processes is a default model for the processes table
+var Processes = &Model{
+	schema: schema.Process{},
+	table:  "processes",
+}
