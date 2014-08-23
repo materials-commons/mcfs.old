@@ -4,7 +4,7 @@ import (
 	"strings"
 
 	"github.com/materials-commons/mcfs/base/mcerr"
-	"github.com/materials-commons/mcfs/base/schema"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 )

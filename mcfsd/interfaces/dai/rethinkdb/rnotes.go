@@ -2,8 +2,8 @@ package rethinkdb
 
 import (
 	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/common"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/interfaces/db/model"
 	"github.com/materials-commons/mcfs/mcerr"
 )

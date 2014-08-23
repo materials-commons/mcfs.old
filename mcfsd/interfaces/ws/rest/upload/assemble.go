@@ -9,9 +9,9 @@ import (
 	"strconv"
 
 	"github.com/inconshreveable/log15"
-	"github.com/materials-commons/mcfs/protocol/flow"
 	"github.com/materials-commons/mcfs/log"
 	"github.com/materials-commons/mcfs/mc"
+	"github.com/materials-commons/mcfs/protocol/flow"
 )
 
 type assembler struct {

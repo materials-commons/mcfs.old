@@ -15,7 +15,6 @@ import (
 	"github.com/dustin/go-humanize"
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/gohandy/file"
-	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/client"
 	"github.com/materials-commons/mcfs/client/autoupdate"
 	"github.com/materials-commons/mcfs/client/config"
@@ -23,6 +22,7 @@ import (
 	"github.com/materials-commons/mcfs/client/mcfs"
 	u "github.com/materials-commons/mcfs/client/user"
 	"github.com/materials-commons/mcfs/client/ws"
+	"github.com/materials-commons/mcfs/mcerr"
 )
 
 var mcuser, _ = u.NewCurrentUser()

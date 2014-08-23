@@ -1,9 +1,9 @@
 package access
 
 import (
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/log"
 	"github.com/materials-commons/mcfs/mcerr"
-	"github.com/materials-commons/mcfs/schema"
 	"github.com/materials-commons/mcfs/server"
 	"github.com/materials-commons/mcfs/server/mcfserr"
 	"github.com/materials-commons/mcfs/server/service"

@@ -3,10 +3,10 @@ package request
 import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/mcfs/codex"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/model"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/schema"
 	"github.com/materials-commons/mcfs/server/inuse"
 	"testing"
 )

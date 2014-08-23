@@ -3,8 +3,8 @@ package model
 import (
 	"fmt"
 	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/interfaces/db/schema"
+	"github.com/materials-commons/mcfs/mcerr"
 	"testing"
 )
 

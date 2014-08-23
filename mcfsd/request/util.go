@@ -1,8 +1,8 @@
 package request
 
 import (
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/mc"
-	"github.com/materials-commons/mcfs/schema"
 	"os"
 )
 

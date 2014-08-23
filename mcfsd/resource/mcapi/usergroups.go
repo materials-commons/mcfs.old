@@ -6,8 +6,8 @@ import (
 
 	"fmt"
 
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/model"
-	"github.com/materials-commons/mcfs/schema"
 	"github.com/materials-commons/mcfs/server/servers/access"
 )
 

@@ -6,14 +6,13 @@ import (
 	"strings"
 
 	"github.com/emicklei/go-restful"
+	"github.com/materials-commons/mcfs/common/schema" // createProjectHandler handles create project request process.
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/mcfsd/service"
 	"github.com/materials-commons/mcfs/mcfsd/ws"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/schema"
 )
 
-// createProjectHandler handles create project request process.
 type createProjectHandler struct {
 	service *service.Service
 }

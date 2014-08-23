@@ -1,12 +1,11 @@
 package request
 
 import (
+	"github.com/materials-commons/mcfs/common/schema" // stat is like the file system stat call but returns information from our document store.
 	"github.com/materials-commons/mcfs/mcerr"
-	"github.com/materials-commons/mcfs/schema"
 	"github.com/materials-commons/mcfs/protocol"
 )
 
-// stat is like the file system stat call but returns information from our document store.
 func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, error) {
 	file, err := h.service.File.ByID(req.DataFileID)
 	switch {

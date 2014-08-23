@@ -1,7 +1,7 @@
 package access
 
 import (
-	"github.com/materials-commons/mcfs/schema"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/server/service"
 )
 

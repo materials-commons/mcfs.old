@@ -1,7 +1,7 @@
 package access
 
 import (
-	"github.com/materials-commons/mcfs/schema"
+	"github.com/materials-commons/mcfs/common/schema"
 )
 
 // GetUserByAPIKey returns the User for a given APIKey.

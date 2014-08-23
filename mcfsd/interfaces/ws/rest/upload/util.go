@@ -10,9 +10,9 @@ import (
 	"strconv"
 
 	"github.com/emicklei/go-restful"
-	"github.com/materials-commons/mcfs/protocol/flow"
 	"github.com/materials-commons/mcfs/log"
 	"github.com/materials-commons/mcfs/mc"
+	"github.com/materials-commons/mcfs/protocol/flow"
 )
 
 // form2FlowRequest reads a multipart upload form and converts it to a flow.Request.
