@@ -27,7 +27,6 @@ package main
 
 import (
 	"fmt"
-	"mime"
 	"net"
 	"net/http"
 	"os"
@@ -166,18 +165,17 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 		fmt.Printf("Failed looking up fileID %s: %s\n", dataFileID, err)
 		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
 	case !s.Group.HasAccess(df.Owner, u.Email):
+		fmt.Printf("No access owner: %s, accessed by: %s\n", df.Owner, u.Email)
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	default:
 		var path string
 		if isTiff(df.Name) && download == "" {
 			path = tiffConversionPath(df.FileID())
 		} else {
-			extension := strings.ToLower(filepath.Ext(df.Name))
-			if mimetype := mime.TypeByExtension(extension); mimetype != "" {
-				writer.Header().Set("Content-Type", mimetype)
-			}
 			path = mc.FilePath(df.FileID())
 		}
+		writer.Header().Set("Content-Type", df.MediaType)
+		fmt.Printf("Serving path: %s\n", path)
 		http.ServeFile(writer, req, path)
 	}
 }

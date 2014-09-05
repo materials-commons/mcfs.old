@@ -12,6 +12,7 @@ type FileEntry struct {
 	Birthtime time.Time `gorethink:"birthtime"`
 	Checksum  string    `gorethink:"checksum"`
 	Size      int64     `gorethink:"size"`
+	MediaType string    `gorethink:"mediatype"`
 }
 
 // DataDirDenorm is a denormalized instance of a datadir used in the datadirs_denorm table.

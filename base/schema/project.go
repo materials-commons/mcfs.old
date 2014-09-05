@@ -14,7 +14,7 @@ type Project struct {
 	Owner       string    `gorethink:"owner" db:"-"`
 	Birthtime   time.Time `gorethink:"birthtime"`
 	MTime       time.Time `gorethink:"mtime"`
-	Notes       []string  `gorethink:"notes" db:"-"`
+	Notes       []Note    `gorethink:"notes" db:"-"`
 	Tags        []string  `gorethink:"tags" db:"-"`
 	Reviews     []string  `gorethink:"reviews" db:"-"`
 	MyTags      []string  `gorethink:"mytags" db:"-"`
