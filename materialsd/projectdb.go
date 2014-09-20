@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/materials-commons/gohandy/file"
-	"github.com/materials-commons/mcfs/client/config"
+	"github.com/materials-commons/mcfs/materialsd/config"
 	"io/ioutil"
 	"os"
 	"path/filepath"

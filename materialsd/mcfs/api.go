@@ -2,7 +2,7 @@ package mcfs
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/client/util"
+	"github.com/materials-commons/mcfs/materialsd/util"
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
 	"net"

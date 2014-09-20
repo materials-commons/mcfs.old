@@ -6,7 +6,7 @@ import (
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/gohandy/file"
 	"github.com/materials-commons/gohandy/marshaling"
-	"github.com/materials-commons/mcfs/client/util"
+	"github.com/materials-commons/mcfs/materialsd/util"
 	"github.com/materials-commons/mcfs/mc"
 	"github.com/materials-commons/mcfs/model"
 	"github.com/materials-commons/mcfs/server"

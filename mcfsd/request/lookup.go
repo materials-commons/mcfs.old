@@ -5,7 +5,7 @@ import (
 	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/db"
 	"github.com/materials-commons/mcfs/mcerr"
-	"github.com/materials-commons/mcfs/model"
+	"github.com/materials-commons/mcfs/interfaces/db/model"
 	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/service"
 )

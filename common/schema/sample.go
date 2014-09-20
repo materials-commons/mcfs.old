@@ -2,8 +2,6 @@ package schema
 
 import (
 	"time"
-
-	"github.com/materials-commons/mcfs/common/schema"
 )
 
 type Property struct {

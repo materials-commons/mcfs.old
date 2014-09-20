@@ -1,8 +1,7 @@
 package autoupdate
 
 import (
-	"github.com/materials-commons/mcfs/client"
-	"github.com/materials-commons/mcfs/client/config"
+	"github.com/materials-commons/mcfs/materialsd/config"
 )
 
 // A Updater keeps track of the status of binary and website updates

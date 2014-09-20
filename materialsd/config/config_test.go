@@ -3,7 +3,7 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/materials-commons/mcfs/client/user"
+	"github.com/materials-commons/mcfs/materialsd/user"
 	"os"
 	"path/filepath"
 	"testing"

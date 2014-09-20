@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/jmoiron/sqlx"
 	"github.com/materials-commons/gohandy/file"
-	"github.com/materials-commons/mcfs/client/config"
-	"github.com/materials-commons/mcfs/client/db/schema"
+	"github.com/materials-commons/mcfs/materialsd/config"
+	"github.com/materials-commons/mcfs/materialsd/db/schema"
 	_ "github.com/mattn/go-sqlite3" // Implicit import of driver
 	"path/filepath"
 )

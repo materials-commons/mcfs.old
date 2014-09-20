@@ -1,7 +1,7 @@
 package materials
 
 import (
-	"github.com/materials-commons/mcfs/client/config"
+	"github.com/materials-commons/mcfs/materialsd/config"
 	"github.com/syndtr/goleveldb/leveldb"
 	"github.com/syndtr/goleveldb/leveldb/util"
 	"path/filepath"

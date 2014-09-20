@@ -2,8 +2,8 @@ package autoupdate
 
 import (
 	"bitbucket.org/kardianos/osext"
-	"github.com/materials-commons/mcfs/client/config"
-	"github.com/materials-commons/mcfs/client/util"
+	"github.com/materials-commons/mcfs/materialsd/config"
+	"github.com/materials-commons/mcfs/materialsd/util"
 	"os"
 	"time"
 )

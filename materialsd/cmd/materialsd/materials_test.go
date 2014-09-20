@@ -2,9 +2,9 @@ package main
 
 import (
 	"bitbucket.org/kardianos/osext"
-	"github.com/materials-commons/mcfs/client"
-	"github.com/materials-commons/mcfs/client/config"
-	"github.com/materials-commons/mcfs/client/user"
+	"github.com/materials-commons/mcfs/materialsd"
+	"github.com/materials-commons/mcfs/materialsd/config"
+	"github.com/materials-commons/mcfs/materialsd/user"
 	"path/filepath"
 	"testing"
 )

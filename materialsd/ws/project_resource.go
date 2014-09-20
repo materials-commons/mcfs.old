@@ -3,7 +3,7 @@ package ws
 import (
 	"fmt"
 	"github.com/emicklei/go-restful"
-	"github.com/materials-commons/mcfs/client"
+	"github.com/materials-commons/mcfs/materialsd"
 	"net/http"
 )
 

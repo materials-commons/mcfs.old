@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/jmoiron/sqlx"
-	"github.com/materials-commons/mcfs/client/db/schema"
+	"github.com/materials-commons/mcfs/materialsd/db/schema"
 	_ "github.com/mattn/go-sqlite3"
 	"os"
 	"testing"

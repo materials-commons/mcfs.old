@@ -2,7 +2,7 @@ package config
 
 import (
 	"encoding/json"
-	"github.com/materials-commons/mcfs/client/user"
+	"github.com/materials-commons/mcfs/materialsd/user"
 	"io/ioutil"
 	"os"
 	"path/filepath"

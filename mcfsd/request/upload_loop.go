@@ -5,8 +5,8 @@ import (
 	"io"
 	"os"
 
-	"github.com/materials-commons/base/schema"
 	"github.com/materials-commons/gohandy/file"
+	"github.com/materials-commons/mcfs/common/schema"
 	"github.com/materials-commons/mcfs/mc"
 	"github.com/materials-commons/mcfs/mcerr"
 	"github.com/materials-commons/mcfs/protocol"

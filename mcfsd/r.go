@@ -2,7 +2,7 @@ package mcfs
 
 import (
 	"github.com/materials-commons/config"
-	"github.com/materials-commons/mcfs/db"
+	"github.com/materials-commons/mcfs/mcfsd/interfaces/db"
 )
 
 func InitRethinkDB() {

@@ -2,7 +2,7 @@ package mcfs
 
 import (
 //"github.com/materials-commons/mcfs/protocol"
-//"github.com/materials-commons/mcfs/client/mcfs"
+//"github.com/materials-commons/mcfs/materialsd/mcfs"
 )
 
 // LookupProject placeholder.

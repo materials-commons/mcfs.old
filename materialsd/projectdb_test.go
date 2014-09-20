@@ -3,8 +3,8 @@ package materials
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/materials-commons/mcfs/client/config"
-	"github.com/materials-commons/mcfs/client/user"
+	"github.com/materials-commons/mcfs/materialsd/config"
+	"github.com/materials-commons/mcfs/materialsd/user"
 	"io/ioutil"
 	"os"
 	"testing"

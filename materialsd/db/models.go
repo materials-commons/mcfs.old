@@ -2,8 +2,8 @@ package db
 
 import (
 	"github.com/jmoiron/sqlx"
-	"github.com/materials-commons/mcfs/client/db/model"
-	"github.com/materials-commons/mcfs/client/db/schema"
+	"github.com/materials-commons/mcfs/materialsd/db/model"
+	"github.com/materials-commons/mcfs/materialsd/db/schema"
 )
 
 var (

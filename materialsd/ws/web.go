@@ -2,8 +2,8 @@ package ws
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/client"
-	"github.com/materials-commons/mcfs/client/config"
+	"github.com/materials-commons/mcfs/materialsd"
+	"github.com/materials-commons/mcfs/materialsd/config"
 	"net/http"
 	"os"
 	"time"
