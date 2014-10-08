@@ -174,7 +174,7 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 		} else {
 			path = mc.FilePath(df.FileID())
 		}
-		writer.Header().Set("Content-Type", df.MediaType)
+		writer.Header().Set("Content-Type", df.MediaType.Mime)
 		fmt.Printf("Serving path: %s\n", path)
 		http.ServeFile(writer, req, path)
 	}

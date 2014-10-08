@@ -4,6 +4,12 @@ import (
 	"time"
 )
 
+// MediaType describes the mime media type and its description.
+type MediaType struct {
+	Mime        string `gorethink:"mime"`        // The MIME type
+	Description string `gorethink:"description"` // Description of MIME type
+}
+
 // File models a user file. A datafile is an abstract representation of a real file
 // plus the attributes that we need in our model for access, and other metadata.
 type File struct {
@@ -13,16 +19,16 @@ type File struct {
 	Birthtime   time.Time `gorethink:"birthtime"`    // Creation time.
 	MTime       time.Time `gorethink:"mtime"`        // Modification time.
 	ATime       time.Time `gorethink:"atime"`        // Last access time.
-	Description string    `gorethink:"description"`
-	Notes       []Note    `gorethink:"notes"`
-	Owner       string    `gorethink:"owner"`     // Who owns the file.
-	Checksum    string    `gorethink:"checksum"`  // MD5 Hash.
-	Size        int64     `gorethink:"size"`      // Size of file.
-	Uploaded    int64     `gorethink:"uploaded"`  // Number of bytes uploaded. When Size != Uploaded file is only partially uploaded.
-	MediaType   string    `gorethink:"mediatype"` // mime type.
-	Parent      string    `gorethink:"parent"`    // If there are multiple ids then parent is the id of the previous version.
-	UsesID      string    `gorethink:"usesid"`    // If file is a duplicate, then usesid points to the real file. This allows multiple files to share a single physical file.
-	DataDirs    []string  `gorethink:"datadirs"`  // List of the directories the file can be found in.
+	Description string    `gorethink:"description"`  // Description of file
+	Notes       []Note    `gorethink:"notes"`        // Notes associated with file
+	Owner       string    `gorethink:"owner"`        // Who owns the file.
+	Checksum    string    `gorethink:"checksum"`     // MD5 Hash.
+	Size        int64     `gorethink:"size"`         // Size of file.
+	MediaType   MediaType `gorethink:"mediatype"`    // MIME media type of file
+	Uploaded    int64     `gorethink:"uploaded"`     // Number of bytes uploaded. When Size != Uploaded file is only partially uploaded.
+	Parent      string    `gorethink:"parent"`       // If there are multiple ids then parent is the id of the previous version.
+	UsesID      string    `gorethink:"usesid"`       // If file is a duplicate, then usesid points to the real file. This allows multiple files to share a single physical file.
+	DataDirs    []string  `gorethink:"datadirs"`     // List of the directories the file can be found in.
 }
 
 // NewFile creates a new File instance.
