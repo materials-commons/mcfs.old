@@ -27,8 +27,8 @@
 		},
 		{
 			"ImportPath": "github.com/dancannon/gorethink",
-			"Comment": "0.2.1-1-g39f197b",
-			"Rev": "39f197b0004cd0f20643fb39dcf105e0aa2a3e8b"
+			"Comment": "v0.5.x-5-gf1ae36f",
+			"Rev": "f1ae36fd641ece4203d8d5bbc6e0291ecd93a9fe"
 		},
 		{
 			"ImportPath": "github.com/dustin/go-humanize",

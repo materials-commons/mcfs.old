@@ -1,13 +1,24 @@
 package gorethink
 
 import (
-	test "launchpad.net/gocheck"
+	test "gopkg.in/check.v1"
 )
 
 func (s *RethinkSuite) TestWriteInsert(c *test.C) {
 	query := Db("test").Table("test").Insert(map[string]interface{}{"num": 1})
 	_, err := query.Run(sess)
 	c.Assert(err, test.IsNil)
+}
+
+func (s *RethinkSuite) TestWriteInsertChanges(c *test.C) {
+	query := Db("test").Table("test").Insert([]interface{}{
+		map[string]interface{}{"num": 1},
+		map[string]interface{}{"num": 2},
+	}, InsertOpts{ReturnChanges: true})
+	res, err := query.RunWrite(sess)
+	c.Assert(err, test.IsNil)
+	c.Assert(res.Inserted, test.Equals, 2)
+	c.Assert(len(res.Changes), test.Equals, 2)
 }
 
 func (s *RethinkSuite) TestWriteInsertStruct(c *test.C) {
@@ -23,10 +34,10 @@ func (s *RethinkSuite) TestWriteInsertStruct(c *test.C) {
 	}
 
 	query := Db("test").Table("test").Insert(o)
-	r, err := query.RunRow(sess)
+	res, err := query.Run(sess)
 	c.Assert(err, test.IsNil)
 
-	err = r.Scan(&response)
+	err = res.One(&response)
 
 	c.Assert(err, test.IsNil)
 	c.Assert(response["inserted"], test.Equals, float64(1))
@@ -45,10 +56,10 @@ func (s *RethinkSuite) TestWriteInsertStructPointer(c *test.C) {
 	}
 
 	query := Db("test").Table("test").Insert(&o)
-	r, err := query.RunRow(sess)
+	res, err := query.Run(sess)
 	c.Assert(err, test.IsNil)
 
-	err = r.Scan(&response)
+	err = res.One(&response)
 
 	c.Assert(err, test.IsNil)
 	c.Assert(response["inserted"], test.Equals, float64(1))
