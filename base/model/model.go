@@ -156,12 +156,13 @@ func (q *Query) InsertRaw(table string, what interface{}, dest interface{}) erro
 		return mcerr.ErrCreate
 	case rv.Inserted == 0:
 		return mcerr.ErrCreate
-	case len(rv.Changes) == 0:
-		return mcerr.ErrCreate
-	default:
-		if returnValue {
-			encoding.Decode(dest, rv.Changes[0].NewValue)
+	case returnValue:
+		if len(rv.Changes) == 0 {
+			return mcerr.ErrCreate
 		}
+		err := encoding.Decode(dest, rv.Changes[0].NewValue)
+		return err
+	default:
 		return nil
 	}
 }
