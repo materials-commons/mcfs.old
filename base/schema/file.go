@@ -20,11 +20,9 @@ type File struct {
 	MTime       time.Time `gorethink:"mtime"`        // Modification time.
 	ATime       time.Time `gorethink:"atime"`        // Last access time.
 	Description string    `gorethink:"description"`  // Description of file
-	Notes       []Note    `gorethink:"notes"`        // Notes associated with file
 	Owner       string    `gorethink:"owner"`        // Who owns the file.
 	Checksum    string    `gorethink:"checksum"`     // MD5 Hash.
 	Size        int64     `gorethink:"size"`         // Size of file.
-	MediaType   MediaType `gorethink:"mediatype"`    // MIME media type of file
 	Uploaded    int64     `gorethink:"uploaded"`     // Number of bytes uploaded. When Size != Uploaded file is only partially uploaded.
 	Parent      string    `gorethink:"parent"`       // If there are multiple ids then parent is the id of the previous version.
 	UsesID      string    `gorethink:"usesid"`       // If file is a duplicate, then usesid points to the real file. This allows multiple files to share a single physical file.
