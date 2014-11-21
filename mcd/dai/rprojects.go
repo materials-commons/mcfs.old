@@ -38,6 +38,16 @@ func (p rProjects) ByName(name, owner string) (*schema.Project, error) {
 	return &project, nil
 }
 
+func (p rProjects) ForUser(user string) ([]schema.Project, error) {
+	var projects []schema.Project
+	rql := r.Table("access").GetAllByIndex("user_id", user).Pluck("project_id").
+		EqJoin("project_id", r.Table("projects")).Zip()
+	if err := model.Projects.Qs(p.session).Rows(rql, &projects); err != nil {
+		return nil, mcerr.ErrNotFound
+	}
+	return projects, nil
+}
+
 // Files returns a flattened list of all the files and directories in a project.
 // Each entry has its full path starting from the project. The returned list is
 // in sorted (ascending) order.
