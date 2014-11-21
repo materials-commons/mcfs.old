@@ -1,9 +1,10 @@
 package mc
 
 import (
-	"github.com/materials-commons/config"
 	"path/filepath"
 	"strings"
+
+	"github.com/materials-commons/config"
 )
 
 // FileDir returns the full directory path for a given fileID,
@@ -29,4 +30,9 @@ func FilePath(fileID string) string {
 // using dir as the base.
 func FilePathFrom(dir, fileID string) string {
 	return filepath.Join(FileDirFrom(dir, fileID), fileID)
+}
+
+// Dir returns the base directory for MCDIR
+func Dir() string {
+	return config.GetString("MCDIR")
 }
