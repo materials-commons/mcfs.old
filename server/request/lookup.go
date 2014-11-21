@@ -7,13 +7,13 @@ import (
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 )
 
 type lookupHandler struct {
 	session *r.Session
 	user    string
-	service *service.Service
+	dai *dai.Service
 }
 
 func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
@@ -21,7 +21,7 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
 	l := &lookupHandler{
 		session: session,
 		user:    h.user,
-		service: h.service,
+		dai: h.dai,
 	}
 
 	switch req.Type {
@@ -100,5 +100,5 @@ func (l *lookupHandler) hasAccess(v interface{}) bool {
 	case *schema.File:
 		owner = t.Owner
 	}
-	return l.service.Group.HasAccess(owner, l.user)
+	return l.dai.Group.HasAccess(owner, l.user)
 }

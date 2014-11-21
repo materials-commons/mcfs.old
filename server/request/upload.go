@@ -9,12 +9,12 @@ import (
 // file ID to write to, and the offset to start sending from. The uploading of bytes
 // is handled in the uploadLoop() method.
 func (h *ReqHandler) upload(req *protocol.UploadReq) (*protocol.UploadResp, error) {
-	dataFile, err := h.service.File.ByID(req.DataFileID)
+	dataFile, err := h.dai.File.ByID(req.DataFileID)
 	if err != nil {
 		return nil, mcerr.Errorm(mcerr.ErrNotFound, err)
 	}
 
-	if !h.service.Group.HasAccess(dataFile.Owner, h.user) {
+	if !h.dai.Group.HasAccess(dataFile.Owner, h.user) {
 		return nil, mcerr.ErrNoAccess
 	}
 

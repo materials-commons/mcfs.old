@@ -5,7 +5,7 @@ import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/server"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 )
 
 func init() {
@@ -48,7 +48,7 @@ type accessServer struct {
 
 // We only expose a single access server. The public routines work against this instance.
 var server = &accessServer{
-	apikeys: newAPIKeys(service.New(service.RethinkDB).User),
+	apikeys: newAPIKeys(dai.New(dai.RethinkDB).User),
 }
 
 // Server returns the singleton accessServer.

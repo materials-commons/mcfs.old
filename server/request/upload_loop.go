@@ -35,7 +35,7 @@ func (h *ReqHandler) uploadLoop(resp *protocol.UploadResp) reqStateFN {
 // createUploadFileHandler creates an instance of the uploadHandler. This instance depends
 // on having the file open. If it can't open the file it returns an error.
 func createUploadFileHandler(h *ReqHandler, dataFileID string, offset int64) (*uploadFileHandler, error) {
-	file, err := h.service.File.ByID(dataFileID)
+	file, err := h.dai.File.ByID(dataFileID)
 	if err != nil {
 		return nil, err
 	}
@@ -225,7 +225,7 @@ func (u *uploadFileHandler) fileState() fileState {
 // all other files that point to it. It will hide all the files parents.
 func (u *uploadFileHandler) markCurrent() {
 	u.makeFileCurrent(u.file)
-	files, _ := u.service.File.MatchOn("usesid", u.file.ID)
+	files, _ := u.dai.File.MatchOn("usesid", u.file.ID)
 	for _, file := range files {
 		// MatchOn query could return the current file if it has a usesid.
 		// We don't want to update it twice because then it will add itself
@@ -241,12 +241,12 @@ func (u *uploadFileHandler) markCurrent() {
 func (u *uploadFileHandler) makeFileCurrent(file *schema.File) {
 	file.Uploaded = file.Size
 	file.Current = true
-	u.service.File.Update(file)
-	u.service.File.AddDirectories(file, file.DataDirs...)
+	u.dai.File.Update(file)
+	u.dai.File.AddDirectories(file, file.DataDirs...)
 	if file.Parent != "" {
-		f, err := u.service.File.ByID(file.Parent)
+		f, err := u.dai.File.ByID(file.Parent)
 		if err == nil {
-			u.service.File.Hide(f)
+			u.dai.File.Hide(f)
 		}
 	}
 }
@@ -261,5 +261,5 @@ func (u *uploadFileHandler) truncate() {
 // updateUploaded updates the total number of bytes written to the file.
 func (u *uploadFileHandler) updateUploaded() {
 	u.file.Uploaded += u.nbytes
-	u.service.File.Update(u.file)
+	u.dai.File.Update(u.file)
 }

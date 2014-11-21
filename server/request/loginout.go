@@ -3,12 +3,12 @@ package request
 import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 )
 
 // login validates a login request.
 func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, error) {
-	if validLogin(req.User, req.APIKey, h.service) {
+	if validLogin(req.User, req.APIKey, h.dai) {
 		h.user = req.User
 		return &protocol.LoginResp{}, nil
 	}
@@ -18,7 +18,7 @@ func (h *ReqHandler) login(req *protocol.LoginReq) (*protocol.LoginResp, error) 
 
 // validLogin looks the user up in the database and compares the APIKey passed in with
 // the APIKey in the database.
-func validLogin(user, apikey string, s *service.Service) bool {
+func validLogin(user, apikey string, s *dai.Service) bool {
 	u, err := s.User.ByID(user)
 	switch {
 	case err != nil:

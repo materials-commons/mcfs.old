@@ -7,7 +7,7 @@ import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 )
 
 // createDirHandler is an internal handler for creating a directory.
@@ -16,16 +16,16 @@ type createDirHandler struct {
 	req     *protocol.CreateDirReq
 	user    string
 	proj    *schema.Project
-	service *service.Service
+	dai *dai.Service
 }
 
 // createDir creates a new directory entry if it doesn't exist and the user has permission.
 // Otherwise it returns an error.
 func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.CreateResp, err error) {
-	cdh := newCreateDirHandler(req, h.user, h.service)
+	cdh := newCreateDirHandler(req, h.user, h.dai)
 
 	// Get the project since a directory is added to a project.
-	cdh.proj, err = h.service.Project.ByID(req.ProjectID)
+	cdh.proj, err = h.dai.Project.ByID(req.ProjectID)
 	switch {
 	case err != nil:
 		// A bad projectID was passed to us
@@ -39,7 +39,7 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 		return nil, mcerr.Errorf(mcerr.ErrInvalid, "Invalid directory path %s", req.Path)
 	default:
 		// The project exists and the user has permission.
-		dataDir, err := h.service.Dir.ByPath(req.Path, req.ProjectID)
+		dataDir, err := h.dai.Dir.ByPath(req.Path, req.ProjectID)
 		switch {
 		case err == mcerr.ErrNotFound:
 			// There isn't a matching directory so attempt to create a new one.
@@ -60,11 +60,11 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 
 // newCreateDirHandler creates a new instance of an createDirHandler. The constructor
 // also sets up the dirs and projects models.
-func newCreateDirHandler(req *protocol.CreateDirReq, user string, service *service.Service) *createDirHandler {
+func newCreateDirHandler(req *protocol.CreateDirReq, user string, dai *dai.Service) *createDirHandler {
 	return &createDirHandler{
 		req:     req,
 		user:    user,
-		service: service,
+		dai: dai,
 	}
 }
 
@@ -79,13 +79,13 @@ func (cdh *createDirHandler) createNewDir() (*schema.Directory, error) {
 	}
 
 	datadir := schema.NewDirectory(cdh.req.Path, cdh.user, cdh.proj.ID, parent.ID)
-	ddir, err := cdh.service.Dir.Insert(&datadir)
+	ddir, err := cdh.dai.Dir.Insert(&datadir)
 	if err != nil {
 		return ddir, err
 	}
 
 	// Add the directory to the project.
-	if err := cdh.service.Project.AddDirectories(cdh.proj, ddir.ID); err != nil {
+	if err := cdh.dai.Project.AddDirectories(cdh.proj, ddir.ID); err != nil {
 		return ddir, err
 	}
 
@@ -102,7 +102,7 @@ func (cdh *createDirHandler) getParent() (*schema.Directory, error) {
 		err    error
 	)
 	parentPath := filepath.Dir(cdh.req.Path)
-	if parent, err = cdh.service.Dir.ByPath(parentPath, cdh.req.ProjectID); err != nil {
+	if parent, err = cdh.dai.Dir.ByPath(parentPath, cdh.req.ProjectID); err != nil {
 		return nil, mcerr.ErrNotFound
 	}
 	return parent, nil

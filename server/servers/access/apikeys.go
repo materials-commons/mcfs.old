@@ -2,15 +2,15 @@ package access
 
 import (
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 )
 
 type apikeys struct {
 	keys  map[string]schema.User
-	users service.Users
+	users dai.Users
 }
 
-func newAPIKeys(users service.Users) *apikeys {
+func newAPIKeys(users dai.Users) *apikeys {
 	return &apikeys{
 		keys:  make(map[string]schema.User),
 		users: users,

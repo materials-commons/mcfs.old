@@ -1,4 +1,4 @@
-package service
+package dai
 
 import (
 	"github.com/materials-commons/mcfs/base/dir"

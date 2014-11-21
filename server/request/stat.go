@@ -8,11 +8,11 @@ import (
 
 // stat is like the file system stat call but returns information from our document store.
 func (h *ReqHandler) stat(req *protocol.StatReq) (*protocol.StatResp, error) {
-	file, err := h.service.File.ByID(req.DataFileID)
+	file, err := h.dai.File.ByID(req.DataFileID)
 	switch {
 	case err != nil:
 		return nil, mcerr.Errorf(mcerr.ErrNotFound, "Unknown id %s", req.DataFileID)
-	case !h.service.Group.HasAccess(file.Owner, h.user):
+	case !h.dai.Group.HasAccess(file.Owner, h.user):
 		return nil, mcerr.Errorf(mcerr.ErrNoAccess, "You do not have permission to access this datafile %s", req.DataFileID)
 	default:
 		return respStat(file), nil

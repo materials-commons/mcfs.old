@@ -40,7 +40,7 @@ import (
 	"github.com/materials-commons/mcfs/client/util"
 	_ "github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/server/request"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 )
 
 // Options for server startup
@@ -69,7 +69,7 @@ func configErrorHandler(key string, err error, args ...interface{}) {
 
 }
 
-var s *service.Service
+var s *dai.Service
 
 func setupRethinkDB() {
 	dbConn := config.GetString("MCDB_CONNECTION")
@@ -82,7 +82,7 @@ func init() {
 	config.Init(config.TwelveFactorWithOverride)
 	config.SetErrorHandler(configErrorHandler)
 	setupRethinkDB()
-	s = service.New(service.RethinkDB)
+	s = dai.New(dai.RethinkDB)
 }
 
 func main() {

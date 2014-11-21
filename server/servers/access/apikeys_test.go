@@ -6,7 +6,7 @@ import (
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/server"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 	"testing"
 )
 
@@ -16,7 +16,7 @@ func init() {
 	mcfs.InitRethinkDB()
 }
 
-var _apikeys = newAPIKeys(service.New(service.RethinkDB).User)
+var _apikeys = newAPIKeys(dai.New(dai.RethinkDB).User)
 
 func TestLoad(t *testing.T) {
 	db.SetAddress("localhost:30815")

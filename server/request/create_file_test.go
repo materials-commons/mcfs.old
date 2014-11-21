@@ -5,7 +5,7 @@ import (
 	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 	"testing"
 )
 
@@ -129,7 +129,7 @@ func TestCreateFile(t *testing.T) {
 }
 
 func TestNewFile(t *testing.T) {
-	cfh := newCreateFileHandler("test@mc.org", service.New(service.RethinkDB))
+	cfh := newCreateFileHandler("test@mc.org", dai.New(dai.RethinkDB))
 
 	req := &protocol.CreateFileReq{
 		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
@@ -164,7 +164,7 @@ func TestNewFile(t *testing.T) {
 	}
 
 	// Insert file and then test to make sure we can find a duplicate when creating a new file.
-	newf, _ := cfh.service.File.InsertEntry(f)
+	newf, _ := cfh.dai.File.InsertEntry(f)
 
 	req.Name = "newFilev2.txt"
 	f = cfh.newFile(req)
@@ -172,11 +172,11 @@ func TestNewFile(t *testing.T) {
 		t.Errorf("Should have found a dup and set UsesID to it.")
 	}
 
-	cfh.service.File.Delete(newf.ID)
+	cfh.dai.File.Delete(newf.ID)
 }
 
 func TestCreateNewFile(t *testing.T) {
-	cfh := newCreateFileHandler("test@mc.org", service.New(service.RethinkDB))
+	cfh := newCreateFileHandler("test@mc.org", dai.New(dai.RethinkDB))
 
 	req := &protocol.CreateFileReq{
 		ProjectID: "9b18dac4-caff-4dc6-9a18-ae5c6b9c9ca3",
@@ -188,10 +188,10 @@ func TestCreateNewFile(t *testing.T) {
 
 	// Create a new file and make sure it is setup correctly
 	resp, _ := cfh.createNewFile(req)
-	f, _ := cfh.service.File.ByID(resp.ID)
+	f, _ := cfh.dai.File.ByID(resp.ID)
 
 	f.Current = true
-	cfh.service.File.Update(f)
+	cfh.dai.File.Update(f)
 
 	// The only thing to test at this point is Parent
 	if f.Parent != "" {
@@ -203,12 +203,12 @@ func TestCreateNewFile(t *testing.T) {
 	req.Name = "newFile.txt"
 	req.Checksum = "abc123v2new"
 	resp, _ = cfh.createNewFile(req)
-	f2, _ := cfh.service.File.ByID(resp.ID)
+	f2, _ := cfh.dai.File.ByID(resp.ID)
 
 	if f2.Parent != f.ID {
 		t.Errorf("Expected new version of file to have its parent set to previous version.")
 	}
 
-	cfh.service.File.Delete(f.ID)
-	cfh.service.File.Delete(f2.ID)
+	cfh.dai.File.Delete(f.ID)
+	cfh.dai.File.Delete(f2.ID)
 }

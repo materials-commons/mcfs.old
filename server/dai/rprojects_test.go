@@ -1,4 +1,4 @@
-package service
+package dai
 
 import (
 	"fmt"

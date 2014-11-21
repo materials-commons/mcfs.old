@@ -6,7 +6,7 @@ import (
 	"github.com/materials-commons/mcfs/base/log"
 	"github.com/materials-commons/mcfs/server/request"
 	"github.com/materials-commons/mcfs/server/servers"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 	"mime"
 	"net/http"
 	"path/filepath"
@@ -50,7 +50,7 @@ func (s *webServer) datafileHandler(writer http.ResponseWriter, req *http.Reques
 	download := req.FormValue("download")
 
 	// Verify key
-	u, err := service.User.ByAPIKey(apikey)
+	u, err := dai.User.ByAPIKey(apikey)
 	if err != nil {
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 		return
@@ -58,11 +58,11 @@ func (s *webServer) datafileHandler(writer http.ResponseWriter, req *http.Reques
 
 	// Get datafile from db and check access
 	dataFileID := filepath.Base(req.URL.Path)
-	df, err := service.File.ByID(dataFileID)
+	df, err := dai.File.ByID(dataFileID)
 	switch {
 	case err != nil:
 		http.Error(writer, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-	case !service.Group.HasAccess(df.Owner, u.Email):
+	case !dai.Group.HasAccess(df.Owner, u.Email):
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	default:
 		var path string

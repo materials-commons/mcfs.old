@@ -14,7 +14,7 @@ func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatPr
 	switch {
 	case req.Name != "":
 		// Lookup the project by its name.
-		project, err := h.service.Project.ByName(req.Name, h.user)
+		project, err := h.dai.Project.ByName(req.Name, h.user)
 		if err != nil {
 			return nil, mcerr.Errorm(mcerr.ErrNotFound, err)
 		}
@@ -26,7 +26,7 @@ func (h *ReqHandler) statProject(req *protocol.StatProjectReq) (*protocol.StatPr
 		return nil, mcerr.Errorm(mcerr.ErrInvalid, nil)
 	}
 
-	entries, err := h.service.Project.Files(projectID, req.Base)
+	entries, err := h.dai.Project.Files(projectID, req.Base)
 	if err != nil {
 		return nil, mcerr.Errorm(mcerr.ErrNotFound, err)
 	}

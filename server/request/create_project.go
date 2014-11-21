@@ -6,12 +6,12 @@ import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 )
 
 // createProjectHandler handles create project request process.
 type createProjectHandler struct {
-	service *service.Service
+	dai *dai.Service
 }
 
 // createProject will create a new project or return an existing project. Only owners
@@ -26,13 +26,13 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.Cr
 		resp protocol.CreateProjectResp
 		err  error
 	)
-	cph := newCreateProjectHandler(h.service)
+	cph := newCreateProjectHandler(h.dai)
 
 	if !cph.validateRequest(req) {
 		return nil, mcerr.Errorf(mcerr.ErrInvalid, "Invalid project name %s", req.Name)
 	}
 
-	proj, err = h.service.Project.ByName(req.Name, h.user)
+	proj, err = h.dai.Project.ByName(req.Name, h.user)
 	switch {
 	case err == nil:
 		// Found project
@@ -54,9 +54,9 @@ func (h *ReqHandler) createProject(req *protocol.CreateProjectReq) (*protocol.Cr
 	return &resp, err
 }
 
-func newCreateProjectHandler(service *service.Service) *createProjectHandler {
+func newCreateProjectHandler(dai *dai.Service) *createProjectHandler {
 	return &createProjectHandler{
-		service: service,
+		dai: dai,
 	}
 }
 
@@ -70,7 +70,7 @@ func (cph *createProjectHandler) validateRequest(req *protocol.CreateProjectReq)
 // createNewProject creates a new project for the given user.
 func (cph *createProjectHandler) createNewProject(name, user string) (*schema.Project, error) {
 	project := schema.NewProject(name, "", user)
-	newProject, err := cph.service.Project.Insert(&project)
+	newProject, err := cph.dai.Project.Insert(&project)
 	if err != nil {
 		return nil, err
 	}

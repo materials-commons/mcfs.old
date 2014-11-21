@@ -4,13 +4,13 @@ import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/server/service"
+	"github.com/materials-commons/mcfs/server/dai"
 )
 
 // createFileHandler is an internal type for handling create file requests.
 type createFileHandler struct {
 	user    string
-	service *service.Service
+	dai *dai.Service
 }
 
 // createFile will create a new file, or use an existing file. Existing files are
@@ -18,14 +18,14 @@ type createFileHandler struct {
 // existing file is returned, the checksums must match between the request and
 // the existing file.
 func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.CreateResp, err error) {
-	cfh := newCreateFileHandler(h.user, h.service)
+	cfh := newCreateFileHandler(h.user, h.dai)
 
 	if err := cfh.validateRequest(req); err != nil {
 		return nil, err
 	}
 
 	// Check the file status.
-	files, err := h.service.File.ByPathChecksum(req.Name, req.DataDirID, req.Checksum)
+	files, err := h.dai.File.ByPathChecksum(req.Name, req.DataDirID, req.Checksum)
 	switch {
 	case len(files) == 0:
 		// This is the easy case. No matching files were found, so we just create a
@@ -66,26 +66,26 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 	}
 }
 
-func newCreateFileHandler(user string, service *service.Service) *createFileHandler {
+func newCreateFileHandler(user string, dai *dai.Service) *createFileHandler {
 	return &createFileHandler{
 		user:    user,
-		service: service,
+		dai: dai,
 	}
 }
 
 // validateRequest will validate the CreateFileReq. It does sanity checking on the file
 // size and checksum. We rely on the client to send us a good checksum.
 func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq) error {
-	proj, err := cfh.service.Project.ByID(req.ProjectID)
+	proj, err := cfh.dai.Project.ByID(req.ProjectID)
 	if err != nil {
 		return mcerr.Errorf(mcerr.ErrInvalid, "Bad projectID %s", req.ProjectID)
 	}
 
-	if !cfh.service.Group.HasAccess(proj.Owner, cfh.user) {
+	if !cfh.dai.Group.HasAccess(proj.Owner, cfh.user) {
 		return mcerr.ErrNoAccess
 	}
 
-	ddir, err := cfh.service.Dir.ByID(req.DataDirID)
+	ddir, err := cfh.dai.Dir.ByID(req.DataDirID)
 	if err != nil {
 		return mcerr.Errorf(mcerr.ErrInvalid, "Unknown directory id: %s", req.DataDirID)
 	}
@@ -111,7 +111,7 @@ func (cfh *createFileHandler) validateRequest(req *protocol.CreateFileReq) error
 // their backing physical file doesn't contain all the bytes.
 func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*protocol.CreateResp, error) {
 	var f *schema.File
-	currentFile, err := cfh.service.File.ByPath(req.Name, req.DataDirID)
+	currentFile, err := cfh.dai.File.ByPath(req.Name, req.DataDirID)
 	switch {
 	case err == mcerr.ErrNotFound:
 		// There is no current entry, create a new one.
@@ -126,7 +126,7 @@ func (cfh *createFileHandler) createNewFile(req *protocol.CreateFileReq) (*proto
 		f.Parent = currentFile.ID
 	}
 
-	created, err := cfh.service.File.InsertEntry(f)
+	created, err := cfh.dai.File.InsertEntry(f)
 	if err != nil {
 		return nil, err
 	}
@@ -144,7 +144,7 @@ func (cfh *createFileHandler) newFile(req *protocol.CreateFileReq) *schema.File 
 	file.Size = req.Size
 	file.Current = false
 
-	dup, err := cfh.service.File.ByChecksum(file.Checksum)
+	dup, err := cfh.dai.File.ByChecksum(file.Checksum)
 	if err == nil && dup != nil {
 		// Found a matching entry, set usesid to it
 		file.UsesID = dup.ID
