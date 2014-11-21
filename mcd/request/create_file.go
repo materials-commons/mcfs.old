@@ -3,14 +3,14 @@ package request
 import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/mcd/dai"
+	"github.com/materials-commons/mcfs/protocol"
 )
 
 // createFileHandler is an internal type for handling create file requests.
 type createFileHandler struct {
-	user    string
-	dai *dai.Service
+	user string
+	dai  *dai.Service
 }
 
 // createFile will create a new file, or use an existing file. Existing files are
@@ -68,8 +68,8 @@ func (h *ReqHandler) createFile(req *protocol.CreateFileReq) (resp *protocol.Cre
 
 func newCreateFileHandler(user string, dai *dai.Service) *createFileHandler {
 	return &createFileHandler{
-		user:    user,
-		dai: dai,
+		user: user,
+		dai:  dai,
 	}
 }
 

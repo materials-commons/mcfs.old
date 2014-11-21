@@ -6,14 +6,14 @@ import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/mcd/dai"
+	"github.com/materials-commons/mcfs/protocol"
 )
 
 type lookupHandler struct {
 	session *r.Session
 	user    string
-	dai *dai.Service
+	dai     *dai.Service
 }
 
 func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
@@ -21,7 +21,7 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
 	l := &lookupHandler{
 		session: session,
 		user:    h.user,
-		dai: h.dai,
+		dai:     h.dai,
 	}
 
 	switch req.Type {

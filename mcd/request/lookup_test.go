@@ -2,8 +2,8 @@ package request
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/mcd"
+	"github.com/materials-commons/mcfs/protocol"
 	"testing"
 )
 

@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/base/model"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/mcd/dai"
+	"github.com/materials-commons/mcfs/protocol"
 	"testing"
 )
 

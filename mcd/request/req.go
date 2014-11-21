@@ -7,8 +7,8 @@ import (
 
 	"github.com/materials-commons/gohandy/marshaling"
 	"github.com/materials-commons/mcfs/base/mcerr"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/mcd/dai"
+	"github.com/materials-commons/mcfs/protocol"
 )
 
 const maxBadRequests = 10
@@ -31,7 +31,7 @@ func NewReqHandler(m marshaling.MarshalUnmarshaler, mcdir string) *ReqHandler {
 	return &ReqHandler{
 		MarshalUnmarshaler: m,
 		mcdir:              mcdir,
-		dai:            dai.New(dai.RethinkDB),
+		dai:                dai.New(dai.RethinkDB),
 	}
 }
 

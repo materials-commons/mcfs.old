@@ -6,17 +6,17 @@ import (
 
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/mcd/dai"
+	"github.com/materials-commons/mcfs/protocol"
 )
 
 // createDirHandler is an internal handler for creating a directory.
 // It holds state information needed to create a new directory entry.
 type createDirHandler struct {
-	req     *protocol.CreateDirReq
-	user    string
-	proj    *schema.Project
-	dai *dai.Service
+	req  *protocol.CreateDirReq
+	user string
+	proj *schema.Project
+	dai  *dai.Service
 }
 
 // createDir creates a new directory entry if it doesn't exist and the user has permission.
@@ -62,9 +62,9 @@ func (h *ReqHandler) createDir(req *protocol.CreateDirReq) (resp *protocol.Creat
 // also sets up the dirs and projects models.
 func newCreateDirHandler(req *protocol.CreateDirReq, user string, dai *dai.Service) *createDirHandler {
 	return &createDirHandler{
-		req:     req,
-		user:    user,
-		dai: dai,
+		req:  req,
+		user: user,
+		dai:  dai,
 	}
 }
 

@@ -5,8 +5,8 @@ import (
 
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
-	"github.com/materials-commons/mcfs/protocol"
 	"github.com/materials-commons/mcfs/mcd/dai"
+	"github.com/materials-commons/mcfs/protocol"
 )
 
 // createProjectHandler handles create project request process.

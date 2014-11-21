@@ -38,9 +38,9 @@ import (
 	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/client/util"
-	_ "github.com/materials-commons/mcfs/protocol"
-	"github.com/materials-commons/mcfs/mcd/request"
 	"github.com/materials-commons/mcfs/mcd/dai"
+	"github.com/materials-commons/mcfs/mcd/request"
+	_ "github.com/materials-commons/mcfs/protocol"
 )
 
 // Options for server startup
