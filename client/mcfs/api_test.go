@@ -33,7 +33,6 @@ func init() {
 		Address:  "localhost:30815",
 		Database: "materialscommons",
 	})
-	mcfs.InitRethinkDB()
 	go mcfsServer(m)
 }
 

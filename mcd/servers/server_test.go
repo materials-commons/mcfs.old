@@ -7,10 +7,6 @@ import (
 	"time"
 )
 
-func init() {
-	mcfs.InitRethinkDB()
-}
-
 var _ = fmt.Println
 
 type testServer struct {

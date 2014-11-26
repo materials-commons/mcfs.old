@@ -9,8 +9,6 @@ import (
 var _ = fmt.Println
 
 func TestRUsersByID(t *testing.T) {
-	db.SetAddress("localhost:30815")
-	db.SetDatabase("materialscommons")
 	rusers := newRUsers(session)
 
 	// Test existing

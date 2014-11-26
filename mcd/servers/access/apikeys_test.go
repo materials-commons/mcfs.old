@@ -12,15 +12,9 @@ import (
 
 var _ = fmt.Println
 
-func init() {
-	mcfs.InitRethinkDB()
-}
-
 var _apikeys = newAPIKeys(dai.New(dai.RethinkDB).User)
 
 func TestLoad(t *testing.T) {
-	db.SetAddress("localhost:30815")
-	db.SetDatabase("materialscommons")
 	err := _apikeys.load()
 	if err != nil {
 		t.Fatalf("Loading apikeys failed %s", err)

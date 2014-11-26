@@ -36,7 +36,7 @@ func (r *uploadResource) WebService() *restful.WebService {
 
 	ws.Path("/upload").
 		Produces(restful.MIME_JSON)
-	ws.Route(ws.POST("/chunk").To(rest.RouteHandler(r.uploadFileChunk)).
+	ws.Route(ws.POST("/chunk").To(rest.RouteHandler1(r.uploadFileChunk)).
 		Consumes("multipart/form-data").
 		Doc("Upload a file chunk"))
 	// ws.Route(ws.GET("/chunk").To(rest.RouteHandler(r.testFileChunk)).
@@ -53,12 +53,12 @@ func (r *uploadResource) testFileChunk(request *restful.Request, response *restf
 }
 
 // uploadFileChunk uploads a new file chunk.
-func (r *uploadResource) uploadFileChunk(request *restful.Request, response *restful.Response, user schema.User) (error, interface{}) {
+func (r *uploadResource) uploadFileChunk(request *restful.Request, response *restful.Response, user schema.User) error {
 	// Create request
 	flowRequest, err := form2FlowRequest(request)
 	if err != nil {
 		r.log.Error(log.Msg("Error converting form to flow.Request: %s", err))
-		return err, nil
+		return err
 	}
 
 	// Ensure directory path exists
@@ -66,17 +66,17 @@ func (r *uploadResource) uploadFileChunk(request *restful.Request, response *res
 	if err != nil {
 		msg := fmt.Sprintf("Unable to create temporary chunk space: %s", err)
 		r.log.Error(msg)
-		return err, nil
+		return err
 	}
 
 	// Write chunk and determine if done.
 	if err := r.processChunk(uploadPath, flowRequest); err != nil {
 		msg := fmt.Sprintf("Unable to write chunk for file: %s", err)
 		r.log.Error(msg)
-		return err, nil
+		return err
 	}
 
-	return nil, nil
+	return nil
 }
 
 // createUploadDir creates the directory for the chunk.

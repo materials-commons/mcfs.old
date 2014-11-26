@@ -9,9 +9,6 @@ import (
 var _ = fmt.Println
 
 func TestRProjectsByID(t *testing.T) {
-	db.SetAddress("localhost:30815")
-	db.SetDatabase("materialscommons")
-
 	rprojs := newRProjects(session)
 
 	// Test existing

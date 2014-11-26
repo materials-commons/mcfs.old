@@ -8,10 +8,6 @@ import (
 	"github.com/materials-commons/mcfs/mcd/dai"
 )
 
-func init() {
-	mcd.InitRethinkDB()
-}
-
 // Create our own context log that always includes our server name.
 var l = log.New("server", "AccessServer")
 

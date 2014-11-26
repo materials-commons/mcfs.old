@@ -17,10 +17,6 @@ type lookupTest struct {
 	comment  string
 }
 
-func init() {
-	mcfs.InitRethinkDB()
-}
-
 /*
 Lookup datadirs. When id field we do a direct lookup. When field other than id,
 then limitTo is a project_id that we will look up a directory in.

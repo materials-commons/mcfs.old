@@ -18,6 +18,8 @@ type Request struct {
 	DirectoryID      string `json:"directoryID"`      // Materials Commons Directory ID.
 	FileID           string `json:"fileID"`           // Materials Commons File ID.
 	Chunk            []byte `json:"-"`                // The file data.
+	ChunkHash        string `json:"chunkHash"`        // The computed MD5 hash for the chunk (optional).
+	FileHash         string `json:"fileHash"`         // The computed MD5 hash for the file (optional)
 }
 
 func (r *Request) UploadID() string {

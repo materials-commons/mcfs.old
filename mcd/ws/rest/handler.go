@@ -23,6 +23,9 @@ func (e *httpError) Write(response *restful.Response) {
 // RouteFunc represents the routes function
 type RouteFunc func(request *restful.Request, response *restful.Response, user schema.User) (error, interface{})
 
+// RouteFunc1 is a route function that only returns an error, but no value
+type RouteFunc1 func(request *restful.Request, response *restful.Response, user schema.User) error
+
 // Handler represents the way a route function should actually be written.
 type Handler func(request *restful.Request, response *restful.Response)
 
@@ -45,6 +48,17 @@ func RouteHandler(f RouteFunc) restful.RouteFunction {
 			// Nothing to do
 		}
 	}
+}
+
+// RouteHandler1 creates a wrapper function for route methods that only return an error. See
+// RouteHandler for details.
+func RouteHandler1(f RouteFunc1) restful.RouteFunction {
+	// Create a function that looks like a RouteFunc but always returns null for its second return value
+	f2 := func(request *restful.Request, response *restful.Response, user schema.User) (error, interface{}) {
+		err := f(request, response, user)
+		return err, nil
+	}
+	return RouteHandler(f2)
 }
 
 // errorToHTTPError translates an error code into an httpError. It checks

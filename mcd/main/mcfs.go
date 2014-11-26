@@ -35,7 +35,6 @@ import (
 
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/config"
-	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/base/mc"
 	"github.com/materials-commons/mcfs/client/util"
 	"github.com/materials-commons/mcfs/mcd/dai"
@@ -71,17 +70,9 @@ func configErrorHandler(key string, err error, args ...interface{}) {
 
 var s *dai.Service
 
-func setupRethinkDB() {
-	dbConn := config.GetString("MCDB_CONNECTION")
-	dbName := config.GetString("MCDB_NAME")
-	db.SetAddress(dbConn)
-	db.SetDatabase(dbName)
-}
-
 func init() {
 	config.Init(config.TwelveFactorWithOverride)
 	config.SetErrorHandler(configErrorHandler)
-	setupRethinkDB()
 	s = dai.New(dai.RethinkDB)
 }
 

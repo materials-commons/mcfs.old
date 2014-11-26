@@ -45,6 +45,7 @@ func form2FlowRequest(request *restful.Request) (*flow.Request, error) {
 		if name != "chunkData" {
 			io.Copy(buf, part)
 		}
+
 		switch name {
 		case "flowChunkNumber":
 			r.FlowChunkNumber = atoi32(buf.String())

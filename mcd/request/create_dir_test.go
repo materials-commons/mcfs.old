@@ -9,10 +9,6 @@ import (
 	"testing"
 )
 
-func init() {
-	mcfs.InitRethinkDB()
-}
-
 func TestCreateDir(t *testing.T) {
 	h := NewReqHandler(nil, "")
 	h.user = "test@mc.org"

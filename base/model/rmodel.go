@@ -10,28 +10,28 @@ import (
 	"github.com/materials-commons/mcfs/base/mcerr"
 )
 
-// Model holds the schema definition and the table for the schema.
-type Model struct {
+// rModel holds the schema definition and the table for the schema.
+type rModel struct {
 	schema interface{}
 	table  string
 }
 
-// Query holds the model and database references, such as the query to run
+// rQuery holds the model and database references, such as the query to run
 // and the database session.
-type Query struct {
-	*Model
+type rQuery struct {
+	*rModel
 	Rql     r.Term
 	Session *r.Session
 }
 
 // ByID retrieves an entry by its id field.
-func (q *Query) ByID(id string, obj interface{}) error {
+func (q *rQuery) ByID(id string, obj interface{}) error {
 	err := GetItem(id, q.table, q.Session, obj)
 	return err
 }
 
-// Q constructs a Query and fills in its Session by calling db.RSession().
-func (m *Model) Q() *Query {
+// Q constructs a rQuery and fills in its Session by calling db.RSession().
+func (m *rModel) Q() *rQuery {
 	session, err := db.RSession()
 	if err != nil {
 		panic(fmt.Sprintf("Unable to connect to database:", err))
@@ -40,33 +40,33 @@ func (m *Model) Q() *Query {
 }
 
 // Qs constructs a query and accepts a database Session to use.
-func (m *Model) Qs(session *r.Session) *Query {
-	return &Query{
-		Model:   m,
+func (m *rModel) Qs(session *r.Session) *rQuery {
+	return &rQuery{
+		rModel:  m,
 		Session: session,
 		Rql:     r.Table(m.table),
 	}
 }
 
 // Row returns a single item. It takes an arbitrary query.
-func (q *Query) Row(query r.Term, obj interface{}) error {
+func (q *rQuery) Row(query r.Term, obj interface{}) error {
 	err := GetRow(query, q.Session, obj)
 	return err
 }
 
 // Table returns the Rql for the table. It abstracts away having to know the particular
 // table for a given model.
-func (m *Model) Table() r.Term {
+func (m *rModel) Table() r.Term {
 	return r.Table(m.table)
 }
 
 // T is a shortcut for Table.
-func (m *Model) T() r.Term {
+func (m *rModel) T() r.Term {
 	return r.Table(m.table)
 }
 
 // Rows returns a list of items from the database. It takes an arbitrary query.
-func (q *Query) Rows(query r.Term, results interface{}) error {
+func (q *rQuery) Rows(query r.Term, results interface{}) error {
 	elementType := reflect.TypeOf(q.schema)
 	resultsValue := reflect.ValueOf(results)
 	if resultsValue.Kind() != reflect.Ptr || (resultsValue.Elem().Kind() != reflect.Slice && resultsValue.Elem().Kind() != reflect.Interface) {
@@ -105,7 +105,7 @@ func (q *Query) Rows(query r.Term, results interface{}) error {
 }
 
 // Update updates an existing database model entry.
-func (q *Query) Update(id string, what interface{}) error {
+func (q *rQuery) Update(id string, what interface{}) error {
 	var (
 		dv  interface{}
 		err error
@@ -134,7 +134,7 @@ func (q *Query) Update(id string, what interface{}) error {
 // available so that models can be used to update dependent tables without
 // having to create a model for them. For example, a join table doesn't
 // really need a model.
-func (q *Query) InsertRaw(table string, what interface{}, dest interface{}) error {
+func (q *rQuery) InsertRaw(table string, what interface{}, dest interface{}) error {
 	returnValue := false
 	dv := reflect.ValueOf(dest)
 	if dv.Kind() == reflect.Ptr {
@@ -168,12 +168,12 @@ func (q *Query) InsertRaw(table string, what interface{}, dest interface{}) erro
 }
 
 // Insert inserts a new model entry into the database
-func (q *Query) Insert(what interface{}, dest interface{}) error {
+func (q *rQuery) Insert(what interface{}, dest interface{}) error {
 	return q.InsertRaw(q.table, what, dest)
 }
 
 // Delete deletes an existing database model entry.
-func (q *Query) Delete(id string) error {
+func (q *rQuery) Delete(id string) error {
 	rv, err := q.T().Get(id).Delete().RunWrite(q.Session)
 	switch {
 	case err != nil:
