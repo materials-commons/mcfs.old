@@ -2,14 +2,20 @@ package dai
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/base/schema"
 	"testing"
+
+	"github.com/materials-commons/mcfs/base/db"
+	"github.com/materials-commons/mcfs/base/schema"
 )
 
 var _ = fmt.Println
 
 func TestHasAccess(t *testing.T) {
-	rgroups := newRGroups(session)
+	s, err := db.RSession()
+	if err != nil {
+		t.Fatalf("Unable to get a session: %s", err)
+	}
+	rgroups := newRGroups(s)
 	user := "gtarcea@umich.edu"
 	owner := "mcfada@umich.edu"
 	// Test empty table different user
@@ -42,7 +48,11 @@ func TestHasAccess(t *testing.T) {
 }
 
 func deleteItem(id string) {
+	s, err := db.RSession()
+	if err != nil {
+		panic("Couldn't get session")
+	}
 	fmt.Printf("Deleting group id %s\n", id)
-	rgroups := newRGroups(session)
+	rgroups := newRGroups(s)
 	rgroups.Delete(id)
 }

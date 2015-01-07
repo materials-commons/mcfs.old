@@ -2,14 +2,19 @@ package dai
 
 import (
 	"fmt"
-	"github.com/materials-commons/mcfs/base/db"
 	"testing"
+
+	"github.com/materials-commons/mcfs/base/db"
 )
 
 var _ = fmt.Println
 
 func TestRUsersByID(t *testing.T) {
-	rusers := newRUsers(session)
+	s, err := db.RSession()
+	if err != nil {
+		t.Fatalf("Unable to get a session: %s", err)
+	}
+	rusers := newRUsers(s)
 
 	// Test existing
 	u, err := rusers.ByID("test@mc.org")
@@ -29,7 +34,11 @@ func TestRUsersByID(t *testing.T) {
 }
 
 func TestRUsersByAPIKey(t *testing.T) {
-	rusers := newRUsers(session)
+	s, err := db.RSession()
+	if err != nil {
+		t.Fatalf("Unable to get a session: %s", err)
+	}
+	rusers := newRUsers(s)
 
 	// Test existing
 	u, err := rusers.ByAPIKey("test")
@@ -49,7 +58,11 @@ func TestRUsersByAPIKey(t *testing.T) {
 }
 
 func TestRUsersAll(t *testing.T) {
-	rusers := newRUsers(session)
+	s, err := db.RSession()
+	if err != nil {
+		t.Fatalf("Unable to get a session: %s", err)
+	}
+	rusers := newRUsers(s)
 
 	users, err := rusers.All()
 	if err != nil {

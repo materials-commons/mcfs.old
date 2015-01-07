@@ -2,7 +2,6 @@ package dai
 
 import (
 	r "github.com/dancannon/gorethink"
-	"github.com/materials-commons/gohandy/collections"
 	"github.com/materials-commons/mcfs/base/model"
 	"github.com/materials-commons/mcfs/base/schema"
 	"github.com/materials-commons/mcfs/mcd"
@@ -108,12 +107,12 @@ func (f rFiles) Update(file *schema.File) error {
 
 // Insert creates a new file entry. Insert updates the directory and other
 // dependent objects in the system.
-func (f rFiles) Insert(file *schema.File) (*schema.File, error) {
+func (f rFiles) Insert(file *schema.File, DirIDs ...string) (*schema.File, error) {
 	var newFile schema.File
 	if err := model.Files.Qs(f.session).Insert(file, &newFile); err != nil {
 		return nil, err
 	}
-	if err := f.AddDirectories(&newFile, file.DataDirs...); err != nil {
+	if err := f.AddDirectories(&newFile, DirIDs...); err != nil {
 		return &newFile, err
 	}
 	return &newFile, nil
@@ -169,18 +168,14 @@ func (f rFiles) removeFromDependents(file *schema.File) error {
 // AddDirectories adds new directories to a file. It updates all related items
 // and join tables.
 func (f rFiles) AddDirectories(file *schema.File, dirIDs ...string) error {
-	rdirs := newRDirs(f.session)
-	var rv error
-	for _, ddirID := range dirIDs {
-		if index := collections.Strings.Find(file.DataDirs, ddirID); index == -1 {
-			file.DataDirs = append(file.DataDirs, ddirID)
-		}
-		dir, err := rdirs.ByID(ddirID)
-		rdirs.AddFiles(dir, file.ID)
-		if err != nil {
-			rv = mcd.ErrDBRelatedUpdateFailed
+	datadir2datafile := make([]schema.DataDir2DataFile, len(dirIDs))
+	for index, dirID := range dirIDs {
+		datadir2datafile[index] = schema.DataDir2DataFile{
+			DataDirID:  dirID,
+			DataFileID: file.ID,
 		}
 	}
-	f.Update(file)
-	return rv
+	rql := r.Table("datadir2datafile").Insert()
+
+	return nil
 }

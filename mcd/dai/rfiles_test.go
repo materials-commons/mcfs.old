@@ -2,18 +2,25 @@ package dai
 
 import (
 	"fmt"
+	"testing"
+
+	"github.com/materials-commons/mcfs/base/db"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
-	"testing"
 )
 
 var _ = fmt.Println
 
 func TestRFilesByID(t *testing.T) {
-	rfiles := newRFiles(session)
+	s, err := db.RSession()
+	if err != nil {
+		t.Fatalf("Unable to get a session: %s", err)
+	}
+
+	rfiles := newRFiles(s)
 
 	// Test existing
-	_, err := rfiles.ByID("650ccb87-f423-499e-b644-2bb093eca86a")
+	_, err = rfiles.ByID("testfile.txt")
 	if err != nil {
 		t.Fatalf("Unable retrieve existing file: %s", err)
 	}
@@ -26,10 +33,14 @@ func TestRFilesByID(t *testing.T) {
 }
 
 func TestRFilesByPath(t *testing.T) {
-	rfiles := newRFiles(session)
+	s, err := db.RSession()
+	if err != nil {
+		t.Fatalf("Unable to get a session: %s", err)
+	}
+	rfiles := newRFiles(s)
 
 	// Lookup an existing file that exists in the given directory
-	f, err := rfiles.ByPath("2H-10X2.JPG", "d0b001c6-fc0a-4e95-97c3-4427de68c0a5")
+	f, err := rfiles.ByPath("testfile.txt", "test")
 	if err != nil {
 		t.Fatalf("Unable to lookup existing file in existing directory: %s", err)
 	}
@@ -39,13 +50,13 @@ func TestRFilesByPath(t *testing.T) {
 	}
 
 	// Lookup an file in the wrong directory
-	_, err = rfiles.ByPath("2H-10X2.JPG", "c3d72271-4a32-4080-a6a3-b4c6a5c4b986")
+	_, err = rfiles.ByPath("testfile.txt", "test/test2")
 	if err == nil {
 		t.Fatalf("Found file in a directory that it is not in")
 	}
 
 	// Lookup an file in a non-existent directory
-	_, err = rfiles.ByPath("2H-10X2.JPG", "dir-does-not-exist")
+	_, err = rfiles.ByPath("testfile.txt", "dir-does-not-exist")
 	if err == nil {
 		t.Fatalf("Found file in a non-existent directory")
 	}
@@ -60,6 +71,7 @@ func TestRFilesByPath(t *testing.T) {
 		t.Fatalf("Found non-existent file in non-existent directory")
 	}
 
+	t.Fatalf("Not converted past here")
 	// Insert a file that doesn't have current set and then see if we can find it.
 	file := schema.NewFile("testfile.test", "test@mc.org")
 	file.Current = false
@@ -79,7 +91,12 @@ func TestRFilesByPath(t *testing.T) {
 }
 
 func TestRFilesByChecksum(t *testing.T) {
-	rfiles := newRFiles(session)
+	t.Fatalf("Test not fixed")
+	s, err := db.RSession()
+	if err != nil {
+		t.Fatalf("Unable to get a session: %s", err)
+	}
+	rfiles := newRFiles(s)
 
 	// Lookup an existing checksum
 	f, err := rfiles.ByChecksum("72d47a675e81cf4a283aaf67587ddd28")
@@ -103,10 +120,15 @@ func TestRFilesByChecksum(t *testing.T) {
 }
 
 func TestRFilesInsert(t *testing.T) {
+	t.Fatalf("Test not fixed")
+	s, err := db.RSession()
+	if err != nil {
+		t.Fatalf("Unable to get a session: %s", err)
+	}
 	// Insert a new item
 	dataFile := schema.NewFile("testfile.txt", "test@mc.org")
 	dataFile.DataDirs = append(dataFile.DataDirs, "d0b001c6-fc0a-4e95-97c3-4427de68c0a5")
-	rfiles := newRFiles(session)
+	rfiles := newRFiles(s)
 	newDF, err := rfiles.Insert(&dataFile)
 	if err != nil {
 		t.Fatalf("Unable to insert new datafile: %s", err)
@@ -120,7 +142,11 @@ func TestRFilesInsert(t *testing.T) {
 }
 
 func rfilesCleanup(f *schema.File) {
+	s, err := db.RSession()
+	if err != nil {
+		panic("Can't get session")
+	}
 	fmt.Println("Deleting file: ", f.ID, f.Name)
-	rf := newRFiles(session)
+	rf := newRFiles(s)
 	rf.Delete(f.ID)
 }

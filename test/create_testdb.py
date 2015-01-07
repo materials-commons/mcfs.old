@@ -110,10 +110,12 @@ def load_tables(conn):
     insert(user.__dict__, "users", conn)
 
     project = Project("test", "test@mc.org")
+    project.id = "test"
     created_project = insert(project.__dict__, "projects", conn)
     project_id = created_project['id']
 
     ddir = DataDir("test", "test@mc.org", "")
+    ddir.id = "test"
     created_ddir = insert(ddir.__dict__, "datadirs", conn)
     ddir_id = created_ddir['id']
 
@@ -123,7 +125,23 @@ def load_tables(conn):
     }
     insert(project2datadir, "project2datadir", conn)
 
-    dfile = DataFile("testfile.txt", "test@mc.org", "abc123", "text", 10)
+    # Create a subdirectory
+    ddir = DataDir("test/test2", "test@mc.org", "test")
+    ddir.id = "test/test2"
+    created_ddir = insert(ddir.__dict__, "datadirs", conn)
+    ddir_id = created_ddir['id']
+    project2datadir = {
+        "project_id": project_id,
+        "datadir_id": ddir_id
+    }
+    insert(project2datadir, "project2datadir", conn)
+
+    dfile = DataFile("testfile.txt", "test@mc.org", "abc123", {
+        "description": "Text",
+        "mime": "text/plain",
+        "mime_description": "ASCII Text"
+    }, 10)
+    dfile.id = "testfile.txt"
     created_dfile = insert(dfile.__dict__, "datafiles", conn)
     dfile_id = created_dfile['id']
 
