@@ -2,10 +2,11 @@ package model
 
 import (
 	"fmt"
+	"testing"
+
 	r "github.com/dancannon/gorethink"
 	"github.com/materials-commons/mcfs/base/mcerr"
 	"github.com/materials-commons/mcfs/base/schema"
-	"testing"
 )
 
 var _ = fmt.Println
@@ -14,12 +15,12 @@ var (
 	session, _ = r.Connect(
 		r.ConnectOpts{
 			Address:  "localhost:30815",
-			Database: "materialscommons",
+			Database: "mctestdb",
 		})
 )
 
 func TestGetUserModel(t *testing.T) {
-	m := &Model{
+	m := &rModel{
 		schema: schema.User{},
 		table:  "users",
 	}
