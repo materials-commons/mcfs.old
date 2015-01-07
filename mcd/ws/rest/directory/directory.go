@@ -29,7 +29,7 @@ func NewResource() rest.Service {
 func (r *directoryResource) WebService() *restful.WebService {
 	ws := new(restful.WebService)
 
-	ws.Path("/directory").Produces(restful.MIME_JSON)
+	ws.Path("/directories").Produces(restful.MIME_JSON)
 	ws.Route(ws.POST("").To(rest.RouteHandler(r.createDirectory)).
 		Reads(directoryRequest{}).
 		Writes(schema.Directory{}))
