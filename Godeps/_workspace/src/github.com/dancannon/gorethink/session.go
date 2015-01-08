@@ -5,9 +5,30 @@ import (
 	"sync/atomic"
 	"time"
 
-	"code.google.com/p/goprotobuf/proto"
+	"gopkg.in/fatih/pool.v2"
+
 	p "github.com/dancannon/gorethink/ql2"
 )
+
+type Query struct {
+	Type       p.Query_QueryType
+	Token      int64
+	Term       *Term
+	GlobalOpts map[string]interface{}
+}
+
+func (q *Query) build() []interface{} {
+	res := []interface{}{q.Type}
+	if q.Term != nil {
+		res = append(res, q.Term.build())
+	}
+
+	if len(q.GlobalOpts) > 0 {
+		res = append(res, q.GlobalOpts)
+	}
+
+	return res
+}
 
 type Session struct {
 	token      int64
@@ -18,22 +39,22 @@ type Session struct {
 	timeFormat string
 
 	// Pool configuration options
-	maxIdle     int
-	maxActive   int
+	initialCap  int
+	maxCap      int
 	idleTimeout time.Duration
 
 	// Response cache, used for batched responses
 	sync.Mutex
-	cache map[int64]*ResultRows
+	cache map[int64]*Cursor
 
 	closed bool
 
-	pool *Pool
+	pool pool.Pool
 }
 
 func newSession(args map[string]interface{}) *Session {
 	s := &Session{
-		cache: map[int64]*ResultRows{},
+		cache: map[int64]*Cursor{},
 	}
 
 	if token, ok := args["token"]; ok {
@@ -53,15 +74,15 @@ func newSession(args map[string]interface{}) *Session {
 	}
 
 	// Pool configuration options
-	if maxIdle, ok := args["maxIdle"]; ok {
-		s.maxIdle = maxIdle.(int)
+	if initialCap, ok := args["initialCap"]; ok {
+		s.initialCap = initialCap.(int)
 	} else {
-		s.maxIdle = 1
+		s.initialCap = 5
 	}
-	if maxActive, ok := args["maxActive"]; ok {
-		s.maxActive = maxActive.(int)
+	if maxCap, ok := args["maxCap"]; ok {
+		s.maxCap = maxCap.(int)
 	} else {
-		s.maxActive = 0
+		s.maxCap = 30
 	}
 	if idleTimeout, ok := args["idleTimeout"]; ok {
 		s.idleTimeout = idleTimeout.(time.Duration)
@@ -127,19 +148,17 @@ func (s *Session) Reconnect(optArgs ...CloseOpts) error {
 
 	s.closed = false
 	if s.pool == nil {
-		s.pool = &Pool{
-			Session:     s,
-			MaxIdle:     s.maxIdle,
-			MaxActive:   s.maxActive,
-			IdleTimeout: s.idleTimeout,
+		cp, err := pool.NewChannelPool(s.initialCap, s.maxCap, Dial(s))
+		s.pool = cp
+		if err != nil {
+			return err
 		}
+
+		s.pool = cp
 	}
 
 	// Check the connection
-	conn, err := s.pool.get()
-	if err == nil {
-		conn.Close()
-	}
+	_, err := s.getConn()
 
 	return err
 }
@@ -156,13 +175,12 @@ func (s *Session) Close(optArgs ...CloseOpts) error {
 		}
 	}
 
-	var err error
 	if s.pool != nil {
-		err = s.pool.Close()
+		s.pool.Close()
 	}
 	s.closed = true
 
-	return err
+	return nil
 }
 
 // noreplyWait ensures that previous queries with the noreply flag have been
@@ -183,29 +201,6 @@ func (s *Session) SetTimeout(timeout time.Duration) {
 	s.timeout = timeout
 }
 
-// SetMaxIdleConns sets the maximum number of connections in the idle
-// connection pool.
-//
-// If MaxOpenConns is greater than 0 but less than the new MaxIdleConns
-// then the new MaxIdleConns will be reduced to match the MaxOpenConns limit
-//
-// If n <= 0, no idle connections are retained.
-func (s *Session) SetMaxIdleConns(n int) {
-	s.pool.MaxIdle = n
-}
-
-// SetMaxOpenConns sets the maximum number of open connections to the database.
-//
-// If MaxIdleConns is greater than 0 and the new MaxOpenConns is less than
-// MaxIdleConns, then MaxIdleConns will be reduced to match the new
-// MaxOpenConns limit
-//
-// If n <= 0, then there is no limit on the number of open connections.
-// The default is 0 (unlimited).
-func (s *Session) SetMaxOpenConns(n int) {
-	s.pool.MaxActive = n
-}
-
 // getToken generates the next query token, used to number requests and match
 // responses with requests.
 func (s *Session) nextToken() int64 {
@@ -213,106 +208,89 @@ func (s *Session) nextToken() int64 {
 }
 
 // startQuery creates a query from the term given and sends it to the server.
-// The result from the server is returned as ResultRows
-func (s *Session) startQuery(t RqlTerm, opts map[string]interface{}) (*ResultRows, error) {
+// The result from the server is returned as a cursor
+func (s *Session) startQuery(t Term, opts map[string]interface{}) (*Cursor, error) {
 	token := s.nextToken()
 
-	// Build query tree
-	pt := t.build()
-
 	// Build global options
-	globalOpts := []*p.Query_AssocPair{}
+	globalOpts := map[string]interface{}{}
 	for k, v := range opts {
-		globalOpts = append(globalOpts, &p.Query_AssocPair{
-			Key: proto.String(k),
-			Val: Expr(v).build(),
-		})
+		globalOpts[k] = Expr(v).build()
 	}
 
 	// If no DB option was set default to the value set in the connection
 	if _, ok := opts["db"]; !ok {
-		globalOpts = append(globalOpts, &p.Query_AssocPair{
-			Key: proto.String("db"),
-			Val: Db(s.database).build(),
-		})
+		globalOpts["db"] = Db(s.database).build()
 	}
 
 	// Construct query
-	q := &p.Query{
-		AcceptsRJson:  proto.Bool(true),
-		Type:          p.Query_START.Enum(),
-		Token:         proto.Int64(token),
-		Query:         pt,
-		GlobalOptargs: globalOpts,
+	q := Query{
+		Type:       p.Query_START,
+		Token:      token,
+		Term:       &t,
+		GlobalOpts: globalOpts,
 	}
 
-	conn := s.pool.Get()
-	defer conn.Close()
+	// Get a connection from the pool, do not close yet as it
+	// might be needed later if a partial response is returned
+	conn, err := s.getConn()
+	if err != nil {
+		return nil, err
+	}
 
-	return conn.SendQuery(s, q, t, opts, false)
+	return conn.SendQuery(s, q, opts, false)
 }
 
-func (s *Session) handleBatchResponse(response *p.Response) {
+func (s *Session) handleBatchResponse(cursor *Cursor, response *Response) {
+	cursor.extend(response)
+
 	s.Lock()
-	result := s.cache[response.GetToken()]
-	s.Unlock()
+	cursor.outstandingRequests--
 
-	result.extend(response)
-	result.outstandingRequests--
-
-	if response.GetType() != p.Response_SUCCESS_PARTIAL && result.outstandingRequests == 0 {
-		s.Lock()
-		delete(s.cache, response.GetToken())
-		s.Unlock()
+	if response.Type != p.Response_SUCCESS_PARTIAL &&
+		response.Type != p.Response_SUCCESS_FEED &&
+		cursor.outstandingRequests == 0 {
+		delete(s.cache, response.Token)
 	}
+	s.Unlock()
 }
 
 // continueQuery continues a previously run query.
 // This is needed if a response is batched.
-func (s *Session) continueQuery(result *ResultRows) error {
-	s.Lock()
-	s.cache[result.query.GetToken()].outstandingRequests++
-	s.Unlock()
-
-	conn := s.pool.Get()
-	defer conn.Close()
-
-	q := &p.Query{
-		Type:  p.Query_CONTINUE.Enum(),
-		Token: result.query.Token,
-	}
-
-	_, err := conn.SendQuery(s, q, result.term, result.opts, true)
+func (s *Session) continueQuery(cursor *Cursor) error {
+	err := s.asyncContinueQuery(cursor)
 	if err != nil {
 		return err
 	}
 
-	response, err := conn.ReadResponse(s, result.query.GetToken())
+	response, err := cursor.conn.ReadResponse(s, cursor.query.Token)
 	if err != nil {
 		return err
 	}
 
-	s.handleBatchResponse(response)
+	s.handleBatchResponse(cursor, response)
 
 	return nil
 }
 
 // asyncContinueQuery asynchronously continues a previously run query.
 // This is needed if a response is batched.
-func (s *Session) asyncContinueQuery(result *ResultRows) error {
+func (s *Session) asyncContinueQuery(cursor *Cursor) error {
 	s.Lock()
-	s.cache[result.query.GetToken()].outstandingRequests++
+	if cursor.outstandingRequests != 0 {
+
+		s.Unlock()
+		return nil
+	}
+	cursor.outstandingRequests = 1
 	s.Unlock()
 
-	conn := s.pool.Get()
-	defer conn.Close()
-
-	q := &p.Query{
-		Type:  p.Query_CONTINUE.Enum(),
-		Token: result.query.Token,
+	q := Query{
+		Type:  p.Query_CONTINUE,
+		Token: cursor.query.Token,
 	}
 
-	_, err := conn.SendQuery(s, q, result.term, result.opts, true)
+	_, err := cursor.conn.SendQuery(s, q, cursor.opts, true)
 	if err != nil {
 		return err
 	}
@@ -321,41 +299,79 @@ func (s *Session) asyncContinueQuery(result *ResultRows) error {
 }
 
 // stopQuery sends closes a query by sending Query_STOP to the server.
-func (s *Session) stopQuery(result *ResultRows) error {
-	q := &p.Query{
-		Type:  p.Query_STOP.Enum(),
-		Token: result.query.Token,
+func (s *Session) stopQuery(cursor *Cursor) error {
+	cursor.mu.Lock()
+	cursor.outstandingRequests++
+	cursor.mu.Unlock()
+
+	q := Query{
+		Type:  p.Query_STOP,
+		Token: cursor.query.Token,
+		Term:  &cursor.term,
 	}
 
-	conn := s.pool.Get()
-	defer conn.Close()
-
-	_, err := conn.SendQuery(s, q, result.term, result.opts, false)
+	_, err := cursor.conn.SendQuery(s, q, cursor.opts, false)
 	if err != nil {
 		return err
 	}
 
-	response, err := conn.ReadResponse(s, result.query.GetToken())
+	response, err := cursor.conn.ReadResponse(s, cursor.query.Token)
 	if err != nil {
 		return err
 	}
 
-	s.handleBatchResponse(response)
+	s.handleBatchResponse(cursor, response)
 
 	return nil
 }
 
 // noreplyWaitQuery sends the NOREPLY_WAIT query to the server.
 func (s *Session) noreplyWaitQuery() error {
-	q := &p.Query{
-		Type:  p.Query_NOREPLY_WAIT.Enum(),
-		Token: proto.Int64(s.nextToken()),
+	conn, err := s.getConn()
+	if err != nil {
+		return err
 	}
 
-	conn := s.pool.Get()
-	defer conn.Close()
+	q := Query{
+		Type:  p.Query_NOREPLY_WAIT,
+		Token: s.nextToken(),
+	}
+	cur, err := conn.SendQuery(s, q, map[string]interface{}{}, false)
+	if err != nil {
+		return err
+	}
+	err = cur.Close()
+	if err != nil {
+		return err
+	}
 
-	_, err := conn.SendQuery(s, q, RqlTerm{}, map[string]interface{}{}, false)
+	return nil
+}
 
-	return err
+func (s *Session) getConn() (*Connection, error) {
+	if s.pool == nil {
+		return nil, pool.ErrClosed
+	}
+
+	c, err := s.pool.Get()
+	if err != nil {
+		return nil, err
+	}
+
+	return &Connection{Conn: c, s: s}, nil
+}
+
+func (s *Session) checkCache(token int64) (*Cursor, bool) {
+	s.Lock()
+	defer s.Unlock()
+
+	cursor, ok := s.cache[token]
+	return cursor, ok
+}
+
+func (s *Session) setCache(token int64, cursor *Cursor) {
+	s.Lock()
+	defer s.Unlock()
+
+	s.cache[token] = cursor
 }

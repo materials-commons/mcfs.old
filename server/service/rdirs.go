@@ -64,6 +64,7 @@ func (d rDirs) Insert(dir *schema.Directory) (*schema.Directory, error) {
 		Name:      newDir.Name,
 		Owner:     newDir.Owner,
 		Birthtime: newDir.Birthtime,
+		ProjectID: dir.Project,
 	}
 
 	if len(newDir.DataFiles) > 0 {

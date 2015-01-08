@@ -45,7 +45,7 @@ func (h *ReqHandler) lookup(req *protocol.LookupReq) (interface{}, error) {
 	}
 }
 
-func (l *lookupHandler) projectRql(req *protocol.LookupReq) r.RqlTerm {
+func (l *lookupHandler) projectRql(req *protocol.LookupReq) r.Term {
 	switch req.Field {
 	case "id":
 		return r.Table("projects").Get(req.Value)
@@ -54,20 +54,20 @@ func (l *lookupHandler) projectRql(req *protocol.LookupReq) r.RqlTerm {
 	}
 }
 
-func (l *lookupHandler) dataFileRql(req *protocol.LookupReq) r.RqlTerm {
+func (l *lookupHandler) dataFileRql(req *protocol.LookupReq) r.Term {
 	switch req.Field {
 	case "id":
 		return r.Table("datafiles").Get(req.Value)
 	default:
 		return r.Table("datadirs").GetAllByIndex("id", req.LimitToID).
 			OuterJoin(r.Table("datafiles"),
-			func(ddirRow, dfRow r.RqlTerm) r.RqlTerm {
+			func(ddirRow, dfRow r.Term) r.Term {
 				return ddirRow.Field("datafiles").Contains(dfRow.Field("id"))
 			}).Zip().Filter(r.Row.Field(req.Field).Eq(req.Value))
 	}
 }
 
-func (l *lookupHandler) dataDirRql(req *protocol.LookupReq) r.RqlTerm {
+func (l *lookupHandler) dataDirRql(req *protocol.LookupReq) r.Term {
 	switch req.Field {
 	case "id":
 		return r.Table("datadirs").Get(req.Value)
@@ -78,7 +78,7 @@ func (l *lookupHandler) dataDirRql(req *protocol.LookupReq) r.RqlTerm {
 	}
 }
 
-func (l *lookupHandler) execute(query r.RqlTerm, v interface{}) (interface{}, error) {
+func (l *lookupHandler) execute(query r.Term, v interface{}) (interface{}, error) {
 	err := model.GetRow(query, l.session, v)
 	switch {
 	case err != nil:

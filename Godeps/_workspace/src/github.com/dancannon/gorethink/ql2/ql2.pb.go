@@ -20,32 +20,32 @@ It has these top-level messages:
 package ql2
 
 import proto "code.google.com/p/goprotobuf/proto"
-import json "encoding/json"
 import math "math"
 
-// Reference proto, json, and math imports to suppress error if they are not otherwise used.
+// Reference imports to suppress errors if they are not otherwise used.
 var _ = proto.Marshal
-var _ = &json.SyntaxError{}
 var _ = math.Inf
 
 // non-conforming protobuf libraries
+// This enum contains the magic numbers for your version.  See **THE HIGH-LEVEL
+// VIEW** for what to do with it.
 type VersionDummy_Version int32
 
 const (
-	VersionDummy_V0_1      VersionDummy_Version = 1063369270
-	VersionDummy_V0_2      VersionDummy_Version = 1915781601
-	VersionDummy_V0_2_JSON VersionDummy_Version = 1584539450
+	VersionDummy_V0_1 VersionDummy_Version = 1063369270
+	VersionDummy_V0_2 VersionDummy_Version = 1915781601
+	VersionDummy_V0_3 VersionDummy_Version = 1601562686
 )
 
 var VersionDummy_Version_name = map[int32]string{
 	1063369270: "V0_1",
 	1915781601: "V0_2",
-	1584539450: "V0_2_JSON",
+	1601562686: "V0_3",
 }
 var VersionDummy_Version_value = map[string]int32{
-	"V0_1":      1063369270,
-	"V0_2":      1915781601,
-	"V0_2_JSON": 1584539450,
+	"V0_1": 1063369270,
+	"V0_2": 1915781601,
+	"V0_3": 1601562686,
 }
 
 func (x VersionDummy_Version) Enum() *VersionDummy_Version {
@@ -62,6 +62,40 @@ func (x *VersionDummy_Version) UnmarshalJSON(data []byte) error {
 		return err
 	}
 	*x = VersionDummy_Version(value)
+	return nil
+}
+
+// The protocol to use after the handshake, specified in V0_3
+type VersionDummy_Protocol int32
+
+const (
+	VersionDummy_PROTOBUF VersionDummy_Protocol = 656407617
+	VersionDummy_JSON     VersionDummy_Protocol = 2120839367
+)
+
+var VersionDummy_Protocol_name = map[int32]string{
+	656407617:  "PROTOBUF",
+	2120839367: "JSON",
+}
+var VersionDummy_Protocol_value = map[string]int32{
+	"PROTOBUF": 656407617,
+	"JSON":     2120839367,
+}
+
+func (x VersionDummy_Protocol) Enum() *VersionDummy_Protocol {
+	p := new(VersionDummy_Protocol)
+	*p = x
+	return p
+}
+func (x VersionDummy_Protocol) String() string {
+	return proto.EnumName(VersionDummy_Protocol_name, int32(x))
+}
+func (x *VersionDummy_Protocol) UnmarshalJSON(data []byte) error {
+	value, err := proto.UnmarshalJSONEnum(VersionDummy_Protocol_value, data, "VersionDummy_Protocol")
+	if err != nil {
+		return err
+	}
+	*x = VersionDummy_Protocol(value)
 	return nil
 }
 
@@ -149,6 +183,7 @@ const (
 	// the same token as this response, you will get
 	// more of the sequence.  Keep sending [CONTINUE]
 	// queries until you get back [SUCCESS_SEQUENCE].
+	Response_SUCCESS_FEED  Response_ResponseType = 5
 	Response_WAIT_COMPLETE Response_ResponseType = 4
 	// These response types indicate failure.
 	Response_CLIENT_ERROR Response_ResponseType = 16
@@ -164,6 +199,7 @@ var Response_ResponseType_name = map[int32]string{
 	1:  "SUCCESS_ATOM",
 	2:  "SUCCESS_SEQUENCE",
 	3:  "SUCCESS_PARTIAL",
+	5:  "SUCCESS_FEED",
 	4:  "WAIT_COMPLETE",
 	16: "CLIENT_ERROR",
 	17: "COMPILE_ERROR",
@@ -173,6 +209,7 @@ var Response_ResponseType_value = map[string]int32{
 	"SUCCESS_ATOM":     1,
 	"SUCCESS_SEQUENCE": 2,
 	"SUCCESS_PARTIAL":  3,
+	"SUCCESS_FEED":     5,
 	"WAIT_COMPLETE":    4,
 	"CLIENT_ERROR":     16,
 	"COMPILE_ERROR":    17,
@@ -265,6 +302,11 @@ const (
 	Term_VAR Term_TermType = 10
 	// Takes some javascript code and executes it.
 	Term_JAVASCRIPT Term_TermType = 11
+	// STRING {timeout: !NUMBER} -> Function(*)
+	Term_UUID Term_TermType = 169
+	// Takes an HTTP URL and gets it.  If the get succeeds and
+	//  returns valid JSON, it is converted into a DATUM
+	Term_HTTP Term_TermType = 153
 	// Takes a string and throws an error with that message.
 	// Inside of a `default` block, you can omit the first
 	// argument to rethrow whatever error you catch (this is most
@@ -369,7 +411,9 @@ const (
 	// Take the union of multiple sequences (preserves duplicate elements! (use distinct)).
 	Term_UNION Term_TermType = 44
 	// Get the Nth element of a sequence.
-	Term_NTH        Term_TermType = 45
+	Term_NTH Term_TermType = 45
+	// do NTH or GET_FIELD depending on target object
+	Term_BRACKET    Term_TermType = 170
 	Term_INNER_JOIN Term_TermType = 48
 	Term_OUTER_JOIN Term_TermType = 49
 	// An inner-join that does an equality comparison on two attributes.
@@ -396,17 +440,19 @@ const (
 	// Updates all the rows in a selection.  Calls its Function with the row
 	// to be updated, and then merges the result of that call.
 	Term_UPDATE Term_TermType = 53
-	// SingleSelection, Function(1), {non_atomic:BOOL, durability:STRING, return_vals:BOOL} -> OBJECT |
-	// StreamSelection, OBJECT,      {non_atomic:BOOL, durability:STRING, return_vals:BOOL} -> OBJECT |
-	// SingleSelection, OBJECT,      {non_atomic:BOOL, durability:STRING, return_vals:BOOL} -> OBJECT
+	// SingleSelection, Function(1), {non_atomic:BOOL, durability:STRING, return_changes:BOOL} -> OBJECT |
+	// StreamSelection, OBJECT,      {non_atomic:BOOL, durability:STRING, return_changes:BOOL} -> OBJECT |
+	// SingleSelection, OBJECT,      {non_atomic:BOOL, durability:STRING, return_changes:BOOL} -> OBJECT
 	// Deletes all the rows in a selection.
 	Term_DELETE Term_TermType = 54
 	// Replaces all the rows in a selection.  Calls its Function with the row
 	// to be replaced, and then discards it and stores the result of that
 	// call.
 	Term_REPLACE Term_TermType = 55
-	// Inserts into a table.  If `upsert` is true, overwrites entries with
-	// the same primary key (otherwise errors).
+	// Inserts into a table.  If `conflict` is replace, overwrites
+	// entries with the same primary key.  If `conflict` is
+	// update, does an update on the entry.  If `conflict` is
+	// error, or is omitted, conflicts will trigger an error.
 	Term_INSERT Term_TermType = 56
 	// * Administrative OPs
 	// Creates a database with a particular name.
@@ -446,6 +492,8 @@ const (
 	// Blocks until a set of indexes are ready to be accessed. Returns the
 	// same values INDEX_STATUS.
 	Term_INDEX_WAIT Term_TermType = 140
+	// Renames the given index to a new name
+	Term_INDEX_RENAME Term_TermType = 156
 	// * Control Operators
 	// Calls a function on data
 	Term_FUNCALL Term_TermType = 64
@@ -593,6 +641,25 @@ const (
 	// `str.split(nil, 5)` splits on whitespace with at most 5 results
 	Term_SPLIT   Term_TermType = 149
 	Term_UNGROUP Term_TermType = 150
+	// Takes a range of numbers and returns a random number within the range
+	Term_RANDOM  Term_TermType = 151
+	Term_CHANGES Term_TermType = 152
+	Term_ARGS    Term_TermType = 154
+	// BINARY is client-only at the moment, it is not supported on the server
+	Term_BINARY           Term_TermType = 155
+	Term_GEOJSON          Term_TermType = 157
+	Term_TO_GEOJSON       Term_TermType = 158
+	Term_POINT            Term_TermType = 159
+	Term_LINE             Term_TermType = 160
+	Term_POLYGON          Term_TermType = 161
+	Term_DISTANCE         Term_TermType = 162
+	Term_INTERSECTS       Term_TermType = 163
+	Term_INCLUDES         Term_TermType = 164
+	Term_CIRCLE           Term_TermType = 165
+	Term_GET_INTERSECTING Term_TermType = 166
+	Term_FILL             Term_TermType = 167
+	Term_GET_NEAREST      Term_TermType = 168
+	Term_POLYGON_SUB      Term_TermType = 171
 )
 
 var Term_TermType_name = map[int32]string{
@@ -601,6 +668,8 @@ var Term_TermType_name = map[int32]string{
 	3:   "MAKE_OBJ",
 	10:  "VAR",
 	11:  "JAVASCRIPT",
+	169: "UUID",
+	153: "HTTP",
 	12:  "ERROR",
 	13:  "IMPLICIT_VAR",
 	14:  "DB",
@@ -650,6 +719,7 @@ var Term_TermType_name = map[int32]string{
 	86:  "IS_EMPTY",
 	44:  "UNION",
 	45:  "NTH",
+	170: "BRACKET",
 	48:  "INNER_JOIN",
 	49:  "OUTER_JOIN",
 	50:  "EQ_JOIN",
@@ -676,6 +746,7 @@ var Term_TermType_name = map[int32]string{
 	77:  "INDEX_LIST",
 	139: "INDEX_STATUS",
 	140: "INDEX_WAIT",
+	156: "INDEX_RENAME",
 	64:  "FUNCALL",
 	65:  "BRANCH",
 	66:  "ANY",
@@ -737,6 +808,23 @@ var Term_TermType_name = map[int32]string{
 	148: "MAX",
 	149: "SPLIT",
 	150: "UNGROUP",
+	151: "RANDOM",
+	152: "CHANGES",
+	154: "ARGS",
+	155: "BINARY",
+	157: "GEOJSON",
+	158: "TO_GEOJSON",
+	159: "POINT",
+	160: "LINE",
+	161: "POLYGON",
+	162: "DISTANCE",
+	163: "INTERSECTS",
+	164: "INCLUDES",
+	165: "CIRCLE",
+	166: "GET_INTERSECTING",
+	167: "FILL",
+	168: "GET_NEAREST",
+	171: "POLYGON_SUB",
 }
 var Term_TermType_value = map[string]int32{
 	"DATUM":            1,
@@ -744,6 +832,8 @@ var Term_TermType_value = map[string]int32{
 	"MAKE_OBJ":         3,
 	"VAR":              10,
 	"JAVASCRIPT":       11,
+	"UUID":             169,
+	"HTTP":             153,
 	"ERROR":            12,
 	"IMPLICIT_VAR":     13,
 	"DB":               14,
@@ -793,6 +883,7 @@ var Term_TermType_value = map[string]int32{
 	"IS_EMPTY":         86,
 	"UNION":            44,
 	"NTH":              45,
+	"BRACKET":          170,
 	"INNER_JOIN":       48,
 	"OUTER_JOIN":       49,
 	"EQ_JOIN":          50,
@@ -819,6 +910,7 @@ var Term_TermType_value = map[string]int32{
 	"INDEX_LIST":       77,
 	"INDEX_STATUS":     139,
 	"INDEX_WAIT":       140,
+	"INDEX_RENAME":     156,
 	"FUNCALL":          64,
 	"BRANCH":           65,
 	"ANY":              66,
@@ -880,6 +972,23 @@ var Term_TermType_value = map[string]int32{
 	"MAX":              148,
 	"SPLIT":            149,
 	"UNGROUP":          150,
+	"RANDOM":           151,
+	"CHANGES":          152,
+	"ARGS":             154,
+	"BINARY":           155,
+	"GEOJSON":          157,
+	"TO_GEOJSON":       158,
+	"POINT":            159,
+	"LINE":             160,
+	"POLYGON":          161,
+	"DISTANCE":         162,
+	"INTERSECTS":       163,
+	"INCLUDES":         164,
+	"CIRCLE":           165,
+	"GET_INTERSECTING": 166,
+	"FILL":             167,
+	"GET_NEAREST":      168,
+	"POLYGON_SUB":      171,
 }
 
 func (x Term_TermType) Enum() *Term_TermType {
@@ -899,8 +1008,6 @@ func (x *Term_TermType) UnmarshalJSON(data []byte) error {
 	return nil
 }
 
-// This enum contains the magic numbers for your version.  See **THE HIGH-LEVEL
-// VIEW** for what to do with it.
 type VersionDummy struct {
 	XXX_unrecognized []byte `json:"-"`
 }
@@ -1346,6 +1453,7 @@ func (m *Term_AssocPair) GetVal() *Term {
 
 func init() {
 	proto.RegisterEnum("VersionDummy_Version", VersionDummy_Version_name, VersionDummy_Version_value)
+	proto.RegisterEnum("VersionDummy_Protocol", VersionDummy_Protocol_name, VersionDummy_Protocol_value)
 	proto.RegisterEnum("Query_QueryType", Query_QueryType_name, Query_QueryType_value)
 	proto.RegisterEnum("Frame_FrameType", Frame_FrameType_name, Frame_FrameType_value)
 	proto.RegisterEnum("Response_ResponseType", Response_ResponseType_name, Response_ResponseType_value)

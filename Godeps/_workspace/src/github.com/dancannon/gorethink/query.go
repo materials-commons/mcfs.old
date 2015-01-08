@@ -5,98 +5,60 @@ import (
 	"strconv"
 	"strings"
 
-	"code.google.com/p/goprotobuf/proto"
 	p "github.com/dancannon/gorethink/ql2"
 )
 
 type OptArgs interface {
 	toMap() map[string]interface{}
 }
-type termsList []RqlTerm
-type termsObj map[string]RqlTerm
-type RqlTerm struct {
+type termsList []Term
+type termsObj map[string]Term
+type Term struct {
 	name     string
 	rootTerm bool
 	termType p.Term_TermType
 	data     interface{}
-	args     []RqlTerm
-	optArgs  map[string]RqlTerm
+	args     []Term
+	optArgs  map[string]Term
 }
 
-// build takes the query tree and turns it into a protobuf term tree.
-func (t RqlTerm) build() *p.Term {
+// build takes the query tree and prepares it to be sent as a JSON
+// expression
+func (t Term) build() interface{} {
 	switch t.termType {
 	case p.Term_DATUM:
-		datum, err := constructDatum(t)
-		if err != nil {
-			panic(err)
-		}
-		return datum
-	default:
-		args := []*p.Term{}
-		optArgs := []*p.Term_AssocPair{}
-		term := &p.Term{
-			Type: t.termType.Enum(),
-		}
-
-		for _, v := range t.args {
-			args = append(args, v.build())
-		}
-
-		for k, v := range t.optArgs {
-			optArgs = append(optArgs, &p.Term_AssocPair{
-				Key: proto.String(k),
-				Val: v.build(),
-			})
-		}
-
-		term.Args = args
-		term.Optargs = optArgs
-
-		return term
-	}
-}
-
-func (t RqlTerm) compose(args []string, optArgs map[string]string) string {
-	switch t.termType {
-	case p.Term_MAKE_ARRAY:
-		return fmt.Sprintf("[%s]", strings.Join(argsToStringSlice(t.args), ", "))
+		return t.data
 	case p.Term_MAKE_OBJ:
-		return fmt.Sprintf("{%s}", strings.Join(optArgsToStringSlice(t.optArgs), ", "))
-	case p.Term_FUNC:
-		// Get string representation of each argument
-		args := []string{}
-		for _, v := range t.args[0].args {
-			args = append(args, fmt.Sprintf("var_%d", v.data))
+		res := map[string]interface{}{}
+		for k, v := range t.optArgs {
+			res[k] = v.build()
 		}
-
-		return fmt.Sprintf("func(%s r.RqlTerm) r.RqlTerm { return %s }",
-			strings.Join(args, ", "),
-			t.args[1].String(),
-		)
-	case p.Term_VAR:
-		return fmt.Sprintf("var_%s", t.args[0])
-	case p.Term_IMPLICIT_VAR:
-		return "r.Row"
-	case p.Term_DATUM:
-		switch v := t.data.(type) {
-		case string:
-			return strconv.Quote(v)
-		default:
-			return fmt.Sprintf("%v", v)
-		}
-
-	default:
-		if t.rootTerm {
-			return fmt.Sprintf("r.%s(%s)", t.name, strings.Join(allArgsToStringSlice(t.args, t.optArgs), ", "))
-		} else {
-			return fmt.Sprintf("%s.%s(%s)", t.args[0].String(), t.name, strings.Join(allArgsToStringSlice(t.args[1:], t.optArgs), ", "))
+		return res
+	case p.Term_BINARY:
+		if len(t.args) == 0 {
+			return map[string]interface{}{
+				"$reql_type$": "BINARY",
+				"data":        t.data,
+			}
 		}
 	}
+
+	args := []interface{}{}
+	optArgs := map[string]interface{}{}
+
+	for _, v := range t.args {
+		args = append(args, v.build())
+	}
+
+	for k, v := range t.optArgs {
+		optArgs[k] = v.build()
+	}
+
+	return []interface{}{t.termType, args, optArgs}
 }
 
 // String returns a string representation of the query tree
-func (t RqlTerm) String() string {
+func (t Term) String() string {
 	switch t.termType {
 	case p.Term_MAKE_ARRAY:
 		return fmt.Sprintf("[%s]", strings.Join(argsToStringSlice(t.args), ", "))
@@ -109,7 +71,7 @@ func (t RqlTerm) String() string {
 			args = append(args, fmt.Sprintf("var_%d", v.data))
 		}
 
-		return fmt.Sprintf("func(%s r.RqlTerm) r.RqlTerm { return %s }",
+		return fmt.Sprintf("func(%s r.Term) r.Term { return %s }",
 			strings.Join(args, ", "),
 			t.args[1].String(),
 		)
@@ -124,14 +86,16 @@ func (t RqlTerm) String() string {
 		default:
 			return fmt.Sprintf("%v", v)
 		}
-
-	default:
-		if t.rootTerm {
-			return fmt.Sprintf("r.%s(%s)", t.name, strings.Join(allArgsToStringSlice(t.args, t.optArgs), ", "))
-		} else {
-			return fmt.Sprintf("%s.%s(%s)", t.args[0].String(), t.name, strings.Join(allArgsToStringSlice(t.args[1:], t.optArgs), ", "))
+	case p.Term_BINARY:
+		if len(t.args) == 0 {
+			return fmt.Sprintf("r.binary(<data>)")
 		}
 	}
+
+	if t.rootTerm {
+		return fmt.Sprintf("r.%s(%s)", t.name, strings.Join(allArgsToStringSlice(t.args, t.optArgs), ", "))
+	}
+	return fmt.Sprintf("%s.%s(%s)", t.args[0].String(), t.name, strings.Join(allArgsToStringSlice(t.args[1:], t.optArgs), ", "))
 }
 
 type WriteResponse struct {
@@ -141,23 +105,37 @@ type WriteResponse struct {
 	Updated       int
 	Unchanged     int
 	Replaced      int
+	Renamed       int
 	Deleted       int
-	GeneratedKeys []string    `gorethink:"generated_keys"`
-	FirstError    string      `gorethink:"first_error"` // populated if Errors > 0
-	NewValue      interface{} `gorethink:"new_val"`
-	OldValue      interface{} `gorethink:"old_val"`
+	GeneratedKeys []string `gorethink:"generated_keys"`
+	FirstError    string   `gorethink:"first_error"` // populated if Errors > 0
+	Changes       []WriteChanges
+}
+
+type WriteChanges struct {
+	NewValue interface{} `gorethink:"new_val"`
+	OldValue interface{} `gorethink:"old_val"`
 }
 
 type RunOpts struct {
-	Db          interface{} `gorethink:"db,omitempty"`
-	Profile     interface{} `gorethink:"profile,omitempty"`
-	UseOutdated interface{} `gorethink:"use_outdated,omitempty"`
-	NoReply     interface{} `gorethink:"noreply,omitempty"`
-	TimeFormat  interface{} `gorethink:"time_format,omitempty"`
+	Db             interface{} `gorethink:"db,omitempty"`
+	Profile        interface{} `gorethink:"profile,omitempty"`
+	UseOutdated    interface{} `gorethink:"use_outdated,omitempty"`
+	NoReply        interface{} `gorethink:"noreply,omitempty"`
+	ArrayLimit     interface{} `gorethink:"array_limit,omitempty"`
+	TimeFormat     interface{} `gorethink:"time_format,omitempty"`
+	GroupFormat    interface{} `gorethink:"group_format,omitempty"`
+	BinaryFormat   interface{} `gorethink:"binary_format,omitempty"`
+	GeometryFormat interface{} `gorethink:"geometry_format,omitempty"`
+	BatchConf      BatchOpts   `gorethink:"batch_conf,omitempty"`
+}
 
-	// Unsupported options
-
-	BatchConf interface{} `gorethink:"batch_conf,omitempty"`
+type BatchOpts struct {
+	MinBatchRows              interface{} `gorethink:"min_batch_rows,omitempty"`
+	MaxBatchRows              interface{} `gorethink:"max_batch_rows,omitempty"`
+	MaxBatchBytes             interface{} `gorethink:"max_batch_bytes,omitempty"`
+	MaxBatchSeconds           interface{} `gorethink:"max_batch_seconds,omitempty"`
+	FirstBatchScaledownFactor interface{} `gorethink:"first_batch_scaledown_factor,omitempty"`
 }
 
 func (o *RunOpts) toMap() map[string]interface{} {
@@ -170,12 +148,12 @@ func (o *RunOpts) toMap() map[string]interface{} {
 //	if err != nil {
 //		// error
 //	}
-//	for rows.Next() {
-//		doc := MyDocumentType{}
-//		err := r.Scan(&doc)
-//		    // Do something with row
+//
+//  var doc MyDocumentType
+//	for rows.Next(&doc) {
+//      // Do something with document
 //	}
-func (t RqlTerm) Run(s *Session, optArgs ...RunOpts) (*ResultRows, error) {
+func (t Term) Run(s *Session, optArgs ...RunOpts) (*Cursor, error) {
 	opts := map[string]interface{}{}
 	if len(optArgs) >= 1 {
 		opts = optArgs[0].toMap()
@@ -183,61 +161,36 @@ func (t RqlTerm) Run(s *Session, optArgs ...RunOpts) (*ResultRows, error) {
 	return s.startQuery(t, opts)
 }
 
-// Run runs a query using the given connection but unlike Run returns ResultRow.
-// This function should be used if your query only returns a single row.
-//
-//	row, err := query.RunRow(sess, r.RunOpts{
-//		UseOutdated: true,
-//	})
-//	if err != nil {
-//		// error
-//	}
-//	if row.IsNil() {
-//		// nothing was found
-//	}
-//	err = row.Scan(&doc)
-func (t RqlTerm) RunRow(s *Session, optArgs ...RunOpts) (*ResultRow, error) {
-	rows, err := t.Run(s, optArgs...)
-	if err != nil {
-		return nil, err
-	}
-
-	rows.Next()
-
-	return &ResultRow{rows: rows, err: err}, err
-}
-
 // RunWrite runs a query using the given connection but unlike Run automatically
 // scans the result into a variable of type WriteResponse. This function should be used
 // if you are running a write query (such as Insert,  Update, TableCreate, etc...)
 //
-// Optional arguments :
-// "db", "use_outdated" (defaults to false), "noreply" (defaults to false) and "time_format".
-//
 //	res, err := r.Db("database").Table("table").Insert(doc).RunWrite(sess, r.RunOpts{
 //		NoReply: true,
 //	})
-func (t RqlTerm) RunWrite(s *Session, optArgs ...RunOpts) (WriteResponse, error) {
+func (t Term) RunWrite(s *Session, optArgs ...RunOpts) (WriteResponse, error) {
 	var response WriteResponse
-	row, err := t.RunRow(s, optArgs...)
+	res, err := t.Run(s, optArgs...)
 	if err == nil {
-		err = row.Scan(&response)
+		err = res.One(&response)
 	}
 	return response, err
 }
 
-// Exec runs the query but does not return the result (It also automatically sets
-// the noreply option).
-func (t RqlTerm) Exec(s *Session, optArgs ...RunOpts) error {
-	// Ensure that noreply is set to true
-	if len(optArgs) >= 1 {
-		optArgs[0].NoReply = true
-	} else {
-		optArgs = append(optArgs, RunOpts{
-			NoReply: true,
-		})
+// Exec runs the query but does not return the result.
+func (t Term) Exec(s *Session, optArgs ...RunOpts) error {
+	res, err := t.Run(s, optArgs...)
+	if err != nil {
+		return err
+	}
+	if res == nil {
+		return nil
 	}
 
-	_, err := t.Run(s, optArgs...)
-	return err
+	err = res.Close()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

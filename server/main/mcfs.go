@@ -32,7 +32,6 @@ import (
 	"os"
 	"path/filepath"
 	"runtime/debug"
-	"strings"
 
 	"github.com/jessevdk/go-flags"
 	"github.com/materials-commons/config"
@@ -169,27 +168,30 @@ func datafileHandler(writer http.ResponseWriter, req *http.Request) {
 		http.Error(writer, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 	default:
 		var path string
-		if isTiff(df.Name) && download == "" {
-			path = tiffConversionPath(df.FileID())
+		if isConvertedImage(df.MediaType.Mime) && download == "" {
+			path = imageConversionPath(df.FileID())
 		} else {
 			path = mc.FilePath(df.FileID())
 		}
-		writer.Header().Set("Content-Type", df.MediaType)
+		writer.Header().Set("Content-Type", df.MediaType.Mime)
 		fmt.Printf("Serving path: %s\n", path)
 		http.ServeFile(writer, req, path)
 	}
 }
 
 // isTiff checks a name to see if it is for a TIFF file.
-func isTiff(name string) bool {
-	ext := strings.ToLower(filepath.Ext(name))
-	if ext == ".tiff" || ext == ".tif" {
+func isConvertedImage(mime string) bool {
+	switch mime {
+	case "image/tiff":
 		return true
+	case "image/x-ms-bmp":
+		return true
+	default:
+		return false
 	}
-	return false
 }
 
-func tiffConversionPath(id string) string {
+func imageConversionPath(id string) string {
 	return filepath.Join(mc.FileDir(id), ".conversion", id+".jpg")
 }
 
